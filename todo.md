@@ -75,3 +75,10 @@
 - [ ] Add KLAVIYO_API_KEY env var for live Klaviyo integration
 - [ ] Add VITE_SHOPIFY_STORE_URL and VITE_SHOPIFY_VARIANT_ID env vars for live checkout
 - [ ] Email confirmation on registration
+
+## Upgrades (Round 2)
+- [x] Replace landing page with WebGL animated shader hero (cosmic fire background, 6+1 brand copy, ENTER THE SYSTEM → CTA)
+- [x] Remove jsx prop from style tag (not supported in plain React/TS)
+- [x] Add AI-generated personalised team name + identity message to post-reveal page using all form data
+- [x] Add AI procedure to backend (sportsday.generateTeamIdentity) using invokeLLM
+- [x] Store AI-generated team name in DB and return on getUserStatus

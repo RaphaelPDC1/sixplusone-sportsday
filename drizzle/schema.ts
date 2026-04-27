@@ -76,6 +76,7 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
   // Generated identity
   sportsDayProfile: varchar("sportsDayProfile", { length: 50 }),
   profileTagline: text("profileTagline"),
+  aiTeamIdentity: text("aiTeamIdentity"), // AI-generated personalised team name + message
 
   // Logistics
   shirtSize: mysqlEnum("shirtSize", ["XS", "S", "M", "L", "XL", "XXL"]),

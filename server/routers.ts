@@ -23,6 +23,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { ENV } from "./_core/env";
+import { invokeLLM } from "./_core/llm";
 import { TRPCError } from "@trpc/server";
 
 // ─── Admin Guard ──────────────────────────────────────────────────────────────
@@ -186,7 +187,71 @@ const sportsDayRouter = router({
         referralRewardUnlocked: reg.referralRewardUnlocked,
         groupCode: reg.groupCode,
         groupRole: reg.groupRole,
+        aiTeamIdentity: reg.revealStatus === "unlocked" ? reg.aiTeamIdentity : null,
       };
+    }),
+  // Generate AI-powered personalised team identity using all form data
+  generateTeamIdentity: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const reg = await getRegistrationById(input.id);
+      if (!reg) throw new TRPCError({ code: "NOT_FOUND" });
+      if (reg.revealStatus !== "unlocked") throw new TRPCError({ code: "FORBIDDEN", message: "Team not yet revealed" });
+      // Return cached identity if already generated
+      if (reg.aiTeamIdentity) return { aiTeamIdentity: reg.aiTeamIdentity };
+      const teamName = reg.team ? reg.team.charAt(0).toUpperCase() + reg.team.slice(1) : "Unknown";
+      const prompt = `You are the identity engine for 6+1 Sports Day 002 — a high-energy competitive sports event. 
+A participant has just been revealed as TEAM ${teamName.toUpperCase()}.
+
+Here is everything we know about them:
+- Name: ${reg.fullName}
+- Competitiveness level: ${reg.competitiveness ?? "balanced"}
+- Teammate type: ${reg.teammateType?.replace(/_/g, " ") ?? "motivator"}
+- Strongest event: ${reg.strongestEvent ?? "unknown"}
+- Biggest fear: ${reg.fear?.replace(/_/g, " ") ?? "unknown"}
+- Captain vote interest: ${reg.captainVoteInterest ?? "maybe"}
+- Event motivation: ${reg.eventMotivation ?? "not provided"}
+- Attended before: ${reg.attendedBefore ? "Yes, returning" : "No, first time"}
+
+Generate a SHORT, punchy, personalised sports day identity for this person on TEAM ${teamName.toUpperCase()}.
+Format: One bold title (max 5 words, ALL CAPS) on the first line, then a single sentence (max 20 words) that captures their specific personality and team role.
+Make it feel earned, specific to their answers, and hype them up. No generic platitudes.
+Example format:
+THE SILENT WEAPON OF TEAM BLUE
+You don't talk about it. You just show up and make everyone else look slow.
+
+Return ONLY the two lines. No extra text, no quotes, no explanation.`;
+      let aiTeamIdentity = "";
+      try {
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: "You are a high-energy sports event identity generator. Be bold, specific, and punchy." },
+            { role: "user", content: prompt },
+          ],
+        });
+        const rawContent = response.choices?.[0]?.message?.content;
+        const candidate = (typeof rawContent === "string" ? rawContent : "").trim();
+        // Validate: must have at least two non-empty lines
+        const lines = candidate.split("\n").map((l: string) => l.trim()).filter(Boolean);
+        if (lines.length >= 2 && lines[0].length > 0) {
+          aiTeamIdentity = lines.slice(0, 2).join("\n");
+        } else {
+          // Fallback to deterministic profile
+          aiTeamIdentity = `${reg.sportsDayProfile ?? "THE COMPETITOR"} OF TEAM ${teamName.toUpperCase()}\n${reg.profileTagline ?? "You were built for this."}`;
+        }
+      } catch (err) {
+        console.error("[AI Identity] LLM call failed:", err);
+        // Fallback to profile + tagline
+        aiTeamIdentity = `${reg.sportsDayProfile ?? "THE COMPETITOR"} OF TEAM ${teamName.toUpperCase()}\n${reg.profileTagline ?? "You were built for this."}`;
+      }
+      // Cache in DB
+      await db
+        .update(sportsDayRegistrations)
+        .set({ aiTeamIdentity })
+        .where(eq(sportsDayRegistrations.id, input.id));
+      return { aiTeamIdentity };
     }),
 
   checkEmail: publicProcedure
