@@ -644,6 +644,22 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
       await db.delete(eventSchedule).where(eq(eventSchedule.id, input.id));
       return { success: true };
     }),
+
+  // ─── Admin password verification (server-side — password never leaks to client) ───
+  verifyAdminPassword: publicProcedure
+    .input(z.object({ password: z.string() }))
+    .mutation(async ({ input }) => {
+      const adminPassword = process.env.ADMIN_PASSWORD;
+      if (!adminPassword) {
+        // Dev fallback: accept hardcoded default if env var not set
+        if (input.password.trim() === "sd002admin") return { success: true };
+        return { success: false as const, error: "Admin password not configured in deployment environment. Set ADMIN_PASSWORD in project secrets." };
+      }
+      if (input.password.trim() === adminPassword.trim()) {
+        return { success: true as const };
+      }
+      return { success: false as const, error: "Incorrect password." };
+    }),
 });
 
 // ─── App Router ───────────────────────────────────────────────────────────────

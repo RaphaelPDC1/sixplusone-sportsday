@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import AnimatedShaderHero from "@/components/ui/animated-shader-hero";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,70 +9,29 @@ import { User } from "lucide-react";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
-// Shooting star logo animation component
-function ShootingStarLogo() {
-  const [stars, setStars] = useState<Array<{ id: number; left: number; top: number }>>([]);
-
+// Hook: fires the shooting star animation on the nav logo element
+function useShootingStarLogo(logoRef: React.RefObject<HTMLImageElement | null>) {
   useEffect(() => {
-    const createStar = () => {
-      const id = Date.now();
-      const left = Math.random() * 80 + 10; // 10-90% from left
-      const top = Math.random() * 30; // 0-30% from top
+    let timer: ReturnType<typeof setTimeout>;
 
-      setStars((prev) => [...prev, { id, left, top }]);
-
-      // Remove star after animation completes
+    const triggerShootingStar = () => {
+      const logo = logoRef.current;
+      if (!logo) return;
+      logo.classList.add("shooting-star-active");
       setTimeout(() => {
-        setStars((prev) => prev.filter((s) => s.id !== id));
-      }, 2000);
+        logo.classList.remove("shooting-star-active");
+        // Schedule next: 55–65 seconds
+        const nextDelay = 55000 + Math.random() * 10000;
+        timer = setTimeout(triggerShootingStar, nextDelay);
+      }, 1200);
     };
 
-    // Initial delay before first star (10s)
-    const initialTimer = setTimeout(createStar, 10000);
+    // First trigger: 10–20 seconds after load
+    const initialDelay = 10000 + Math.random() * 10000;
+    timer = setTimeout(triggerShootingStar, initialDelay);
 
-    // Then every 60 seconds
-    const interval = setInterval(createStar, 60000);
-
-    return () => {
-      clearTimeout(initialTimer);
-      clearInterval(interval);
-    };
-  }, []);
-
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      {stars.map((star) => (
-        <div
-          key={star.id}
-          className="absolute"
-          style={{
-            left: `${star.left}%`,
-            top: `${star.top}%`,
-            animation: `shootingStarLogo 2s ease-in forwards`,
-          }}
-        >
-          <img
-            src={LOGO_URL}
-            alt="shooting star"
-            className="h-8 w-auto opacity-80"
-            style={{ filter: "invert(1)" }}
-          />
-        </div>
-      ))}
-      <style>{`
-        @keyframes shootingStarLogo {
-          0% {
-            opacity: 1;
-            transform: translate(0, 0) scale(1);
-          }
-          100% {
-            opacity: 0;
-            transform: translate(300px, 300px) scale(0.3);
-          }
-        }
-      `}</style>
-    </div>
-  );
+    return () => clearTimeout(timer);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
 function InfoBlock({ number, title, body }: { number: string; title: string; body: string }) {
@@ -91,6 +50,8 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+  const logoRef = useRef<HTMLImageElement>(null);
+  useShootingStarLogo(logoRef);
 
   // Query to check if email exists
   const checkEmailQuery = trpc.sportsday.checkEmailExists.useQuery(
@@ -126,13 +87,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
-      <ShootingStarLogo />
-
       {/* Top nav bar */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4">
         <img
+          ref={logoRef}
           src={LOGO_URL}
           alt="6+1"
+          id="hero-logo"
           className="h-10 w-auto"
           style={{ filter: "invert(1)" }}
         />

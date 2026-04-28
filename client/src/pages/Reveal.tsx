@@ -516,44 +516,62 @@ export default function Reveal() {
     }
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Generate share card
+  // Generate share card — loads Bebas Neue via FontFace API before drawing
   useEffect(() => {
     if (phase !== "reveal") return;
     const canvas = shareCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    canvas.width = 1080; canvas.height = 1920;
-    ctx.fillStyle = config.color;
-    ctx.fillRect(0, 0, 1080, 1920);
-    ctx.strokeStyle = "rgba(0,0,0,0.12)"; ctx.lineWidth = 1;
-    for (let i = 0; i < 1080; i += 40) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 1920); ctx.stroke(); }
-    for (let i = 0; i < 1920; i += 40) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1080, i); ctx.stroke(); }
-    ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.fillRect(0, 0, 1080, 240);
-    const logoImg = new Image();
-    logoImg.crossOrigin = "anonymous";
-    logoImg.onload = () => {
-      ctx.save(); ctx.filter = "brightness(0) invert(1)";
-      const logoH = 130, logoW = (logoImg.width / logoImg.height) * logoH;
-      ctx.drawImage(logoImg, (1080 - logoW) / 2, 55, logoW, logoH); ctx.restore();
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 170px 'Arial Narrow', Arial, sans-serif"; ctx.textAlign = "center";
-      ctx.fillText("I'M TEAM", 540, 920);
-      ctx.font = "bold 240px 'Arial Narrow', Arial, sans-serif";
-      ctx.fillText(team.toUpperCase() + ".", 540, 1180);
-      ctx.font = "bold 72px monospace"; ctx.fillStyle = "rgba(255,255,255,0.65)";
-      ctx.fillText("SPORTS DAY 002", 540, 1360);
-      ctx.font = "bold 48px monospace"; ctx.fillStyle = "rgba(255,255,255,0.45)";
-      ctx.fillText("@6plus1", 540, 1840);
+
+    const drawCard = (headingFont: string) => {
+      canvas.width = 1080; canvas.height = 1920;
+      // Background
+      ctx.fillStyle = config.color;
+      ctx.fillRect(0, 0, 1080, 1920);
+      // Subtle grid
+      ctx.strokeStyle = "rgba(0,0,0,0.10)"; ctx.lineWidth = 1;
+      for (let i = 0; i < 1080; i += 60) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 1920); ctx.stroke(); }
+      for (let i = 0; i < 1920; i += 60) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1080, i); ctx.stroke(); }
+      // Header band
+      ctx.fillStyle = "rgba(0,0,0,0.35)"; ctx.fillRect(0, 0, 1080, 280);
+      // Bottom band
+      ctx.fillStyle = "rgba(0,0,0,0.25)"; ctx.fillRect(0, 1780, 1080, 140);
+      // Main copy — exact spec: "I'M TEAM [COLOUR]"
+      ctx.fillStyle = "#FFFFFF"; ctx.textAlign = "center";
+      ctx.font = `180px ${headingFont}`;
+      ctx.fillText("I'M TEAM", 540, 1020);
+      ctx.font = `260px ${headingFont}`;
+      ctx.fillText(team.toUpperCase(), 540, 1320);
+      // Tagline
+      ctx.font = "bold 68px monospace"; ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.fillText("SPORTS DAY 002", 540, 1480);
+      // Handle
+      ctx.font = "bold 52px monospace"; ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.fillText("@6plus1", 540, 1860);
     };
-    logoImg.onerror = () => {
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 170px 'Arial Narrow', Arial, sans-serif"; ctx.textAlign = "center";
-      ctx.fillText("I'M TEAM", 540, 920);
-      ctx.font = "bold 240px 'Arial Narrow', Arial, sans-serif";
-      ctx.fillText(team.toUpperCase() + ".", 540, 1180);
+
+    const drawWithLogo = (headingFont: string) => {
+      drawCard(headingFont);
+      const logoImg = new Image();
+      logoImg.crossOrigin = "anonymous";
+      logoImg.onload = () => {
+        ctx.save(); ctx.filter = "brightness(0) invert(1)";
+        const logoH = 150, logoW = (logoImg.width / logoImg.height) * logoH;
+        ctx.drawImage(logoImg, (1080 - logoW) / 2, 65, logoW, logoH);
+        ctx.restore();
+      };
+      logoImg.src = LOGO_URL;
     };
-    logoImg.src = LOGO_URL;
+
+    // Load Bebas Neue via FontFace API for crisp canvas text
+    const font = new FontFace(
+      "Bebas Neue",
+      "url(https://fonts.gstatic.com/s/bebasneuepro/v1/CNz9x_HTkHBMRBBqBBbMgMBBFBBnAA.woff2)"
+    );
+    font.load()
+      .then((loaded) => { document.fonts.add(loaded); drawWithLogo("'Bebas Neue'"); })
+      .catch(() => { drawWithLogo("'Arial Narrow', Arial, sans-serif"); });
   }, [phase, config.color, team]);
 
   const handleShare = () => {

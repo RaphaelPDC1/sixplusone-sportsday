@@ -4,6 +4,114 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
+
+// ─── Entry Splash Animation ───────────────────────────────────────────────────
+function EntrySplash({ onComplete }: { onComplete: () => void }) {
+  const [phase, setPhase] = useState<"flash" | "explode" | "done">("flash");
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    // Phase 1: flash logo for 600ms
+    const t1 = setTimeout(() => setPhase("explode"), 600);
+    return () => clearTimeout(t1);
+  }, []);
+
+  useEffect(() => {
+    if (phase !== "explode") return;
+    const canvas = canvasRef.current;
+    if (!canvas) { onComplete(); return; }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) { onComplete(); return; }
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Create particle burst from center
+    type Particle = { x: number; y: number; vx: number; vy: number; size: number; alpha: number; color: string };
+    const colors = ["#FF5500", "#FF7A2E", "#F2F0EB", "#FF5500", "#FF3300"];
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const particles: Particle[] = Array.from({ length: 80 }, () => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 8;
+      return {
+        x: cx, y: cy,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size: 2 + Math.random() * 5,
+        alpha: 1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      };
+    });
+
+    let frame: number;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let alive = false;
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.15; // gravity
+        p.alpha -= 0.022;
+        if (p.alpha > 0) {
+          alive = true;
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x, p.y, p.size, p.size);
+        }
+      }
+      ctx.globalAlpha = 1;
+      if (alive) {
+        frame = requestAnimationFrame(animate);
+      } else {
+        setPhase("done");
+        onComplete();
+      }
+    };
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (phase === "done") return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center"
+      style={{
+        background: "#0A0A0A",
+        transition: phase === "explode" ? "background 0.4s ease" : undefined,
+      }}
+    >
+      {/* Logo flash */}
+      {phase === "flash" && (
+        <img
+          src={LOGO_URL}
+          alt="6+1"
+          className="w-40 h-auto"
+          style={{
+            filter: "invert(1)",
+            animation: "splashLogoFlash 0.6s ease forwards",
+          }}
+        />
+      )}
+      {/* Particle canvas */}
+      {phase === "explode" && (
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full"
+        />
+      )}
+      <style>{`
+        @keyframes splashLogoFlash {
+          0% { opacity: 0; transform: scale(0.7); }
+          40% { opacity: 1; transform: scale(1.08); }
+          70% { opacity: 1; transform: scale(1); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 const SHOPIFY_STORE_URL = import.meta.env.VITE_SHOPIFY_STORE_URL || "https://your-store.myshopify.com";
 const SHOPIFY_VARIANT_ID = import.meta.env.VITE_SHOPIFY_VARIANT_ID || "12345678901234";
 
@@ -231,22 +339,33 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
-
-// ─── Main Holding Page ────────────────────────────────────────────────────────
+// ─── Main Holding Page ─────────────────────────────────────────────────────────────
 export default function Holding() {
   const [, navigate] = useLocation();
   const [userId, setUserId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [heroVisible, setHeroVisible] = useState(false);
+  // Show splash only once per session
+  const [showSplash, setShowSplash] = useState(
+    () => sessionStorage.getItem("holding_splash_seen") !== "true"
+  );
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
+
+  const handleSplashComplete = () => {
+    sessionStorage.setItem("holding_splash_seen", "true");
+    setShowSplash(false);
+  };
 
   useEffect(() => {
     const id = localStorage.getItem("sd_user_id");
     if (!id) return; // Don't redirect — show "find my spot" state
     setUserId(id);
-    const t = setTimeout(() => setHeroVisible(true), 120);
+    // Delay hero fade-in until after splash completes
+    const splashDone = sessionStorage.getItem("holding_splash_seen") === "true";
+    const delay = splashDone ? 120 : 1800; // wait for splash if first visit
+    const t = setTimeout(() => setHeroVisible(true), delay);
     return () => clearTimeout(t);
   }, []);
 
@@ -342,6 +461,7 @@ export default function Holding() {
           </a>
         </div>
         {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
+        {showSplash && <EntrySplash onComplete={handleSplashComplete} />}
       </div>
     );
   }
@@ -358,6 +478,8 @@ export default function Holding() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden">
+      {showSplash && <EntrySplash onComplete={handleSplashComplete} />}
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
       <HoldingBackground />
 
       {/* Scanlines */}

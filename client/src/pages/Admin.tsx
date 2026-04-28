@@ -5,8 +5,6 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
-// Admin password is stored as an env var; fallback for dev
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "sd002admin";
 
 const TEAM_COLORS: Record<string, string> = {
   red: "#E8232A",
@@ -22,15 +20,28 @@ function AdminPasswordGate({ onUnlock }: { onUnlock: () => void }) {
   const [error, setError] = useState("");
   const [, navigate] = useLocation();
 
+  // Server-side password verification — ADMIN_PASSWORD env var is never exposed to the client
+  const verifyMutation = trpc.sportsday.verifyAdminPassword.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        sessionStorage.setItem("admin_unlocked", "true");
+        onUnlock();
+      } else {
+        const errMsg = (data as { success: false; error: string }).error ?? "Incorrect password.";
+        setError(errMsg);
+        setPassword("");
+      }
+    },
+    onError: () => {
+      setError("Server error. Please try again.");
+      setPassword("");
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem("admin_unlocked", "true");
-      onUnlock();
-    } else {
-      setError("Incorrect password.");
-      setPassword("");
-    }
+    if (!password.trim()) return;
+    verifyMutation.mutate({ password });
   };
 
   return (
@@ -46,14 +57,22 @@ function AdminPasswordGate({ onUnlock }: { onUnlock: () => void }) {
           onChange={(e) => { setPassword(e.target.value); setError(""); }}
           placeholder="Enter admin password"
           autoFocus
-          className="w-full bg-[#111] border border-[#333] focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-sm px-4 py-4 transition-colors placeholder:text-[#444]"
+          disabled={verifyMutation.isPending}
+          className="w-full bg-[#111] border border-[#333] focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-sm px-4 py-4 transition-colors placeholder:text-[#444] disabled:opacity-50"
         />
-        {error && <p className="font-mono text-[#FF5500] text-xs tracking-wider">{error}</p>}
+        {error && (
+          <p className="font-mono text-[#FF5500] text-xs tracking-wider leading-relaxed">
+            {error.includes("not configured") 
+              ? "⚠ Admin password not set in deployment environment. Set ADMIN_PASSWORD in project secrets."
+              : error}
+          </p>
+        )}
         <button
           type="submit"
-          className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest py-4 hover:bg-[#F2F0EB] transition-colors"
+          disabled={verifyMutation.isPending || !password.trim()}
+          className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest py-4 hover:bg-[#F2F0EB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          ENTER →
+          {verifyMutation.isPending ? "VERIFYING..." : "ENTER →"}
         </button>
         <button
           type="button"
