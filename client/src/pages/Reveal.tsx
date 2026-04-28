@@ -483,6 +483,16 @@ export default function Reveal() {
     { enabled: !!userId }
   );
 
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+
+  // Guard: redirect to holding if not unlocked — MUST be in useEffect, not render
+  useEffect(() => {
+    if (user && user.revealStatus !== "unlocked") {
+      navigateRef.current("/holding");
+    }
+  }, [user?.revealStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const markRevealSeenMutation = trpc.sportsday.markRevealSeen.useMutation();
   const generateIdentityMutation = trpc.sportsday.generateTeamIdentity.useMutation({
     onSuccess: (data) => {
@@ -573,9 +583,13 @@ export default function Reveal() {
     );
   }
 
+  // Redirect handled in useEffect above — show a brief redirecting state
   if (user.revealStatus !== "unlocked") {
-    navigate("/holding");
-    return null;
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <div className="text-[#FF5500] font-display text-3xl tracking-widest animate-pulse">REDIRECTING...</div>
+      </div>
+    );
   }
 
   return (
