@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import AnimatedShaderHero from "@/components/ui/animated-shader-hero";
+import { ShootingStarCanvas } from "@/components/ui/shooting-star-canvas";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,31 +9,6 @@ import { trpc } from "@/lib/trpc";
 import { User } from "lucide-react";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
-
-// Hook: fires the shooting star animation on the nav logo element
-function useShootingStarLogo(logoRef: React.RefObject<HTMLImageElement | null>) {
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-
-    const triggerShootingStar = () => {
-      const logo = logoRef.current;
-      if (!logo) return;
-      logo.classList.add("shooting-star-active");
-      setTimeout(() => {
-        logo.classList.remove("shooting-star-active");
-        // Schedule next: 55–65 seconds
-        const nextDelay = 55000 + Math.random() * 10000;
-        timer = setTimeout(triggerShootingStar, nextDelay);
-      }, 1200);
-    };
-
-    // First trigger: 10–20 seconds after load
-    const initialDelay = 10000 + Math.random() * 10000;
-    timer = setTimeout(triggerShootingStar, initialDelay);
-
-    return () => clearTimeout(timer);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-}
 
 function InfoBlock({ number, title, body }: { number: string; title: string; body: string }) {
   return (
@@ -50,10 +26,40 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
-  const logoRef = useRef<HTMLImageElement>(null);
-  useShootingStarLogo(logoRef);
 
-  // Query to check if email exists
+  // Shooting star easter egg state
+  const logoRef = useRef<HTMLImageElement>(null);
+  const [starActive, setStarActive] = useState<{ x: number; y: number } | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleNext = useCallback(() => {
+    const delay = 55000 + Math.random() * 15000;
+    timerRef.current = setTimeout(() => {
+      const logo = logoRef.current;
+      if (!logo) return;
+      const rect = logo.getBoundingClientRect();
+      setStarActive({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    }, delay);
+  }, []);
+
+  useEffect(() => {
+    // First trigger: 10–20s after load
+    const initialDelay = 10000 + Math.random() * 10000;
+    timerRef.current = setTimeout(() => {
+      const logo = logoRef.current;
+      if (!logo) return;
+      const rect = logo.getBoundingClientRect();
+      setStarActive({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    }, initialDelay);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, []);
+
+  const handleStarComplete = useCallback(() => {
+    setStarActive(null);
+    scheduleNext();
+  }, [scheduleNext]);
+
+  // Email lookup query
   const checkEmailQuery = trpc.sportsday.checkEmailExists.useQuery(
     { email: email.trim() },
     { enabled: false }
@@ -64,21 +70,18 @@ export default function Home() {
       setLoginError("Please enter your email");
       return;
     }
-
     setLoginLoading(true);
     setLoginError("");
-
     try {
       const result = await checkEmailQuery.refetch();
       if (result.data?.exists) {
-        // User found — redirect to holding page
         localStorage.setItem("userEmail", email.trim());
         setLoginOpen(false);
         navigate("/holding");
       } else {
         setLoginError("Email not found. Please register first.");
       }
-    } catch (err) {
+    } catch {
       setLoginError("Error looking up email. Please try again.");
     } finally {
       setLoginLoading(false);
@@ -87,6 +90,15 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
+      {/* Shooting star canvas overlay — renders above everything */}
+      {starActive && (
+        <ShootingStarCanvas
+          logoStartX={starActive.x}
+          logoStartY={starActive.y}
+          onComplete={handleStarComplete}
+        />
+      )}
+
       {/* Top nav bar */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4">
         <img

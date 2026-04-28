@@ -129,3 +129,9 @@
 - [ ] Show current activity + time range
 - [ ] Show "up next" immediately below
 - [ ] Reads from admin-set schedule
+
+## Shooting Star Easter Egg Upgrade
+- [x] Logo shoots diagonally across full screen (from nav position, arcs down and across)
+- [x] Glowing comet trail behind the logo as it travels
+- [x] Firework explosion at exit point with sparks in all 4 team colours (red, blue, pink, orange)
+- [x] Canvas overlay for the full animation so it renders above everything
