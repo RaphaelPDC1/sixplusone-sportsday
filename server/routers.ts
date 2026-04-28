@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { and, eq, like, or } from "drizzle-orm";
 import { z } from "zod";
-import { awardsVotes, groupCodes, leaderboard, profilePhotos, sportsDayRegistrations, wildcardVotes } from "../drizzle/schema";
+import { awardsVotes, eventSchedule, groupCodes, leaderboard, profilePhotos, sportsDayRegistrations, wildcardVotes } from "../drizzle/schema";
 import { getDb } from "./db";
 import {
   assignTeam,
@@ -553,6 +553,97 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
     });
     return counts;
   }),
+
+  checkEmailExists: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { exists: false };
+      const result = await db
+        .select()
+        .from(sportsDayRegistrations)
+        .where(eq(sportsDayRegistrations.email, input.email))
+        .limit(1);
+      return { exists: result.length > 0 };
+    }),
+
+  // Event Schedule (public)
+  getEventSchedule: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    return db.select().from(eventSchedule).orderBy(eventSchedule.sortOrder);
+  }),
+
+  getLiveEvent: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return null;
+    const results = await db
+      .select()
+      .from(eventSchedule)
+      .where(eq(eventSchedule.isLive, true))
+      .limit(1);
+    return results[0] ?? null;
+  }),
+
+  // Event Schedule (admin)
+  adminSetLiveEvent: adminProcedure
+    .input(z.object({ id: z.number().nullable() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { success: false };
+      await db.update(eventSchedule).set({ isLive: false });
+      if (input.id !== null) {
+        await db.update(eventSchedule).set({ isLive: true }).where(eq(eventSchedule.id, input.id));
+      }
+      return { success: true };
+    }),
+
+  adminUpsertEvent: adminProcedure
+    .input(z.object({
+      id: z.number().optional(),
+      eventName: z.string(),
+      startTime: z.string().optional(),
+      endTime: z.string().optional(),
+      location: z.string().optional(),
+      description: z.string().optional(),
+      sortOrder: z.number().optional(),
+      isCompleted: z.boolean().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { success: false };
+      if (input.id) {
+        await db.update(eventSchedule).set({
+          eventName: input.eventName,
+          startTime: input.startTime ?? null,
+          endTime: input.endTime ?? null,
+          location: input.location ?? null,
+          description: input.description ?? null,
+          sortOrder: input.sortOrder ?? 0,
+          isCompleted: input.isCompleted ?? false,
+        }).where(eq(eventSchedule.id, input.id));
+      } else {
+        await db.insert(eventSchedule).values({
+          eventName: input.eventName,
+          startTime: input.startTime ?? null,
+          endTime: input.endTime ?? null,
+          location: input.location ?? null,
+          description: input.description ?? null,
+          sortOrder: input.sortOrder ?? 0,
+          isCompleted: input.isCompleted ?? false,
+        });
+      }
+      return { success: true };
+    }),
+
+  adminDeleteEvent: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { success: false };
+      await db.delete(eventSchedule).where(eq(eventSchedule.id, input.id));
+      return { success: true };
+    }),
 });
 
 // ─── App Router ───────────────────────────────────────────────────────────────

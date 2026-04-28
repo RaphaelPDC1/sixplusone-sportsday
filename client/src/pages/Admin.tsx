@@ -75,7 +75,8 @@ export default function Admin() {
   const [passwordUnlocked, setPasswordUnlocked] = useState(
     () => sessionStorage.getItem("admin_unlocked") === "true"
   );
-  const [activeTab, setActiveTab] = useState<"users" | "health" | "leaderboard">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "health" | "leaderboard" | "schedule">("users");
+  const [scheduleForm, setScheduleForm] = useState({ eventName: "", startTime: "", endTime: "", location: "", description: "", sortOrder: "0", isCompleted: false });
   const [lbForm, setLbForm] = useState({
     eventName: "sprint",
     team: "red" as "red" | "blue" | "pink" | "orange",
@@ -109,6 +110,25 @@ export default function Admin() {
   });
   const { data: leaderboardData = [] } = trpc.sportsday.adminGetLeaderboard.useQuery(undefined, {
     enabled: canAccess && activeTab === "leaderboard",
+  });
+  const { data: eventScheduleData = [], refetch: refetchSchedule } = trpc.sportsday.getEventSchedule.useQuery(undefined, {
+    enabled: canAccess && activeTab === "schedule",
+  });
+  const { data: liveEventData, refetch: refetchLive } = trpc.sportsday.getLiveEvent.useQuery(undefined, {
+    enabled: canAccess,
+    refetchInterval: 15000,
+  });
+  const setLiveEventMutation = trpc.sportsday.adminSetLiveEvent.useMutation({
+    onSuccess: () => { toast.success("Live event updated!"); refetchLive(); refetchSchedule(); },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+  const upsertEventMutation = trpc.sportsday.adminUpsertEvent.useMutation({
+    onSuccess: () => { toast.success("Event saved!"); setScheduleForm({ eventName: "", startTime: "", endTime: "", location: "", description: "", sortOrder: "0", isCompleted: false }); refetchSchedule(); },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+  const deleteEventMutation = trpc.sportsday.adminDeleteEvent.useMutation({
+    onSuccess: () => { toast.success("Event deleted!"); refetchSchedule(); },
+    onError: (e: { message: string }) => toast.error(e.message),
   });
   const upsertLb = trpc.sportsday.adminUpsertLeaderboard.useMutation({
     onSuccess: () => {
@@ -282,7 +302,7 @@ export default function Admin() {
 
         {/* Tabs */}
         <div className="flex gap-0 border-b border-[#1A1A1A]">
-          {(["users", "health", "leaderboard"] as const).map((tab) => (
+          {(["users", "health", "leaderboard", "schedule"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -292,7 +312,7 @@ export default function Admin() {
                   : "text-[#444] hover:text-[#F2F0EB]"
               }`}
             >
-              {tab === "users" ? "ALL REGISTRATIONS" : tab === "health" ? "HEALTH NOTES" : "LEADERBOARD"}
+              {tab === "users" ? "ALL REGISTRATIONS" : tab === "health" ? "HEALTH NOTES" : tab === "leaderboard" ? "LEADERBOARD" : "SCHEDULE"}
             </button>
           ))}
         </div>
@@ -590,6 +610,59 @@ export default function Admin() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* Schedule Tab */}
+        {activeTab === "schedule" && (
+          <div className="space-y-6">
+            <div className="border border-[#FF5500]/30 bg-[#FF5500]/5 p-4">
+              <p className="font-mono text-[#FF5500] text-xs tracking-[0.2em] mb-2">CURRENTLY LIVE</p>
+              {liveEventData ? (
+                <div className="flex items-center justify-between">
+                  <p className="font-display text-[#F2F0EB] text-lg tracking-widest">{liveEventData.eventName}</p>
+                  <button onClick={() => setLiveEventMutation.mutate({ id: null })} className="font-mono text-[#FF5500] text-xs border border-[#FF5500]/40 px-3 py-1 hover:bg-[#FF5500]/10 transition-colors">CLEAR LIVE</button>
+                </div>
+              ) : (
+                <p className="font-mono text-[#444] text-xs">No event currently live.</p>
+              )}
+            </div>
+            <div className="border border-[#1A1A1A] p-4 space-y-3">
+              <p className="font-mono text-[#444] text-xs tracking-[0.2em] mb-3">ADD EVENT</p>
+              <div className="grid grid-cols-2 gap-3">
+                <input placeholder="Event name *" value={scheduleForm.eventName} onChange={(e) => setScheduleForm((f) => ({ ...f, eventName: e.target.value }))} className="col-span-2 bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-3 py-2 outline-none focus:border-[#FF5500]" />
+                <input placeholder="Start time (10:00)" value={scheduleForm.startTime} onChange={(e) => setScheduleForm((f) => ({ ...f, startTime: e.target.value }))} className="bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-3 py-2 outline-none focus:border-[#FF5500]" />
+                <input placeholder="End time (10:30)" value={scheduleForm.endTime} onChange={(e) => setScheduleForm((f) => ({ ...f, endTime: e.target.value }))} className="bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-3 py-2 outline-none focus:border-[#FF5500]" />
+                <input placeholder="Location" value={scheduleForm.location} onChange={(e) => setScheduleForm((f) => ({ ...f, location: e.target.value }))} className="bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-3 py-2 outline-none focus:border-[#FF5500]" />
+                <input placeholder="Sort order" type="number" value={scheduleForm.sortOrder} onChange={(e) => setScheduleForm((f) => ({ ...f, sortOrder: e.target.value }))} className="bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-3 py-2 outline-none focus:border-[#FF5500]" />
+                <textarea placeholder="Description" value={scheduleForm.description} onChange={(e) => setScheduleForm((f) => ({ ...f, description: e.target.value }))} rows={2} className="col-span-2 bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-3 py-2 outline-none focus:border-[#FF5500] resize-none" />
+              </div>
+              <button onClick={() => { if (!scheduleForm.eventName.trim()) { toast.error("Event name required"); return; } upsertEventMutation.mutate({ eventName: scheduleForm.eventName.trim(), startTime: scheduleForm.startTime || undefined, endTime: scheduleForm.endTime || undefined, location: scheduleForm.location || undefined, description: scheduleForm.description || undefined, sortOrder: parseInt(scheduleForm.sortOrder) || 0, isCompleted: scheduleForm.isCompleted }); }} disabled={upsertEventMutation.isPending} className="font-display text-[#0A0A0A] bg-[#FF5500] tracking-widest text-sm px-6 py-2 hover:bg-[#F2F0EB] transition-colors disabled:opacity-50">
+                {upsertEventMutation.isPending ? "SAVING..." : "SAVE EVENT →"}
+              </button>
+            </div>
+            <div className="space-y-2">
+              {eventScheduleData.length === 0 ? (
+                <div className="py-8 text-center font-mono text-[#444] text-xs tracking-wider">No events added yet.</div>
+              ) : (
+                eventScheduleData.map((ev) => (
+                  <div key={ev.id} className={`border p-4 flex items-center justify-between gap-4 ${ev.isLive ? "border-[#FF5500]/50 bg-[#FF5500]/5" : "border-[#1A1A1A] bg-[#0D0D0D]"}`}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        {ev.isLive && <span className="font-mono text-[#FF5500] text-xs">● LIVE</span>}
+                        {ev.isCompleted && <span className="font-mono text-[#444] text-xs">✓ DONE</span>}
+                        <p className="font-display text-[#F2F0EB] tracking-widest text-sm">{ev.eventName}</p>
+                      </div>
+                      <p className="font-mono text-[#444] text-xs">{[ev.startTime, ev.endTime].filter(Boolean).join(" – ")}{ev.location ? ` · ${ev.location}` : ""}</p>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      {!ev.isLive && <button onClick={() => setLiveEventMutation.mutate({ id: ev.id })} className="font-mono text-xs text-[#FF5500] border border-[#FF5500]/40 px-3 py-1 hover:bg-[#FF5500]/10 transition-colors">SET LIVE</button>}
+                      <button onClick={() => { if (confirm("Delete this event?")) deleteEventMutation.mutate({ id: ev.id }); }} className="font-mono text-xs text-[#444] border border-[#333] px-3 py-1 hover:text-[#F2F0EB] transition-colors">DELETE</button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

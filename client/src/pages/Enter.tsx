@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import WarpShaderBg from "@/components/ui/warp-shader";
+import StepParticles from "@/components/ui/step-particles";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -201,7 +202,9 @@ export default function Enter() {
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#0A0A0A]">
       {/* Animated Warp shader background */}
-      <WarpShaderBg key={step} colors={palette} />
+      <WarpShaderBg colors={palette} />
+      {/* Per-step particles — persistent canvas, config changes with step */}
+      <StepParticles step={step} />
 
       {/* Top bar */}
       <div className="relative z-10 flex items-center justify-between px-5 pt-6 pb-4">

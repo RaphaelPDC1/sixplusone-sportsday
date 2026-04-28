@@ -182,3 +182,21 @@ export const leaderboard = mysqlTable("leaderboard", {
 }));
 export type LeaderboardEntry = typeof leaderboard.$inferSelect;
 export type InsertLeaderboardEntry = typeof leaderboard.$inferInsert;
+
+// ─── Event Schedule & Live Status ─────────────────────────────────────────────
+// Admin controls which event is "now happening" and the event schedule
+export const eventSchedule = mysqlTable("event_schedule", {
+  id: int("id").autoincrement().primaryKey(),
+  eventName: varchar("eventName", { length: 100 }).notNull(),
+  startTime: varchar("startTime", { length: 10 }),   // e.g. "10:00"
+  endTime: varchar("endTime", { length: 10 }),
+  location: varchar("location", { length: 200 }),
+  description: text("description"),
+  sortOrder: int("sortOrder").default(0),
+  isLive: boolean("isLive").default(false),
+  isCompleted: boolean("isCompleted").default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EventScheduleEntry = typeof eventSchedule.$inferSelect;
+export type InsertEventScheduleEntry = typeof eventSchedule.$inferInsert;

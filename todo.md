@@ -93,3 +93,39 @@
 - [x] Add DB schema for: team votes, wildcard votes, awards votes, profile photos, leaderboard
 - [x] Build admin leaderboard management: fill in event results, DNF, team scores
 - [x] Wire Team Hub route in App.tsx and add navigation from Reveal page
+
+
+## Phase 1 Build (Confirmed)
+
+### STEP 1: Admin Access
+- [x] Verify ADMIN_PASSWORD env var is set in Manus deployment config
+- [x] Test /admin access and confirm live user data is visible
+- [x] Remove temporary console.log once confirmed
+
+### STEP 2: Landing Page
+- [x] Add logo shooting star animation (random ~60s interval, 10s initial delay)
+- [x] Increase logo size in nav by 30-40%
+- [x] Add login entry point in top-right nav (email lookup → holding page or "not found")
+
+### STEP 3: Form
+- [ ] Fix background animation not loading on step 1 (initialize before first card)
+- [ ] Build one reusable particle system with config (colour, speed, direction, density, shape)
+- [ ] Apply particle config to each of the 12 steps per theme mapping
+
+### STEP 4: Holding Page
+- [ ] Update hero greeting to match Paste 1 layout
+- [ ] Apply Paste 2 aesthetic to status block background (neutral only, no team colour leak)
+- [ ] Add login icon in top-right when user has active session
+- [ ] Fix React setState-in-render bug in Reveal component
+
+### STEP 5: Reveal Animations
+- [ ] Upgrade all 4 animations with spring physics easing
+- [ ] Add dramatic tension before final land on each animation
+- [ ] Test animations at 375px mobile width
+- [ ] Apply Paste 3 background aesthetic during reveal
+
+### STEP 6: Live Event Indicator
+- [ ] Build "NOW HAPPENING" indicator above events list
+- [ ] Show current activity + time range
+- [ ] Show "up next" immediately below
+- [ ] Reads from admin-set schedule

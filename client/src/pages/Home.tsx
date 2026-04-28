@@ -1,25 +1,186 @@
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import AnimatedShaderHero from "@/components/ui/animated-shader-hero";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { trpc } from "@/lib/trpc";
+import { User } from "lucide-react";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
+// Shooting star logo animation component
+function ShootingStarLogo() {
+  const [stars, setStars] = useState<Array<{ id: number; left: number; top: number }>>([]);
+
+  useEffect(() => {
+    const createStar = () => {
+      const id = Date.now();
+      const left = Math.random() * 80 + 10; // 10-90% from left
+      const top = Math.random() * 30; // 0-30% from top
+
+      setStars((prev) => [...prev, { id, left, top }]);
+
+      // Remove star after animation completes
+      setTimeout(() => {
+        setStars((prev) => prev.filter((s) => s.id !== id));
+      }, 2000);
+    };
+
+    // Initial delay before first star (10s)
+    const initialTimer = setTimeout(createStar, 10000);
+
+    // Then every 60 seconds
+    const interval = setInterval(createStar, 60000);
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+    };
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      {stars.map((star) => (
+        <div
+          key={star.id}
+          className="absolute"
+          style={{
+            left: `${star.left}%`,
+            top: `${star.top}%`,
+            animation: `shootingStarLogo 2s ease-in forwards`,
+          }}
+        >
+          <img
+            src={LOGO_URL}
+            alt="shooting star"
+            className="h-8 w-auto opacity-80"
+            style={{ filter: "invert(1)" }}
+          />
+        </div>
+      ))}
+      <style>{`
+        @keyframes shootingStarLogo {
+          0% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(300px, 300px) scale(0.3);
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+function InfoBlock({ number, title, body }: { number: string; title: string; body: string }) {
+  return (
+    <div>
+      <div className="font-bebas text-4xl text-[#FF5500] mb-2">{number}</div>
+      <h3 className="font-bebas text-xl text-white mb-3 tracking-wide">{title}</h3>
+      <p className="font-mono text-sm text-[#999] leading-relaxed">{body}</p>
+    </div>
+  );
+}
+
 export default function Home() {
   const [, navigate] = useLocation();
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  // Query to check if email exists
+  const checkEmailQuery = trpc.sportsday.checkEmailExists.useQuery(
+    { email: email.trim() },
+    { enabled: false }
+  );
+
+  const handleLogin = async () => {
+    if (!email.trim()) {
+      setLoginError("Please enter your email");
+      return;
+    }
+
+    setLoginLoading(true);
+    setLoginError("");
+
+    try {
+      const result = await checkEmailQuery.refetch();
+      if (result.data?.exists) {
+        // User found — redirect to holding page
+        localStorage.setItem("userEmail", email.trim());
+        setLoginOpen(false);
+        navigate("/holding");
+      } else {
+        setLoginError("Email not found. Please register first.");
+      }
+    } catch (err) {
+      setLoginError("Error looking up email. Please try again.");
+    } finally {
+      setLoginLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
+      <ShootingStarLogo />
+
       {/* Top nav bar */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4">
         <img
           src={LOGO_URL}
           alt="6+1"
-          className="h-7 w-auto"
+          className="h-10 w-auto"
           style={{ filter: "invert(1)" }}
         />
-        <span className="font-mono text-[#FF5500] text-xs tracking-[0.3em]">
-          SPORTS DAY 002
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="font-mono text-[#FF5500] text-xs tracking-[0.3em]">
+            SPORTS DAY 002
+          </span>
+          <button
+            onClick={() => setLoginOpen(true)}
+            className="p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors"
+            title="Login"
+          >
+            <User className="w-5 h-5 text-[#FF5500]" />
+          </button>
+        </div>
       </nav>
+
+      {/* Login Dialog */}
+      <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
+        <DialogContent className="bg-[#1A1A1A] border-[#333]">
+          <DialogHeader>
+            <DialogTitle className="text-white font-bebas text-2xl">FIND YOUR ACCOUNT</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setLoginError("");
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleLogin();
+              }}
+              className="bg-[#0A0A0A] border-[#333] text-white placeholder-[#666]"
+            />
+            {loginError && <p className="text-[#FF5500] text-sm">{loginError}</p>}
+            <Button
+              onClick={handleLogin}
+              disabled={loginLoading}
+              className="w-full bg-[#FF5500] hover:bg-[#FF6B1A] text-white font-bebas tracking-wide"
+            >
+              {loginLoading ? "LOOKING UP..." : "FIND MY ACCOUNT"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Shader Hero — full screen */}
       <AnimatedShaderHero
@@ -79,27 +240,8 @@ export default function Home() {
           <p className="font-mono text-[#333] text-xs tracking-wider">
             © 6+1 SPORTS DAY 002
           </p>
-          <a
-            href="/admin"
-            className="font-mono text-[#222] text-xs tracking-wider hover:text-[#FF5500] transition-colors"
-          >
-            ADMIN
-          </a>
         </div>
       </div>
-    </div>
-  );
-}
-
-function InfoBlock({ number, title, body }: { number: string; title: string; body: string }) {
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        <span className="font-mono text-[#FF5500] text-xs tracking-widest">{number}</span>
-        <div className="flex-1 h-[1px] bg-[#FF5500]/20" />
-      </div>
-      <h3 className="font-display text-[#F2F0EB] text-2xl tracking-widest">{title}</h3>
-      <p className="font-mono text-[#555] text-xs leading-relaxed tracking-wide">{body}</p>
     </div>
   );
 }

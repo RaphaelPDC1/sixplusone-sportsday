@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { NowHappening } from "@/components/ui/now-happening";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -167,6 +168,10 @@ export default function TeamHub() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB]">
+      {/* Live event indicator */}
+      <div className="px-5 pt-4">
+        <NowHappening />
+      </div>
       {/* Header */}
       <div
         className="relative overflow-hidden"
