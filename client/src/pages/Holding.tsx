@@ -250,10 +250,24 @@ export default function Holding() {
     return () => clearTimeout(t);
   }, []);
 
-  const { data: user, isLoading } = trpc.sportsday.getUserStatus.useQuery(
+  const { data: user, isLoading, error } = trpc.sportsday.getUserStatus.useQuery(
     { id: userId! },
-    { enabled: !!userId, refetchInterval: 15000 }
+    {
+      enabled: !!userId,
+      refetchInterval: 15000,
+      retry: false, // Don't retry on NOT_FOUND — prevents console spam
+    }
   );
+
+  // If the stored ID no longer exists in the DB, clear it and show "find my spot"
+  useEffect(() => {
+    if (!error) return;
+    const code = (error as { data?: { code?: string } }).data?.code;
+    if (code === "NOT_FOUND") {
+      localStorage.removeItem("sd_user_id");
+      setUserId(null);
+    }
+  }, [error]);
 
   // Fix: use ref-based navigate to avoid stale closure / setState-in-render
   useEffect(() => {
