@@ -75,7 +75,15 @@ export default function Admin() {
   const [passwordUnlocked, setPasswordUnlocked] = useState(
     () => sessionStorage.getItem("admin_unlocked") === "true"
   );
-  const [activeTab, setActiveTab] = useState<"users" | "health">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "health" | "leaderboard">("users");
+  const [lbForm, setLbForm] = useState({
+    eventName: "sprint",
+    team: "red" as "red" | "blue" | "pink" | "orange",
+    position: "",
+    points: "0",
+    dnf: false,
+    notes: "",
+  });
   const [filters, setFilters] = useState({
     team: "all",
     paymentStatus: "all",
@@ -86,6 +94,7 @@ export default function Admin() {
 
   const isAdmin = isAuthenticated && user?.role === "admin";
   const canAccess = passwordUnlocked && isAdmin;
+  const utils = trpc.useUtils();
 
   const { data: stats } = trpc.sportsday.adminStats.useQuery(undefined, {
     enabled: canAccess,
@@ -97,6 +106,16 @@ export default function Admin() {
 
   const { data: healthNotes = [] } = trpc.sportsday.adminHealthNotes.useQuery(undefined, {
     enabled: canAccess && activeTab === "health",
+  });
+  const { data: leaderboardData = [] } = trpc.sportsday.adminGetLeaderboard.useQuery(undefined, {
+    enabled: canAccess && activeTab === "leaderboard",
+  });
+  const upsertLb = trpc.sportsday.adminUpsertLeaderboard.useMutation({
+    onSuccess: () => {
+      toast.success("Leaderboard updated!");
+      utils.sportsday.adminGetLeaderboard.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
   });
 
   const filteredUsers = useMemo(() => {
@@ -263,7 +282,7 @@ export default function Admin() {
 
         {/* Tabs */}
         <div className="flex gap-0 border-b border-[#1A1A1A]">
-          {(["users", "health"] as const).map((tab) => (
+          {(["users", "health", "leaderboard"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -273,7 +292,7 @@ export default function Admin() {
                   : "text-[#444] hover:text-[#F2F0EB]"
               }`}
             >
-              {tab === "users" ? "ALL REGISTRATIONS" : "HEALTH NOTES"}
+              {tab === "users" ? "ALL REGISTRATIONS" : tab === "health" ? "HEALTH NOTES" : "LEADERBOARD"}
             </button>
           ))}
         </div>
@@ -429,6 +448,148 @@ export default function Admin() {
                   No registrations match your filters.
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Leaderboard Tab */}
+        {activeTab === "leaderboard" && (
+          <div className="space-y-6">
+            {/* Entry form */}
+            <div className="border border-[#1A1A1A] p-5 bg-[#0D0D0D]">
+              <p className="font-mono text-[#555] text-xs tracking-[0.3em] mb-4">ADD / UPDATE RESULT</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                <div>
+                  <label className="font-mono text-[#444] text-[10px] tracking-wider block mb-1">EVENT</label>
+                  <select
+                    value={lbForm.eventName}
+                    onChange={(e) => setLbForm((f) => ({ ...f, eventName: e.target.value }))}
+                    className="w-full bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-3 py-2 outline-none focus:border-[#FF5500]"
+                  >
+                    {["sprint","relay","tug_of_war","obstacle","long_jump","penalty_shoot","tiebreaker"].map((e) => (
+                      <option key={e} value={e} className="bg-[#111]">{e.replace(/_/g, " ").toUpperCase()}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="font-mono text-[#444] text-[10px] tracking-wider block mb-1">TEAM</label>
+                  <select
+                    value={lbForm.team}
+                    onChange={(e) => setLbForm((f) => ({ ...f, team: e.target.value as "red"|"blue"|"pink"|"orange" }))}
+                    className="w-full bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-3 py-2 outline-none focus:border-[#FF5500]"
+                  >
+                    {["red","blue","pink","orange"].map((t) => (
+                      <option key={t} value={t} className="bg-[#111]">{t.toUpperCase()}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="font-mono text-[#444] text-[10px] tracking-wider block mb-1">POSITION</label>
+                  <input
+                    type="number"
+                    min="1" max="4"
+                    value={lbForm.position}
+                    onChange={(e) => setLbForm((f) => ({ ...f, position: e.target.value }))}
+                    placeholder="1-4"
+                    className="w-full bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-3 py-2 outline-none focus:border-[#FF5500] placeholder:text-[#444]"
+                  />
+                </div>
+                <div>
+                  <label className="font-mono text-[#444] text-[10px] tracking-wider block mb-1">POINTS</label>
+                  <input
+                    type="number"
+                    value={lbForm.points}
+                    onChange={(e) => setLbForm((f) => ({ ...f, points: e.target.value }))}
+                    className="w-full bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-3 py-2 outline-none focus:border-[#FF5500]"
+                  />
+                </div>
+                <div className="flex items-end gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={lbForm.dnf}
+                      onChange={(e) => setLbForm((f) => ({ ...f, dnf: e.target.checked }))}
+                      className="accent-[#FF5500]"
+                    />
+                    <span className="font-mono text-[#F2F0EB] text-xs tracking-wider">DNF</span>
+                  </label>
+                </div>
+                <div>
+                  <label className="font-mono text-[#444] text-[10px] tracking-wider block mb-1">NOTES</label>
+                  <input
+                    type="text"
+                    value={lbForm.notes}
+                    onChange={(e) => setLbForm((f) => ({ ...f, notes: e.target.value }))}
+                    placeholder="Optional notes"
+                    className="w-full bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-3 py-2 outline-none focus:border-[#FF5500] placeholder:text-[#444]"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={() => upsertLb.mutate({
+                  eventName: lbForm.eventName,
+                  team: lbForm.team,
+                  position: lbForm.position ? parseInt(lbForm.position) : undefined,
+                  points: parseInt(lbForm.points) || 0,
+                  dnf: lbForm.dnf,
+                  notes: lbForm.notes || undefined,
+                })}
+                disabled={upsertLb.isPending}
+                className="bg-[#FF5500] text-[#0A0A0A] font-mono text-xs tracking-widest px-6 py-3 hover:bg-[#F2F0EB] transition-colors disabled:opacity-50"
+              >
+                {upsertLb.isPending ? "SAVING..." : "SAVE RESULT →"}
+              </button>
+            </div>
+
+            {/* Leaderboard table */}
+            <div className="border border-[#1A1A1A] bg-[#0D0D0D]">
+              <p className="font-mono text-[#555] text-xs tracking-[0.3em] p-4 border-b border-[#1A1A1A]">CURRENT RESULTS</p>
+              {leaderboardData.length === 0 ? (
+                <div className="py-8 text-center font-mono text-[#444] text-sm">No results yet.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-[#1A1A1A]">
+                        {["Event","Team","Position","Points","DNF","Notes","Updated"].map((h) => (
+                          <th key={h} className="font-mono text-[#444] text-xs tracking-wider py-3 px-4 whitespace-nowrap">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {leaderboardData.map((row) => (
+                        <tr key={row.id} className="border-b border-[#0D0D0D] hover:bg-[#111] transition-colors">
+                          <td className="font-mono text-[#F2F0EB] text-xs py-3 px-4 capitalize">{row.eventName.replace(/_/g, " ")}</td>
+                          <td className="py-3 px-4">
+                            <span className="font-mono text-xs uppercase" style={{ color: TEAM_COLORS[row.team] }}>{row.team}</span>
+                          </td>
+                          <td className="font-mono text-[#F2F0EB] text-xs py-3 px-4">{row.position ?? "—"}</td>
+                          <td className="font-mono text-[#FF5500] text-xs py-3 px-4">{row.points ?? 0}</td>
+                          <td className="font-mono text-xs py-3 px-4">{row.dnf ? <span className="text-red-400">DNF</span> : "—"}</td>
+                          <td className="font-mono text-[#555] text-xs py-3 px-4 max-w-[120px] truncate">{row.notes ?? "—"}</td>
+                          <td className="font-mono text-[#444] text-xs py-3 px-4 whitespace-nowrap">{new Date(row.updatedAt).toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Team totals */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {(["red","blue","pink","orange"] as const).map((team) => {
+                const pts = leaderboardData
+                  .filter((r) => r.team === team && !r.dnf)
+                  .reduce((sum, r) => sum + (r.points ?? 0), 0);
+                return (
+                  <div key={team} className="border p-4" style={{ borderColor: `${TEAM_COLORS[team]}40`, background: `${TEAM_COLORS[team]}08` }}>
+                    <p className="font-mono text-xs tracking-wider uppercase mb-1" style={{ color: TEAM_COLORS[team] }}>{team}</p>
+                    <p className="font-display text-3xl" style={{ color: TEAM_COLORS[team] }}>{pts}</p>
+                    <p className="font-mono text-[#444] text-[10px]">TOTAL PTS</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

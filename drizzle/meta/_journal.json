@@ -22,6 +22,27 @@
       "when": 1777333750874,
       "tag": "0002_eager_firestar",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1777334911300,
+      "tag": "0003_lively_captain_universe",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1777336404506,
+      "tag": "0004_mature_jackpot",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1777336451426,
+      "tag": "0005_mushy_mastermind",
+      "breakpoints": true
     }
   ]
 }

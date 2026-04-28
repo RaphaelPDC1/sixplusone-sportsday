@@ -27,10 +27,15 @@ export default function Holding() {
     { enabled: !!userId, refetchInterval: 10000 }
   );
 
-  // Redirect to reveal if already unlocked
+  // If unlocked AND already watched the reveal → go straight to team hub
+  // If unlocked but NOT yet seen → go to reveal animation first
   useEffect(() => {
     if (user?.revealStatus === "unlocked") {
-      navigate("/reveal");
+      if (user?.revealSeen) {
+        navigate("/team-hub");
+      } else {
+        navigate("/reveal");
+      }
     }
   }, [user, navigate]);
 

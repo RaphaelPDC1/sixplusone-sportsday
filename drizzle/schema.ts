@@ -1,13 +1,4 @@
-import {
-  boolean,
-  int,
-  json,
-  mysqlEnum,
-  mysqlTable,
-  text,
-  timestamp,
-  varchar,
-} from "drizzle-orm/mysql-core";
+import { boolean, int, json, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -87,6 +78,7 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
   // Team
   team: mysqlEnum("team", ["red", "blue", "pink", "orange"]),
   revealStatus: mysqlEnum("revealStatus", ["locked", "unlocked"]).default("locked"),
+  revealSeen: boolean("revealSeen").default(false), // true once they've watched the animation
 
   // Access / Payment
   accessType: mysqlEnum("accessType", ["free", "priority"]).default("free"),
@@ -125,3 +117,68 @@ export const groupCodes = mysqlTable("group_codes", {
 
 export type GroupCode = typeof groupCodes.$inferSelect;
 export type InsertGroupCode = typeof groupCodes.$inferInsert;
+
+// ─── Profile Photos ───────────────────────────────────────────────────────────
+export const profilePhotos = mysqlTable("profile_photos", {
+  id: int("id").autoincrement().primaryKey(),
+  registrationId: varchar("registrationId", { length: 36 }).notNull().unique(),
+  storageKey: text("storageKey").notNull(),
+  url: text("url").notNull(),
+  uploadedAt: timestamp("uploadedAt").defaultNow().notNull(),
+});
+export type ProfilePhoto = typeof profilePhotos.$inferSelect;
+
+// ─── Awards Votes ─────────────────────────────────────────────────────────────
+// Each voter can cast one vote per award category
+export const awardsVotes = mysqlTable("awards_votes", {
+  id: int("id").autoincrement().primaryKey(),
+  voterId: varchar("voterId", { length: 36 }).notNull(),      // registrationId of voter
+  nomineeId: varchar("nomineeId", { length: 36 }).notNull(),  // registrationId of nominee
+  category: mysqlEnum("category", [
+    "mvp",
+    "funniest_moment",
+    "most_dramatic",
+    "best_dressed",
+    "most_competitive",
+    "biggest_surprise",
+    "team_player",
+  ]).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => ({
+  // One vote per voter per category
+  voterCategoryIdx: uniqueIndex("voter_category_idx").on(t.voterId, t.category),
+}));
+export type AwardsVote = typeof awardsVotes.$inferSelect;
+
+// ─── Wildcard Votes ───────────────────────────────────────────────────────────
+// Each team has 3 wildcards they can vote to activate
+export const wildcardVotes = mysqlTable("wildcard_votes", {
+  id: int("id").autoincrement().primaryKey(),
+  voterId: varchar("voterId", { length: 36 }).notNull(),
+  team: mysqlEnum("team", ["red", "blue", "pink", "orange"]).notNull(),
+  wildcardId: varchar("wildcardId", { length: 50 }).notNull(), // e.g. "double_points", "steal_a_player", "bonus_round"
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (t) => ({
+  // One vote per voter per wildcard
+  voterWildcardIdx: uniqueIndex("voter_wildcard_idx").on(t.voterId, t.wildcardId),
+}));
+export type WildcardVote = typeof wildcardVotes.$inferSelect;
+
+// ─── Leaderboard ──────────────────────────────────────────────────────────────
+// Admin fills in results per event per team
+export const leaderboard = mysqlTable("leaderboard", {
+  id: int("id").autoincrement().primaryKey(),
+  eventName: varchar("eventName", { length: 100 }).notNull(),
+  team: mysqlEnum("team", ["red", "blue", "pink", "orange"]).notNull(),
+  position: int("position"),          // 1st, 2nd, 3rd, 4th
+  points: int("points").default(0),
+  dnf: boolean("dnf").default(false),
+  notes: text("notes"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedBy: varchar("updatedBy", { length: 64 }), // admin openId
+}, (t) => ({
+  // One result per event per team
+  eventTeamIdx: uniqueIndex("event_team_idx").on(t.eventName, t.team),
+}));
+export type LeaderboardEntry = typeof leaderboard.$inferSelect;
+export type InsertLeaderboardEntry = typeof leaderboard.$inferInsert;

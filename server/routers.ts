@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { and, eq, like, or } from "drizzle-orm";
 import { z } from "zod";
-import { groupCodes, sportsDayRegistrations } from "../drizzle/schema";
+import { awardsVotes, groupCodes, leaderboard, profilePhotos, sportsDayRegistrations, wildcardVotes } from "../drizzle/schema";
 import { getDb } from "./db";
 import {
   assignTeam,
@@ -18,6 +18,7 @@ import {
   incrementReferralCount,
   joinGroupCode,
 } from "./sportsday.db";
+import { storagePut } from "./storage";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
@@ -188,7 +189,19 @@ const sportsDayRouter = router({
         groupCode: reg.groupCode,
         groupRole: reg.groupRole,
         aiTeamIdentity: reg.revealStatus === "unlocked" ? reg.aiTeamIdentity : null,
+        revealSeen: reg.revealSeen ?? false,
       };
+    }),
+  // Mark reveal animation as seen so user goes directly to team hub on next visit
+  markRevealSeen: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(sportsDayRegistrations)
+        .set({ revealSeen: true })
+        .where(eq(sportsDayRegistrations.id, input.id));
+      return { success: true };
     }),
   // Generate AI-powered personalised team identity using all form data
   generateTeamIdentity: publicProcedure
@@ -344,6 +357,201 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
         )
       );
     return rows.filter((r) => r.healthNotes && r.healthNotes.trim().length > 0);
+  }),
+
+  // ─── Team Hub: get team members + leaderboard + wildcards ─────────────────
+  getTeamHub: publicProcedure
+    .input(z.object({ registrationId: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const reg = await getRegistrationById(input.registrationId);
+      if (!reg || reg.revealStatus !== "unlocked") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Team not unlocked" });
+      }
+      const team = reg.team;
+      // Team members
+      const members = await db
+        .select({
+          id: sportsDayRegistrations.id,
+          fullName: sportsDayRegistrations.fullName,
+          instagramHandle: sportsDayRegistrations.instagramHandle,
+          sportsDayProfile: sportsDayRegistrations.sportsDayProfile,
+          profileTagline: sportsDayRegistrations.profileTagline,
+          teammateType: sportsDayRegistrations.teammateType,
+          strongestEvent: sportsDayRegistrations.strongestEvent,
+          captainVoteInterest: sportsDayRegistrations.captainVoteInterest,
+        })
+        .from(sportsDayRegistrations)
+        .where(eq(sportsDayRegistrations.team, team as "red" | "blue" | "pink" | "orange"));
+      // Profile photos
+      const photos = await db.select().from(profilePhotos);
+      const photoMap = new Map(photos.map((p) => [p.registrationId, p.url]));
+      // Leaderboard
+      const lb = await db.select().from(leaderboard);
+      // Wildcard votes for this team
+      const wv = await db
+        .select()
+        .from(wildcardVotes)
+        .where(eq(wildcardVotes.team, team as "red" | "blue" | "pink" | "orange"));
+      const wildcardCounts: Record<string, number> = {};
+      wv.forEach((v) => {
+        wildcardCounts[v.wildcardId] = (wildcardCounts[v.wildcardId] ?? 0) + 1;
+      });
+      // Has this user voted for each wildcard?
+      const myWildcardVotes = wv.filter((v) => v.voterId === input.registrationId).map((v) => v.wildcardId);
+      return {
+        team,
+        members: members.map((m) => ({
+          ...m,
+          photoUrl: photoMap.get(m.id) ?? null,
+        })),
+        leaderboard: lb,
+        wildcardCounts,
+        myWildcardVotes,
+        totalMembers: members.length,
+      };
+    }),
+
+  // ─── Profile photo upload ─────────────────────────────────────────────────
+  uploadProfilePhoto: publicProcedure
+    .input(z.object({
+      registrationId: z.string(),
+      imageDataUrl: z.string(), // base64 data URL
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const reg = await getRegistrationById(input.registrationId);
+      if (!reg) throw new TRPCError({ code: "NOT_FOUND", message: "Registration not found" });
+      // Parse base64
+      const matches = input.imageDataUrl.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+      if (!matches) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid image data" });
+      const mimeType = matches[1];
+      const buffer = Buffer.from(matches[2], "base64");
+      if (buffer.length > 5 * 1024 * 1024) throw new TRPCError({ code: "BAD_REQUEST", message: "Image too large (max 5MB)" });
+      const ext = mimeType.includes("png") ? "png" : "jpg";
+      const key = `profile-photos/${input.registrationId}.${ext}`;
+      const { url } = await storagePut(key, buffer, mimeType);
+      // Upsert photo record
+      await db
+        .insert(profilePhotos)
+        .values({ registrationId: input.registrationId, storageKey: key, url })
+        .onDuplicateKeyUpdate({ set: { storageKey: key, url, uploadedAt: new Date() } });
+      return { url };
+    }),
+
+  // ─── Awards voting ────────────────────────────────────────────────────────
+  castAwardVote: publicProcedure
+    .input(z.object({
+      voterId: z.string(),
+      nomineeId: z.string(),
+      category: z.enum(["mvp","funniest_moment","most_dramatic","best_dressed","most_competitive","biggest_surprise","team_player"]),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      if (input.voterId === input.nomineeId) throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot vote for yourself" });
+      // Upsert: one vote per voter per category
+      await db
+        .insert(awardsVotes)
+        .values({ voterId: input.voterId, nomineeId: input.nomineeId, category: input.category })
+        .onDuplicateKeyUpdate({ set: { nomineeId: input.nomineeId } });
+      return { success: true };
+    }),
+
+  getAwardVotes: publicProcedure
+    .input(z.object({ registrationId: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { myVotes: [], allVotes: [] };
+      const reg = await getRegistrationById(input.registrationId);
+      if (!reg) return { myVotes: [], allVotes: [] };
+      const myVotes = await db
+        .select()
+        .from(awardsVotes)
+        .where(eq(awardsVotes.voterId, input.registrationId));
+      const allVotes = await db.select().from(awardsVotes);
+      return { myVotes, allVotes };
+    }),
+
+  // ─── Wildcard voting ──────────────────────────────────────────────────────
+  castWildcardVote: publicProcedure
+    .input(z.object({
+      voterId: z.string(),
+      team: z.enum(["red","blue","pink","orange"]),
+      wildcardId: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      // Check voter is on this team
+      const reg = await getRegistrationById(input.voterId);
+      if (!reg || reg.team !== input.team) throw new TRPCError({ code: "FORBIDDEN", message: "Not on this team" });
+      // Check hasn't already voted for this wildcard
+      const existing = await db
+        .select()
+        .from(wildcardVotes)
+        .where(and(eq(wildcardVotes.voterId, input.voterId), eq(wildcardVotes.wildcardId, input.wildcardId)))
+        .limit(1);
+      if (existing.length > 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Already voted for this wildcard" });
+      await db.insert(wildcardVotes).values({ voterId: input.voterId, team: input.team, wildcardId: input.wildcardId });
+      return { success: true };
+    }),
+
+  // ─── Admin: leaderboard management ───────────────────────────────────────
+  adminUpsertLeaderboard: adminProcedure
+    .input(z.object({
+      eventName: z.string(),
+      team: z.enum(["red","blue","pink","orange"]),
+      position: z.number().optional(),
+      points: z.number().default(0),
+      dnf: z.boolean().default(false),
+      notes: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      await db
+        .insert(leaderboard)
+        .values({
+          eventName: input.eventName,
+          team: input.team,
+          position: input.position ?? null,
+          points: input.points,
+          dnf: input.dnf,
+          notes: input.notes ?? null,
+          updatedBy: ctx.user.openId,
+        })
+        .onDuplicateKeyUpdate({
+          set: {
+            position: input.position ?? null,
+            points: input.points,
+            dnf: input.dnf,
+            notes: input.notes ?? null,
+            updatedBy: ctx.user.openId,
+          },
+        });
+      return { success: true };
+    }),
+
+  adminGetLeaderboard: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    return db.select().from(leaderboard);
+  }),
+
+  adminGetAwardVotes: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    const votes = await db.select().from(awardsVotes);
+    // Count votes per nominee per category
+    const counts: Record<string, Record<string, number>> = {};
+    votes.forEach((v) => {
+      if (!counts[v.category]) counts[v.category] = {};
+      counts[v.category][v.nomineeId] = (counts[v.category][v.nomineeId] ?? 0) + 1;
+    });
+    return counts;
   }),
 });
 

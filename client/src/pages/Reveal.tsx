@@ -85,6 +85,8 @@ function useConfetti(active: boolean, colors: string[]) {
 
 // ─── Roulette Wheel (Red) ─────────────────────────────────────────────────────
 
+// ─── Casino Roulette (Red) ────────────────────────────────────────────────────
+// 37-segment casino wheel (0-36), white ball orbits then spirals to land on RED
 function RouletteAnimation({ onComplete }: { onComplete: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -93,76 +95,161 @@ function RouletteAnimation({ onComplete }: { onComplete: () => void }) {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    canvas.width = 300;
-    canvas.height = 300;
-    const cx = 150, cy = 150, r = 130;
-    const segments = [
-      { color: "#E8232A", label: "RED" },
-      { color: "#1A4FE8", label: "BLUE" },
-      { color: "#F72B8C", label: "PINK" },
-      { color: "#FF6B00", label: "ORANGE" },
-    ];
-    const targetAngle = 8 * Math.PI * 2;
+    const SIZE = 320;
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+    const cx = SIZE / 2, cy = SIZE / 2;
+    const outerR = 148, innerR = 88, pocketR = 68;
+    const NUM_SEG = 37;
+    const segAngle = (Math.PI * 2) / NUM_SEG;
+    // Classic roulette number order
+    const numbers = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
+    const redNums = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+    // Target: number 1 (RED) is at index 23
+    const targetIndex = 23;
+    const totalWheelRot = 5;
+    const targetWheelAngle = totalWheelRot * Math.PI * 2 + targetIndex * segAngle;
+    const totalBallRot = 14;
+    const duration = 5200;
     let frame: number;
     let startTime: number | null = null;
-    const duration = 3500;
-    const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+
+    const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+    const easeOutQuint = (t: number) => 1 - Math.pow(1 - t, 5);
+
+    const drawWheel = (wheelAngle: number) => {
+      // Outer rim
+      ctx.beginPath();
+      ctx.arc(cx, cy, outerR + 10, 0, Math.PI * 2);
+      ctx.fillStyle = "#1a0800";
+      ctx.fill();
+      ctx.strokeStyle = "#7B3F00";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Ball track groove
+      ctx.beginPath();
+      ctx.arc(cx, cy, outerR + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = "#3a1800";
+      ctx.lineWidth = 8;
+      ctx.stroke();
+
+      // Segments
+      numbers.forEach((num, i) => {
+        const startA = wheelAngle + i * segAngle - Math.PI / 2;
+        const endA = startA + segAngle;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, outerR, startA, endA);
+        ctx.closePath();
+        if (num === 0) ctx.fillStyle = "#006400";
+        else if (redNums.has(num)) ctx.fillStyle = "#B80000";
+        else ctx.fillStyle = "#111111";
+        ctx.fill();
+        ctx.strokeStyle = "#7B3F00";
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+
+        // Number
+        const labelAngle = wheelAngle + i * segAngle + segAngle / 2 - Math.PI / 2;
+        const labelR = (outerR + innerR) / 2;
+        ctx.save();
+        ctx.translate(cx + Math.cos(labelAngle) * labelR, cy + Math.sin(labelAngle) * labelR);
+        ctx.rotate(labelAngle + Math.PI / 2);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 7px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(String(num), 0, 0);
+        ctx.restore();
+      });
+
+      // Diamond separators on rim
+      for (let d = 0; d < 8; d++) {
+        const dAngle = (d / 8) * Math.PI * 2;
+        const dx = cx + Math.cos(dAngle) * (outerR + 2);
+        const dy = cy + Math.sin(dAngle) * (outerR + 2);
+        ctx.beginPath();
+        ctx.arc(dx, dy, 3, 0, Math.PI * 2);
+        ctx.fillStyle = "#FFD700";
+        ctx.fill();
+      }
+
+      // Inner bowl
+      ctx.beginPath();
+      ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+      ctx.fillStyle = "#0a0400";
+      ctx.fill();
+      ctx.strokeStyle = "#7B3F00";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Center hub
+      ctx.beginPath();
+      ctx.arc(cx, cy, 20, 0, Math.PI * 2);
+      const hubGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 20);
+      hubGrad.addColorStop(0, "#FFD700");
+      hubGrad.addColorStop(1, "#7B3F00");
+      ctx.fillStyle = hubGrad;
+      ctx.fill();
+
+      // Fixed pointer at top
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - outerR - 2);
+      ctx.lineTo(cx - 9, cy - outerR + 16);
+      ctx.lineTo(cx + 9, cy - outerR + 16);
+      ctx.closePath();
+      ctx.fillStyle = "#FFD700";
+      ctx.fill();
+      ctx.strokeStyle = "#0A0A0A";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    };
 
     const draw = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const angle = easeOut(progress) * targetAngle;
-      ctx.clearRect(0, 0, 300, 300);
-      segments.forEach((seg, i) => {
-        const startA = angle + (i * Math.PI * 2) / 4 - Math.PI / 2;
-        const endA = startA + Math.PI / 2;
-        ctx.beginPath();
-        ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, r, startA, endA);
-        ctx.closePath();
-        ctx.fillStyle = seg.color;
-        ctx.fill();
-        ctx.strokeStyle = "#0A0A0A";
-        ctx.lineWidth = 3;
-        ctx.stroke();
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(startA + Math.PI / 4);
-        ctx.fillStyle = "#FFFFFF";
-        ctx.font = "bold 14px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(seg.label, r * 0.65, 5);
-        ctx.restore();
-      });
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const wheelAngle = easeOutCubic(progress) * targetWheelAngle;
+
+      // Ball: counter-rotates fast, then slows and spirals inward
+      const ballAngle = -(totalBallRot * Math.PI * 2 * (1 - easeOutQuint(Math.min(progress * 1.1, 1))));
+      const ballRadius = outerR + 4 - (outerR + 4 - pocketR) * Math.pow(Math.min(progress * 1.2, 1), 2.8);
+
+      const ballX = cx + Math.cos(ballAngle) * ballRadius;
+      const ballY = cy + Math.sin(ballAngle) * ballRadius;
+
+      ctx.clearRect(0, 0, SIZE, SIZE);
+      drawWheel(wheelAngle);
+
+      // Ball with glow
+      ctx.save();
+      ctx.shadowColor = "rgba(255,255,255,0.9)";
+      ctx.shadowBlur = progress > 0.8 ? 12 : 8;
       ctx.beginPath();
-      ctx.moveTo(cx, cy - r - 5);
-      ctx.lineTo(cx - 12, cy - r + 18);
-      ctx.lineTo(cx + 12, cy - r + 18);
-      ctx.closePath();
-      ctx.fillStyle = "#F2F0EB";
+      ctx.arc(ballX, ballY, 7, 0, Math.PI * 2);
+      const ballGrad = ctx.createRadialGradient(ballX - 2, ballY - 2, 1, ballX, ballY, 7);
+      ballGrad.addColorStop(0, "#FFFFFF");
+      ballGrad.addColorStop(1, "#CCCCCC");
+      ctx.fillStyle = ballGrad;
       ctx.fill();
-      ctx.beginPath();
-      ctx.arc(cx, cy, 22, 0, Math.PI * 2);
-      ctx.fillStyle = "#0A0A0A";
-      ctx.fill();
-      ctx.strokeStyle = "#FF5500";
-      ctx.lineWidth = 2;
-      ctx.stroke();
+      ctx.restore();
+
       if (progress < 1) frame = requestAnimationFrame(draw);
-      else setTimeout(onComplete, 600);
+      else setTimeout(onComplete, 900);
     };
+
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
   }, [onComplete]);
 
   return (
     <div className="flex flex-col items-center">
-      <p className="font-mono text-[#555] text-xs tracking-[0.3em] mb-6">SPINNING YOUR FATE...</p>
-      <canvas ref={canvasRef} style={{ width: 280, height: 280 }} />
+      <p className="font-mono text-[#555] text-xs tracking-[0.3em] mb-6">THE WHEEL IS SPINNING...</p>
+      <canvas ref={canvasRef} style={{ width: 300, height: 300 }} />
     </div>
   );
 }
-
 // ─── Claw Machine (Blue) ──────────────────────────────────────────────────────
 
 function ClawAnimation({ onComplete }: { onComplete: () => void }) {
@@ -357,6 +444,8 @@ export default function Reveal() {
     { enabled: !!userId }
   );
 
+  const markRevealSeenMutation = trpc.sportsday.markRevealSeen.useMutation();
+
   const generateIdentityMutation = trpc.sportsday.generateTeamIdentity.useMutation({
     onSuccess: (data) => {
       const lines = data.aiTeamIdentity.split("\n").filter(Boolean);
@@ -375,12 +464,14 @@ export default function Reveal() {
 
   const handleAnimationComplete = useCallback(() => {
     setPhase("reveal");
-    // Trigger AI identity generation
     if (userId) {
+      // Mark reveal as seen so future visits skip straight to team hub
+      markRevealSeenMutation.mutate({ id: userId });
+      // Trigger AI identity generation
       setAiLoading(true);
       generateIdentityMutation.mutate({ id: userId });
     }
-  }, [userId, generateIdentityMutation]);
+  }, [userId, generateIdentityMutation, markRevealSeenMutation]);
 
   // Generate share card
   useEffect(() => {
@@ -552,10 +643,10 @@ export default function Reveal() {
               SHARE YOUR TEAM →
             </button>
             <button
-              onClick={() => navigate("/holding")}
+              onClick={() => navigate("/team-hub")}
               className="w-full border-2 border-white text-white font-display text-xl tracking-widest py-5 hover:bg-white/10 transition-colors active:scale-95"
             >
-              SEE WHAT'S NEXT →
+              ENTER TEAM HUB →
             </button>
           </div>
 

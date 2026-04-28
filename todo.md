@@ -82,3 +82,14 @@
 - [x] Add AI-generated personalised team name + identity message to post-reveal page using all form data
 - [x] Add AI procedure to backend (sportsday.generateTeamIdentity) using invokeLLM
 - [x] Store AI-generated team name in DB and return on getUserStatus
+
+## Round 3 Upgrades
+- [x] Fix Red team reveal animation to be a proper roulette wheel (distinct from Orange chaotic wheel)
+- [x] Install @paper-design/shaders-react and build WarpShader component
+- [x] Redesign 12-step registration form with Warp shader background (on-brand colours: orange/red/dark)
+- [x] Build Team Hub page (/team-hub) shown after reveal: events list, team voting, wildcards, location
+- [x] Add profile photo upload on Team Hub (stored in S3, shown as display picture)
+- [x] Build fun awards voting system (funniest moment, MVP, most dramatic, etc.)
+- [x] Add DB schema for: team votes, wildcard votes, awards votes, profile photos, leaderboard
+- [x] Build admin leaderboard management: fill in event results, DNF, team scores
+- [x] Wire Team Hub route in App.tsx and add navigation from Reveal page

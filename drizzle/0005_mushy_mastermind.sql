@@ -1,0 +1,1 @@
+ALTER TABLE `sports_day_registrations` ADD `revealSeen` boolean DEFAULT false;
