@@ -56,7 +56,7 @@ export default function TeamHub() {
   const [photoUploading, setPhotoUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: hub, isLoading, refetch } = trpc.sportsday.getTeamHub.useQuery(
+  const { data: hub, isLoading, error: hubError, refetch } = trpc.sportsday.getTeamHub.useQuery(
     { registrationId: userId },
     { enabled: !!userId, retry: false }
   );
@@ -108,12 +108,28 @@ export default function TeamHub() {
     reader.readAsDataURL(file);
   }, [userId, uploadPhotoMutation]);
 
-  if (!userId) {
+  if (!userId || hubError) {
+    // Clear stale localStorage ID if server rejects it
+    if (hubError && typeof window !== "undefined") {
+      localStorage.removeItem("sd_user_id");
+    }
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <div className="text-center">
-          <p className="font-mono text-white/40 text-sm mb-4">No registration found.</p>
-          <button onClick={() => navigate("/enter")} className="font-display text-[#FF5500] text-xl tracking-widest">
+        <div className="text-center space-y-5 px-6">
+          <img src={LOGO_URL} alt="6+1" className="h-8 w-auto mx-auto opacity-40" style={{ filter: "invert(1)" }} />
+          <p className="font-mono text-white/40 text-sm">
+            {hubError ? "Team not unlocked yet — complete payment to access your hub." : "No registration found."}
+          </p>
+          <button
+            onClick={() => navigate("/holding")}
+            className="block font-display text-[#FF5500] text-xl tracking-widest hover:opacity-80 transition-opacity"
+          >
+            ← BACK TO HOLDING
+          </button>
+          <button
+            onClick={() => navigate("/enter")}
+            className="block font-mono text-white/25 text-xs tracking-widest hover:text-white/50 transition-colors mx-auto"
+          >
             REGISTER →
           </button>
         </div>
