@@ -201,7 +201,6 @@ export default function TeamHub() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB]">
-      <BackNav to="/holding" />
       {/* Live event indicator */}
       <div className="px-5 pt-4">
         <NowHappening />
@@ -216,13 +215,8 @@ export default function TeamHub() {
       >
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center justify-between mb-5">
+            <BackNav to="/holding" inline />
             <img src={LOGO_URL} alt="6+1" className="h-7 w-auto" style={{ filter: "invert(1)" }} />
-            <button
-              onClick={() => navigate("/holding")}
-              className="font-mono text-white/30 text-xs tracking-wider hover:text-white/60 transition-colors"
-            >
-              ← BACK
-            </button>
           </div>
 
           {/* Team identity */}

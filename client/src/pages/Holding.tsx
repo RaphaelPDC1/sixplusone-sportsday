@@ -458,6 +458,7 @@ export default function Holding() {
         <HoldingBackground />
         <div className="h-[2px] bg-[#FF5500] relative z-10" />
         <header className="relative z-10 flex items-center justify-between px-6 pt-6 pb-4">
+          <BackNav to="/" inline />
           <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: "invert(1)" }} />
           <button
             onClick={() => setShowLogin(true)}
@@ -510,7 +511,6 @@ export default function Holding() {
       {showSplash && <EntrySplash onComplete={handleSplashComplete} />}
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
       <HoldingBackground />
-      <BackNav to="/" />
 
       {/* Scanlines */}
       <div
@@ -526,6 +526,7 @@ export default function Holding() {
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 pt-6 pb-4">
+        <BackNav to="/" inline />
         <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: "invert(1)" }} />
         <div className="flex items-center gap-4">
           <span className="font-mono text-[#FF5500] text-xs tracking-[0.2em]">SPORTS DAY 002</span>

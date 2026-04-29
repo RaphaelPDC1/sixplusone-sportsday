@@ -257,12 +257,12 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB]">
-      <BackNav to="/" />
       <div className="h-[2px] bg-[#FF5500]" />
 
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-[#1A1A1A]">
         <div className="flex items-center gap-4">
+          <BackNav to="/" inline />
           <img src={LOGO_URL} alt="6+1" className="h-7 w-auto" style={{ filter: "invert(1)" }} />
           <div>
             <h1 className="font-display text-[#FF5500] text-2xl tracking-widest">ADMIN DASHBOARD</h1>

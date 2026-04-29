@@ -3,48 +3,52 @@ import { useLocation } from "wouter";
 interface BackNavProps {
   to: string;
   label?: string;
+  /** Pass className to override positioning — defaults to fixed top-left */
+  className?: string;
+  /** If true, renders inline (no fixed positioning) — useful inside flex headers */
+  inline?: boolean;
 }
 
 /**
- * Minimal top-left back navigation button used on every page.
- * Renders as a fixed overlay so it sits above page content without
- * affecting layout flow.
+ * Back navigation in the site's editorial mono style.
+ * Default: fixed top-left overlay.
+ * Pass inline=true to render as a plain inline element inside a header.
  */
-export function BackNav({ to, label = "BACK" }: BackNavProps) {
+export function BackNav({ to, label = "BACK", className, inline = false }: BackNavProps) {
   const [, navigate] = useLocation();
+
+  const base =
+    "flex items-center gap-2 font-mono text-xs tracking-[0.25em] text-white/40 hover:text-[#FF5500] transition-colors group";
+
+  const positioning = inline
+    ? ""
+    : "fixed top-5 left-5 z-50";
 
   return (
     <button
       onClick={() => navigate(to)}
-      className="fixed top-4 left-4 z-50 flex items-center gap-2 text-white/60 hover:text-white transition-colors group"
-      aria-label={`Go back to ${to}`}
+      className={`${base} ${positioning} ${className ?? ""}`}
+      aria-label={`Go back`}
     >
-      {/* Arrow */}
-      <span
-        className="flex items-center justify-center w-8 h-8 rounded-full border border-white/15 bg-black/50 backdrop-blur-sm group-hover:border-[#FF5500]/60 group-hover:bg-[#FF5500]/10 transition-all"
+      {/* Arrow — thin, no border/pill */}
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 12 12"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="transition-transform group-hover:-translate-x-0.5"
         aria-hidden="true"
       >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 14 14"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M9 2L4 7L9 12"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
-
-      {/* Label — hidden on very small screens to avoid overlap */}
-      <span className="hidden sm:block font-mono text-xs tracking-widest uppercase">
-        {label}
-      </span>
+        <path
+          d="M8 1.5L3.5 6L8 10.5"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span>{label}</span>
     </button>
   );
 }

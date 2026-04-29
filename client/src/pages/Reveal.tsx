@@ -617,12 +617,15 @@ export default function Reveal() {
       {phase !== "reveal" && <RevealBackground teamColor={config.color} />}
       <canvas ref={confettiRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 10 }} />
       <canvas ref={shareCanvasRef} className="hidden" />
-      <BackNav to="/holding" />
 
       {/* Tension phase */}
       {phase === "tension" && (
         <div className="relative z-20 flex flex-col items-center px-5 w-full max-w-sm">
-          <img src={LOGO_URL} alt="6+1" className="h-8 w-auto mb-12" style={{ filter: "invert(1)" }} />
+          <div className="w-full flex items-center justify-between mb-10">
+            <BackNav to="/holding" inline />
+            <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: "invert(1)" }} />
+            <div className="w-16" />
+          </div>
           <TensionBuilder teamColor={config.color} onReady={() => setPhase("animation")} />
         </div>
       )}
@@ -630,7 +633,11 @@ export default function Reveal() {
       {/* Animation phase */}
       {phase === "animation" && (
         <div className="relative z-20 flex flex-col items-center px-5 w-full max-w-sm">
-          <img src={LOGO_URL} alt="6+1" className="h-8 w-auto mb-10" style={{ filter: "invert(1)" }} />
+          <div className="w-full flex items-center justify-between mb-8">
+            <BackNav to="/holding" inline />
+            <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: "invert(1)" }} />
+            <div className="w-16" />
+          </div>
           {team === "red" && <RouletteAnimation onComplete={handleAnimationComplete} />}
           {team === "blue" && <ClawAnimation onComplete={handleAnimationComplete} />}
           {team === "pink" && <SlotAnimation onComplete={handleAnimationComplete} />}
@@ -641,7 +648,11 @@ export default function Reveal() {
       {/* Reveal phase */}
       {phase === "reveal" && (
         <div className="relative z-20 flex flex-col items-center px-5 text-center w-full max-w-sm py-12">
-          <img src={LOGO_URL} alt="6+1" className="h-10 w-auto mb-8" style={{ filter: "brightness(0) invert(1)" }} />
+          <div className="w-full flex items-center justify-between mb-6">
+            <BackNav to="/holding" inline />
+            <img src={LOGO_URL} alt="6+1" className="h-10 w-auto" style={{ filter: "brightness(0) invert(1)" }} />
+            <div className="w-16" />
+          </div>
           <div className="h-[1px] bg-white/30 w-full mb-6" />
           <p className="font-display text-white/80 tracking-widest mb-1" style={{ fontSize: "clamp(0.9rem, 3.5vw, 1.3rem)" }}>
             YOU ARE
