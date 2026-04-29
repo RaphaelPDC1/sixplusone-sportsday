@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { NowHappening } from "@/components/ui/now-happening";
 import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
-import { LightningBg } from "@/components/ui/lightning-bg";
+import { HeroWave } from "@/components/ui/hero-wave";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -16,12 +16,12 @@ const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; gl
   orange: { bg: "bg-[#FF6B00]",   text: "text-[#FF6B00]",   border: "border-[#FF6B00]",   glow: "rgba(255,107,0,0.4)",  hex: "#FF6B00" },
 };
 
-// Approximate HSL hue for each team colour (used by LightningBg shader)
-const TEAM_HUE: Record<string, number> = {
-  red: 0,
-  blue: 220,
-  pink: 330,
-  orange: 25,
+// RGB tint for each team colour (used by HeroWave background)
+const TEAM_TINT: Record<string, { r: number; g: number; b: number }> = {
+  red:    { r: 184, g: 0,   b: 0   },
+  blue:   { r: 26,  g: 79,  b: 232 },
+  pink:   { r: 247, g: 43,  b: 140 },
+  orange: { r: 255, g: 107, b: 0   },
 };
 
 const EVENTS = [
@@ -214,17 +214,13 @@ export default function TeamHub() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden">
-      {/* Full-page lightning background tinted to team colour */}
-      <LightningBg
-        hue={TEAM_HUE[hub.team ?? "red"] ?? 0}
-        intensity={0.4}
-        speed={1.4}
-        size={2}
+      {/* Full-page wave background tinted to team colour */}
+      <HeroWave
+        tint={TEAM_TINT[hub.team ?? "red"] ?? TEAM_TINT.red}
         className="fixed inset-0 w-full h-full pointer-events-none"
-        style={{ zIndex: 0 }}
       />
       {/* Subtle dark veil over the whole page so content stays readable */}
-      <div className="fixed inset-0 bg-black/70 pointer-events-none" style={{ zIndex: 0 }} />
+      <div className="fixed inset-0 bg-black/65 pointer-events-none" style={{ zIndex: 0 }} />
       {showSplash && <EntrySplash onComplete={() => { sessionStorage.setItem("teamhub_splash_seen", "true"); setShowSplash(false); }} />}
       {/* Live event indicator */}
       <div className="relative z-10 px-5 pt-4">
@@ -241,7 +237,11 @@ export default function TeamHub() {
 
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center justify-between mb-5">
-            <BackNav to="/holding" inline />
+            <BackNav
+              to="/holding"
+              inline
+              onBeforeNavigate={() => sessionStorage.setItem("came_from_teamhub", "1")}
+            />
             <img src={LOGO_URL} alt="6+1" className="h-7 w-auto" style={{ filter: "invert(1)" }} />
           </div>
 
@@ -749,7 +749,29 @@ export default function TeamHub() {
               />
             </div>
           </div>
-        )}
+         )}
+        {/* ─── Account / Logout ─── */}
+        <div className="relative z-10 mt-8 pb-10 px-0">
+          <div className="border-t border-white/8 pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-mono text-white/25 text-[10px] tracking-[0.3em] mb-0.5">LOGGED IN AS</p>
+                <p className="font-mono text-white/50 text-xs tracking-wider">{typeof window !== "undefined" ? localStorage.getItem("userEmail") ?? "" : ""}</p>
+              </div>
+              <button
+                onClick={() => {
+                  localStorage.removeItem("sd_user_id");
+                  localStorage.removeItem("userEmail");
+                  sessionStorage.setItem("came_from_teamhub", "1");
+                  window.location.href = "/";
+                }}
+                className="font-mono text-white/25 text-xs tracking-[0.2em] hover:text-[#FF5500] transition-colors border border-white/10 hover:border-[#FF5500]/40 px-4 py-2"
+              >
+                LOG OUT
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

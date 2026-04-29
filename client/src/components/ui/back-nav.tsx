@@ -8,13 +8,15 @@ interface BackNavProps {
   className?: string;
   /** If true, renders inline — useful inside flex headers */
   inline?: boolean;
+  /** Optional extra action to run before navigation (e.g. set sessionStorage flag) */
+  onBeforeNavigate?: () => void;
 }
 
 /**
  * Back navigation in the site's editorial mono style.
- * Fires the shooting-star page transition animation on click.
+ * Fires the page transition animation on click.
  */
-export function BackNav({ to, label = "BACK", className, inline = false }: BackNavProps) {
+export function BackNav({ to, label = "BACK", className, inline = false, onBeforeNavigate }: BackNavProps) {
   const { triggerTransition } = usePageTransition();
   const btnRef = useRef<HTMLButtonElement>(null);
 
@@ -26,7 +28,10 @@ export function BackNav({ to, label = "BACK", className, inline = false }: BackN
   return (
     <button
       ref={btnRef}
-      onClick={() => triggerTransition(to, btnRef.current)}
+      onClick={() => {
+        onBeforeNavigate?.();
+        triggerTransition(to, btnRef.current);
+      }}
       className={`${base} ${positioning} ${className ?? ""}`}
       aria-label="Go back"
     >

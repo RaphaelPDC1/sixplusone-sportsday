@@ -256,8 +256,14 @@ export default function Holding() {
   }, [error]);
 
   // Fix: use ref-based navigate to avoid stale closure / setState-in-render
+  // Suppress redirect if user just navigated back from TeamHub (they chose to be here)
   useEffect(() => {
     if (!user) return;
+    const cameFromTeamHub = sessionStorage.getItem("came_from_teamhub") === "1";
+    if (cameFromTeamHub) {
+      sessionStorage.removeItem("came_from_teamhub");
+      return;
+    }
     if (user.revealStatus === "unlocked") {
       if (user.revealSeen) {
         navigateRef.current("/team-hub");
