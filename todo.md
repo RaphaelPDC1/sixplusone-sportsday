@@ -188,10 +188,16 @@
 - [x] Add sponsor descriptions and team-themed styling
 - [x] All 20 tests passing, TypeScript clean
 
-## Phase 7: Global Post Feed
-- [ ] Build global scrolling post feed (images/videos)
-- [ ] Add post creation UI
-- [ ] Implement like/comment functionality
+## Phase 7: Global Post Feed (MOCK - NEEDS BACKEND)
+- [x] Build global scrolling post feed UI (mock posts, team-colored styling)
+- [x] Add post creation UI (SHARE YOUR MOMENT composer with local state)
+- [x] Implement like/comment UI (like button, comment/share counters)
+- [x] Team-colored post styling and author info
+- [ ] Backend integration: Create posts table in DB schema
+- [ ] Backend integration: Add tRPC procedures for post CRUD
+- [ ] Backend integration: Persist posts to database
+- [ ] Backend integration: Implement real comment functionality
+- [ ] Backend integration: Add image/video upload support
 
 ## Phase 8: Shopify Payment Integration
 - [ ] Set up Shopify API connection for £10 Priority Player Pass

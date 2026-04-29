@@ -13,6 +13,7 @@ import UnlockSuccess from "./pages/UnlockSuccess";
 import Admin from "./pages/Admin";
 import ReferralRedirect from "./pages/ReferralRedirect";
 import TeamHub from "./pages/TeamHub";
+import PostFeed from "./pages/PostFeed";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/unlock/success" component={UnlockSuccess} />
       <Route path="/admin" component={Admin} />
       <Route path="/team-hub" component={TeamHub} />
+      <Route path="/feed" component={PostFeed} />
       <Route path="/r/:code" component={ReferralRedirect} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
