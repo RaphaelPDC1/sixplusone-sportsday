@@ -175,11 +175,12 @@
 - [x] Live data updates: All four teams have simulated updates
 - [x] All 20 tests passing, TypeScript clean
 
-## Phase 5: Leaderboard, Voting, Awards
-- [ ] Build Leaderboard tab (event results, team scores, rankings)
-- [ ] Implement Wildcard voting (team-wide vote for secret wildcard player)
-- [ ] Implement Awards voting (funniest, MVP, most dramatic, etc.)
-- [ ] Add voting UI with team colour theming
+## Phase 5: Leaderboard, Voting, Awards (COMPLETE)
+- [x] Build Leaderboard tab (team standings + event results grid)
+- [x] Implement Wildcard voting (team-wide vote for secret wildcard player)
+- [x] Implement Awards voting (funniest, MVP, most dramatic, etc.)
+- [x] Add voting UI with team colour theming
+- [x] All 20 tests passing, TypeScript clean
 
 ## Phase 6: Event Recommendations & Sponsors
 - [ ] Build Event Recommendations tab

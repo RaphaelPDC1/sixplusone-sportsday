@@ -66,7 +66,7 @@ export default function TeamHub() {
     () => sessionStorage.getItem("teamhub_splash_seen") !== "true"
   );
   const userId = typeof window !== "undefined" ? localStorage.getItem("sd_user_id") ?? "" : "";
-  const [activeTab, setActiveTab] = useState<"team" | "events" | "wildcards" | "awards" | "location">("team");
+  const [activeTab, setActiveTab] = useState<"team" | "events" | "leaderboard" | "wildcards" | "awards" | "location">("team");
   const [votingFor, setVotingFor] = useState<AwardCategory | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -206,11 +206,12 @@ export default function TeamHub() {
   const sortedTeams = Object.entries(teamPoints).sort((a, b) => b[1] - a[1]);
 
   const TABS = [
-    { id: "team" as const,      label: "TEAM",      icon: "👥" },
-    { id: "events" as const,    label: "EVENTS",    icon: "🏃" },
-    { id: "wildcards" as const, label: "WILDCARDS", icon: "⚡" },
-    { id: "awards" as const,    label: "AWARDS",    icon: "🏆" },
-    { id: "location" as const,  label: "LOCATION",  icon: "📍" },
+    { id: "team" as const,        label: "TEAM",        icon: "👥" },
+    { id: "events" as const,      label: "EVENTS",      icon: "🏃" },
+    { id: "leaderboard" as const, label: "LEADERBOARD", icon: "📊" },
+    { id: "wildcards" as const,   label: "WILDCARDS",   icon: "⚡" },
+    { id: "awards" as const,      label: "AWARDS",      icon: "🏆" },
+    { id: "location" as const,    label: "LOCATION",    icon: "📍" },
   ];
 
   return (
@@ -511,6 +512,111 @@ export default function TeamHub() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* ─── LEADERBOARD TAB ─── */}
+        {activeTab === "leaderboard" && (
+          <div className="space-y-4">
+            <SectionHeader label="TEAM STANDINGS" />
+            {sortedTeams.length === 0 ? (
+              <p className="font-mono text-white/30 text-sm text-center py-8">
+                No results yet. Events coming soon.
+              </p>
+            ) : (
+              <>
+                <div className="space-y-3">
+                  {sortedTeams.map(([team, points], index) => {
+                    const teamColor = TEAM_COLORS[team as keyof typeof TEAM_COLORS];
+                    const teamEventCount = hub.leaderboard.filter((e) => e.team === team && !e.dnf).length;
+                    return (
+                      <div
+                        key={team}
+                        className="p-4 border transition-all"
+                        style={{
+                          borderColor: team === hub.team ? `${teamColor?.hex}50` : "rgba(255,255,255,0.1)",
+                          background: team === hub.team ? `${teamColor?.hex}08` : "rgba(255,255,255,0.01)",
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ background: teamColor?.hex }}
+                            />
+                            <div>
+                              <div className="font-display text-lg tracking-widest uppercase">
+                                {index + 1}. {team} TEAM
+                              </div>
+                              <div className="font-mono text-white/40 text-xs mt-0.5">
+                                {teamEventCount} events completed
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div
+                              className="font-bebas text-3xl tracking-widest"
+                              style={{ color: teamColor?.hex }}
+                            >
+                              {points}
+                            </div>
+                            <div className="font-mono text-white/30 text-xs">POINTS</div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-6 space-y-4">
+                  <SectionHeader label="EVENT RESULTS" />
+                  <div className="space-y-3">
+                    {EVENTS.map((event) => {
+                      const eventResults = hub.leaderboard.filter((e) => e.eventName === event.id);
+                      if (eventResults.length === 0) return null;
+                      return (
+                        <div key={event.id} className="border border-white/10 bg-white/[0.02] p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-xl">{event.icon}</span>
+                            <div>
+                              <div className="font-display text-base tracking-widest">{event.name}</div>
+                              <div className="font-mono text-white/30 text-xs">{event.desc}</div>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-4 gap-2">
+                            {(["red", "blue", "pink", "orange"] as const).map((team) => {
+                              const r = eventResults.find((e) => e.team === team);
+                              const teamColor = TEAM_COLORS[team];
+                              return (
+                                <div key={team} className="text-center p-2 border border-white/5 bg-white/[0.01]">
+                                  <div
+                                    className="w-2 h-2 rounded-full mx-auto mb-1"
+                                    style={{ background: teamColor?.hex }}
+                                  />
+                                  <div className="font-mono text-[9px] text-white/50 mb-1">{team}</div>
+                                  <div className="font-display text-sm tracking-widest" style={{ color: teamColor?.hex }}>
+                                    {r?.dnf ? "DNF" : r?.position ? `${r.position}${ordinal(r.position)}` : "—"}
+                                  </div>
+                                  <div className="font-mono text-[9px] text-white/40">{r?.points ?? 0}pts</div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="mt-6 p-4 border border-white/10 bg-white/[0.02]">
+                  <div className="font-mono text-xs text-white/40 tracking-wider mb-2">SCORING</div>
+                  <div className="space-y-1 font-mono text-xs text-white/50">
+                    <div>1st Place: 5 points</div>
+                    <div>2nd Place: 3 points</div>
+                    <div>3rd Place: 1 point</div>
+                    <div>DNF: 0 points</div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
