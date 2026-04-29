@@ -238,9 +238,13 @@ export default function TeamHub() {
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center justify-between mb-5">
             <BackNav
-              to="/holding"
+              to="/reveal"
               inline
-              onBeforeNavigate={() => sessionStorage.setItem("came_from_teamhub", "1")}
+              label="REPLAY REVEAL"
+              onBeforeNavigate={() => {
+                // Clear reveal splash so it plays fresh on return
+                sessionStorage.removeItem("reveal_splash_seen");
+              }}
             />
             <img src={LOGO_URL} alt="6+1" className="h-7 w-auto" style={{ filter: "invert(1)" }} />
           </div>

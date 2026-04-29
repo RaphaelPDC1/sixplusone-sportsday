@@ -152,6 +152,11 @@ function LoginModal({ onClose }: { onClose: () => void }) {
       if (result.data?.exists && result.data?.id) {
         localStorage.setItem("sd_user_id", result.data.id);
         localStorage.setItem("userEmail", trimmed);
+        // Clear all splash/session flags so animations play fresh on login
+        sessionStorage.removeItem("holding_splash_seen");
+        sessionStorage.removeItem("reveal_splash_seen");
+        sessionStorage.removeItem("teamhub_splash_seen");
+        sessionStorage.removeItem("came_from_teamhub");
         onClose();
         navigate("/holding");
       } else {

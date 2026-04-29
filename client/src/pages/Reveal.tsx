@@ -623,7 +623,7 @@ export default function Reveal() {
       <canvas ref={confettiRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 10 }} />
       <canvas ref={shareCanvasRef} className="hidden" />
 
-      {/* Tension phase */}
+      {/* Tension phase — TensionBuilder only mounts after splash so countdown always starts at 3 */}
       {phase === "tension" && (
         <div className="relative z-20 flex flex-col items-center px-5 w-full max-w-sm">
           <div className="w-full flex items-center justify-between mb-10">
@@ -631,7 +631,7 @@ export default function Reveal() {
             <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: "invert(1)" }} />
             <div className="w-16" />
           </div>
-          <TensionBuilder teamColor={config.color} onReady={() => setPhase("animation")} />
+          {!showSplash && <TensionBuilder teamColor={config.color} onReady={() => setPhase("animation")} />}
         </div>
       )}
 
