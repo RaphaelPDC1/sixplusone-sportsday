@@ -8,6 +8,7 @@ interface LightningBgProps {
   intensity?: number;
   size?: number;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 /**
@@ -22,6 +23,7 @@ export function LightningBg({
   intensity = 0.6,
   size = 2,
   className = "absolute inset-0 w-full h-full",
+  style,
 }: LightningBgProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -141,5 +143,5 @@ export function LightningBg({
     };
   }, [hue, xOffset, speed, intensity, size]);
 
-  return <canvas ref={canvasRef} className={className} />;
+  return <canvas ref={canvasRef} className={className} style={style} />;
 }

@@ -213,30 +213,32 @@ export default function TeamHub() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB]">
+    <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden">
+      {/* Full-page lightning background tinted to team colour */}
+      <LightningBg
+        hue={TEAM_HUE[hub.team ?? "red"] ?? 0}
+        intensity={0.4}
+        speed={1.4}
+        size={2}
+        className="fixed inset-0 w-full h-full pointer-events-none"
+        style={{ zIndex: 0 }}
+      />
+      {/* Subtle dark veil over the whole page so content stays readable */}
+      <div className="fixed inset-0 bg-black/70 pointer-events-none" style={{ zIndex: 0 }} />
       {showSplash && <EntrySplash onComplete={() => { sessionStorage.setItem("teamhub_splash_seen", "true"); setShowSplash(false); }} />}
       {/* Live event indicator */}
-      <div className="px-5 pt-4">
+      <div className="relative z-10 px-5 pt-4">
         <NowHappening />
       </div>
       {/* Header */}
       <div
-        className="relative overflow-hidden"
+        className="relative z-10 overflow-hidden"
         style={{
-          background: "#0A0A0A",
+          background: "transparent",
           borderBottom: `1px solid ${tc.hex}33`,
         }}
       >
-        {/* Lightning background tinted to team colour */}
-        <LightningBg
-          hue={TEAM_HUE[hub.team ?? "red"] ?? 0}
-          intensity={0.5}
-          speed={1.4}
-          size={2}
-          className="absolute inset-0 w-full h-full pointer-events-none"
-        />
-        {/* Dark overlay so text stays readable */}
-        <div className="absolute inset-0 bg-black/60 pointer-events-none" />
+
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center justify-between mb-5">
             <BackNav to="/holding" inline />
@@ -347,7 +349,7 @@ export default function TeamHub() {
       </div>
 
       {/* Tab content */}
-      <div className="px-5 py-6 max-w-2xl mx-auto">
+      <div className="relative z-10 px-5 py-6 max-w-2xl mx-auto">
 
         {/* ─── TEAM TAB ─── */}
         {activeTab === "team" && (
