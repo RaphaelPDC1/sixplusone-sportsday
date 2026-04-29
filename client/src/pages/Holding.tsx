@@ -348,7 +348,6 @@ export default function Holding() {
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden">
       {showSplash && <EntrySplash onComplete={handleSplashComplete} />}
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
-      <HoldingBackground />
 
       {/* Scanlines */}
       <div
@@ -459,6 +458,14 @@ export default function Holding() {
           <StatusBlock visible={heroVisible} />
         </section>
 
+        {/* ── Particle strip between status and unlock ── */}
+        <div className="relative w-full overflow-hidden" style={{ height: "140px" }}>
+          <ParticleTextBg
+            words={["SPORTS DAY", "002", "GET READY", "YOUR TEAM", "AWAITS", "6+1", "JULY 2026"]}
+            interval={3200}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+          />
+        </div>
         {/* ── Section 4: Unlock CTA ── */}
         <section
           style={{
