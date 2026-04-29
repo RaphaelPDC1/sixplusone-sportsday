@@ -66,7 +66,7 @@ export default function TeamHub() {
     () => sessionStorage.getItem("teamhub_splash_seen") !== "true"
   );
   const userId = typeof window !== "undefined" ? localStorage.getItem("sd_user_id") ?? "" : "";
-  const [activeTab, setActiveTab] = useState<"team" | "events" | "leaderboard" | "wildcards" | "awards" | "location">("team");
+  const [activeTab, setActiveTab] = useState<"team" | "events" | "leaderboard" | "wildcards" | "awards" | "recommendations" | "sponsors" | "location">("team");
   const [votingFor, setVotingFor] = useState<AwardCategory | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -206,12 +206,14 @@ export default function TeamHub() {
   const sortedTeams = Object.entries(teamPoints).sort((a, b) => b[1] - a[1]);
 
   const TABS = [
-    { id: "team" as const,        label: "TEAM",        icon: "👥" },
-    { id: "events" as const,      label: "EVENTS",      icon: "🏃" },
-    { id: "leaderboard" as const, label: "LEADERBOARD", icon: "📊" },
-    { id: "wildcards" as const,   label: "WILDCARDS",   icon: "⚡" },
-    { id: "awards" as const,      label: "AWARDS",      icon: "🏆" },
-    { id: "location" as const,    label: "LOCATION",    icon: "📍" },
+    { id: "team" as const,           label: "TEAM",           icon: "👥" },
+    { id: "events" as const,         label: "EVENTS",         icon: "🏃" },
+    { id: "leaderboard" as const,    label: "LEADERBOARD",    icon: "📊" },
+    { id: "wildcards" as const,      label: "WILDCARDS",      icon: "⚡" },
+    { id: "awards" as const,         label: "AWARDS",         icon: "🏆" },
+    { id: "recommendations" as const, label: "RECS",           icon: "👍" },
+    { id: "sponsors" as const,       label: "SPONSORS",       icon: "🤟" },
+    { id: "location" as const,       label: "LOCATION",       icon: "📍" },
   ];
 
   return (
@@ -800,6 +802,76 @@ export default function TeamHub() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* ─── RECOMMENDATIONS TAB ─── */}
+        {activeTab === "recommendations" && (
+          <div className="space-y-4">
+            <SectionHeader label="RECOMMENDED EVENTS" />
+            <p className="font-mono text-white/30 text-xs tracking-wider">
+              Based on your team's performance, try these next.
+            </p>
+            <div className="space-y-3">
+              {EVENTS.slice(0, 3).map((event) => (
+                <div
+                  key={event.id}
+                  className="p-4 border border-white/10 bg-white/[0.02]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{event.icon}</span>
+                      <div>
+                        <div className="font-display text-lg tracking-widest">{event.name}</div>
+                        <div className="font-mono text-white/30 text-xs mt-0.5">{event.desc}</div>
+                      </div>
+                    </div>
+                    <div
+                      className="px-3 py-1 rounded text-xs font-mono tracking-wider flex-shrink-0"
+                      style={{ background: `${tc.hex}20`, color: tc.hex }}
+                    >
+                      TRY IT
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ─── SPONSORS TAB ─── */}
+        {activeTab === "sponsors" && (
+          <div className="space-y-4">
+            <SectionHeader label="SPONSORS & VENDORS" />
+            <p className="font-mono text-white/30 text-xs tracking-wider">
+              Thanks to our partners making this day possible.
+            </p>
+            <div className="space-y-3">
+              {[
+                { name: "Nike", desc: "Official athletic partner" },
+                { name: "Gatorade", desc: "Hydration sponsor" },
+                { name: "GoPro", desc: "Media partner" },
+                { name: "Local Cafe", desc: "Refreshments" },
+              ].map((sponsor) => (
+                <div
+                  key={sponsor.name}
+                  className="p-4 border border-white/10 bg-white/[0.02]"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-display text-base tracking-widest">{sponsor.name}</div>
+                      <div className="font-mono text-white/30 text-xs mt-0.5">{sponsor.desc}</div>
+                    </div>
+                    <div
+                      className="w-12 h-12 rounded border flex items-center justify-center text-2xl"
+                      style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
+                    >
+                      🏢
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

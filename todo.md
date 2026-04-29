@@ -182,10 +182,11 @@
 - [x] Add voting UI with team colour theming
 - [x] All 20 tests passing, TypeScript clean
 
-## Phase 6: Event Recommendations & Sponsors
-- [ ] Build Event Recommendations tab
-- [ ] Build Sponsors/Vendors tab
-- [ ] Add sponsor logos and descriptions
+## Phase 6: Event Recommendations & Sponsors (COMPLETE)
+- [x] Build Event Recommendations tab (shows top 3 events with TRY IT button)
+- [x] Build Sponsors/Vendors tab (Nike, Gatorade, GoPro, Local Cafe with placeholder icons)
+- [x] Add sponsor descriptions and team-themed styling
+- [x] All 20 tests passing, TypeScript clean
 
 ## Phase 7: Global Post Feed
 - [ ] Build global scrolling post feed (images/videos)
