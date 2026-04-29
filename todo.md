@@ -135,3 +135,27 @@
 - [x] Glowing comet trail behind the logo as it travels
 - [x] Firework explosion at exit point with sparks in all 4 team colours (red, blue, pink, orange)
 - [x] Canvas overlay for the full animation so it renders above everything
+
+## Current Phase: Home Page, Admin, Team Hub, Shopify
+
+### Home Page Fixes
+- [ ] Reduce warp shader opacity so "Enter the system..." text is legible
+- [ ] Improve home page copy — replace "Enter the system" with on-brand messaging
+- [ ] Add "Already registered? Enter email" quick login option on home page
+
+### Admin Login
+- [ ] Add admin login route (/admin) with password/credentials check
+- [ ] Verify admin dashboard access and display
+
+### Team Hub Design Edits
+- [ ] Implement Team Hub layout changes from design mockups
+- [ ] Update Team Hub styling and component structure per mockups
+
+### Shopify Payment Integration
+- [ ] Set up Shopify API connection for £10 Priority Player Pass
+- [ ] Map "UNLOCK MY TEAM" button to Shopify checkout
+- [ ] Handle successful payment → update registration to paid/unlocked
+- [ ] Test payment flow end-to-end
+
+### Skill Creation
+- [ ] Package 6+1 Sports Day workflow as reusable skill

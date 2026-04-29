@@ -168,6 +168,8 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
+      {/* Quick login hint removed — "Already registered?" now lives inside the form */}
+
       {/* Shader Hero — full screen */}
       <AnimatedShaderHero
         trustBadge={{
@@ -178,11 +180,15 @@ export default function Home() {
           line1: "SPORTS DAY",
           line2: "002",
         }}
-        subtitle="Enter the system. Get your team. Unlock your identity. Built with the people who actually want to be there."
+        subtitle="Get your team. Unlock your identity. Built with the people who actually want to be there."
         buttons={{
           primary: {
-            text: "ENTER THE SYSTEM →",
+            text: "REGISTER NOW →",
             onClick: () => navigate("/enter"),
+          },
+          secondary: {
+            text: "Already registered? →",
+            onClick: () => setLoginOpen(true),
           },
         }}
       />

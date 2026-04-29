@@ -78,7 +78,7 @@ void main(void) {
     col=mix(col,vec3(bg*.35,bg*.12,bg*.02),d);
   }
   // Darken overall to keep text readable — 6+1 brand dark
-  col *= 0.55;
+  col *= 0.35;
   O=vec4(col,1);
 }`;
 
