@@ -465,7 +465,16 @@ export default function Holding() {
         </section>
 
         {/* ── Particle strip between status and unlock ── */}
-        <div className="relative w-full overflow-hidden" style={{ height: "140px" }}>
+        {/* Break out of max-w-lg container to fill full viewport width */}
+        <div
+          className="relative overflow-hidden"
+          style={{
+            height: "160px",
+            marginLeft: "calc(-50vw + 50%)",
+            marginRight: "calc(-50vw + 50%)",
+            width: "100vw",
+          }}
+        >
           <ParticleTextBg
             words={["SPORTS DAY", "002", "GET READY", "YOUR TEAM", "AWAITS", "6+1", "JULY 2026"]}
             interval={3200}
