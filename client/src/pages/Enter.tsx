@@ -262,7 +262,6 @@ export default function Enter() {
             {step === 0 && (
               <StepCard label="What's your name?" caption="First name is fine.">
                 <input
-                  autoFocus
                   type="text"
                   value={form.fullName}
                   onChange={(e) => set("fullName", e.target.value)}
@@ -279,7 +278,6 @@ export default function Enter() {
             {step === 1 && (
               <StepCard label="Your email address." caption="We'll send your team reveal link here.">
                 <input
-                  autoFocus
                   type="email"
                   value={form.email}
                   onChange={(e) => set("email", e.target.value)}
@@ -298,7 +296,6 @@ export default function Enter() {
                 <div className="flex items-center border-b-2 border-white/20 focus-within:border-[#FF5500] transition-colors">
                   <span className="text-white/30 font-mono text-2xl py-3 mr-1">@</span>
                   <input
-                    autoFocus
                     type="text"
                     value={form.instagramHandle}
                     onChange={(e) => set("instagramHandle", e.target.value.replace("@", ""))}

@@ -8,7 +8,8 @@ interface WarpShaderBgProps {
 
 /**
  * Full-bleed Warp shader background for form steps.
- * Renders behind content via absolute positioning.
+ * Uses fixed positioning so it always covers the full viewport on mobile,
+ * even when the keyboard pushes content up or the page scrolls.
  */
 export default function WarpShaderBg({
   colors = [
@@ -20,7 +21,7 @@ export default function WarpShaderBg({
   className = "",
 }: WarpShaderBgProps) {
   return (
-    <div className={`absolute inset-0 ${className}`} aria-hidden="true">
+    <div className={`fixed inset-0 -z-10 ${className}`} aria-hidden="true">
       <Warp
         style={{ height: "100%", width: "100%" }}
         proportion={0.45}
