@@ -109,9 +109,11 @@ export default function TeamHub() {
     reader.readAsDataURL(file);
   }, [userId, uploadPhotoMutation]);
 
-  if (!userId || hubError) {
-    // Clear stale localStorage ID if server rejects it
-    if (hubError && typeof window !== "undefined") {
+  // On FORBIDDEN (team locked) → go back to holding WITHOUT clearing localStorage
+  // On NOT_FOUND (invalid ID) → clear localStorage and send to holding
+  if (hubError) {
+    const code = (hubError as { data?: { code?: string } }).data?.code;
+    if (code === "NOT_FOUND" && typeof window !== "undefined") {
       localStorage.removeItem("sd_user_id");
     }
     return (
@@ -119,7 +121,7 @@ export default function TeamHub() {
         <div className="text-center space-y-5 px-6">
           <img src={LOGO_URL} alt="6+1" className="h-8 w-auto mx-auto opacity-40" style={{ filter: "invert(1)" }} />
           <p className="font-mono text-white/40 text-sm">
-            {hubError ? "Team not unlocked yet — complete payment to access your hub." : "No registration found."}
+            {code === "FORBIDDEN" ? "Team not unlocked yet — complete payment to access your hub." : "No registration found."}
           </p>
           <button
             onClick={() => navigate("/holding")}
@@ -132,6 +134,20 @@ export default function TeamHub() {
             className="block font-mono text-white/25 text-xs tracking-widest hover:text-white/50 transition-colors mx-auto"
           >
             REGISTER →
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userId) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <div className="text-center space-y-5 px-6">
+          <img src={LOGO_URL} alt="6+1" className="h-8 w-auto mx-auto opacity-40" style={{ filter: "invert(1)" }} />
+          <p className="font-mono text-white/40 text-sm">No registration found.</p>
+          <button onClick={() => navigate("/holding")} className="block font-display text-[#FF5500] text-xl tracking-widest hover:opacity-80 transition-opacity">
+            ← BACK TO HOLDING
           </button>
         </div>
       </div>
