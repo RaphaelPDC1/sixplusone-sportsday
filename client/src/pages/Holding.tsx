@@ -477,8 +477,13 @@ export default function Holding() {
           <StatusBlock visible={heroVisible} />
         </section>
 
-        {/* ── Particle full-page background (fixed, behind content) ── */}
-        {/* Canvas is rendered once here but positioned fixed so it covers the whole viewport */}
+        {/* ── Particle breathing space ── */}
+        {/* Tall empty zone so the fixed particle canvas text is readable while scrolling */}
+        <div
+          aria-hidden="true"
+          style={{ height: "60vh", pointerEvents: "none" }}
+        />
+
         {/* ── Section 4: Unlock CTA ── */}
         <section
           style={{
