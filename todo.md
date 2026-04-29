@@ -199,8 +199,12 @@
 - [ ] Backend integration: Implement real comment functionality
 - [ ] Backend integration: Add image/video upload support
 
-## Phase 8: Shopify Payment Integration
-- [ ] Set up Shopify API connection for £10 Priority Player Pass
-- [ ] Map "UNLOCK MY TEAM" button to Shopify checkout
-- [ ] Handle successful payment → update registration to paid/unlocked
-- [ ] Test payment flow end-to-end
+## Phase 8: Shopify Payment Integration (PLACEHOLDER - NEEDS LIVE CONFIG)
+- [x] Map "UNLOCK MY TEAM" button to Shopify checkout (UI in place)
+- [x] Webhook handler for payment confirmation (in place)
+- [ ] Configure real Shopify store URL (currently placeholder)
+- [ ] Configure real product/variant ID (currently placeholder)
+- [ ] Add SHOPIFY_WEBHOOK_SECRET env var
+- [ ] Add VITE_SHOPIFY_STORE_URL env var
+- [ ] Add VITE_SHOPIFY_VARIANT_ID env var
+- [ ] Test payment flow end-to-end with live Shopify
