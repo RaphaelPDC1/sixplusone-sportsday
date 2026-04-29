@@ -360,6 +360,14 @@ export default function Holding() {
       {showSplash && <EntrySplash onComplete={handleSplashComplete} />}
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
 
+      {/* Full-page particle text background — fixed behind all content */}
+      <ParticleTextBg
+        words={["SPORTS DAY", "002", "GET READY", "YOUR TEAM", "AWAITS", "6+1", "JULY 2026"]}
+        interval={3200}
+        className="fixed inset-0 w-full h-full pointer-events-none"
+        style={{ zIndex: 0 }}
+      />
+
       {/* Scanlines */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -469,23 +477,8 @@ export default function Holding() {
           <StatusBlock visible={heroVisible} />
         </section>
 
-        {/* ── Particle strip between status and unlock ── */}
-        {/* Break out of max-w-lg container to fill full viewport width */}
-        <div
-          className="relative overflow-hidden"
-          style={{
-            height: "160px",
-            marginLeft: "calc(-50vw + 50%)",
-            marginRight: "calc(-50vw + 50%)",
-            width: "100vw",
-          }}
-        >
-          <ParticleTextBg
-            words={["SPORTS DAY", "002", "GET READY", "YOUR TEAM", "AWAITS", "6+1", "JULY 2026"]}
-            interval={3200}
-            className="absolute inset-0 w-full h-full pointer-events-none"
-          />
-        </div>
+        {/* ── Particle full-page background (fixed, behind content) ── */}
+        {/* Canvas is rendered once here but positioned fixed so it covers the whole viewport */}
         {/* ── Section 4: Unlock CTA ── */}
         <section
           style={{

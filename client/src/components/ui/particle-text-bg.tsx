@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import type React from "react";
 
 interface Vector2D { x: number; y: number }
 
@@ -73,6 +74,7 @@ interface ParticleTextBgProps {
   /** Milliseconds between word transitions (default 3000) */
   interval?: number;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 /**
@@ -84,6 +86,7 @@ export function ParticleTextBg({
   words = ["SPORTS DAY", "002", "GET READY", "YOUR TEAM", "AWAITS"],
   interval = 3000,
   className = "absolute inset-0 w-full h-full",
+  style,
 }: ParticleTextBgProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef({
@@ -210,5 +213,5 @@ export function ParticleTextBg({
     };
   }, [words, interval]);
 
-  return <canvas ref={canvasRef} className={className} />;
+  return <canvas ref={canvasRef} className={className} style={style} />;
 }
