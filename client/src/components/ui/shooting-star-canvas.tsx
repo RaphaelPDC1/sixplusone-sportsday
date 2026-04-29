@@ -64,15 +64,18 @@ export function ShootingStarCanvas({
     const DURATION_TRAVEL = 1400; // ms for the logo to cross the screen
     const DURATION_FIREWORK = 1200; // ms for the firework to fade
 
-    // Travel path: start at nav logo position, arc diagonally down-right
+    // Travel path: start at nav logo position, arc to a random burst point anywhere on screen
     const startX = logoStartX;
     const startY = logoStartY;
-    // End point: bottom-right area, off-screen
-    const endX = window.innerWidth + 80;
-    const endY = window.innerHeight * 0.75;
-    // Control point for the arc (mid-screen, slightly lower)
-    const cpX = window.innerWidth * 0.55;
-    const cpY = window.innerHeight * 0.45;
+    // Firework detonation point: random position on screen (avoid edges)
+    const burstX = window.innerWidth  * (0.2 + Math.random() * 0.6);
+    const burstY = window.innerHeight * (0.2 + Math.random() * 0.6);
+    // End point is the burst point — logo disappears there
+    const endX = burstX;
+    const endY = burstY;
+    // Control point arcs the path naturally toward the burst
+    const cpX = (startX + burstX) * 0.5 + (Math.random() - 0.5) * window.innerWidth * 0.3;
+    const cpY = Math.min(startY, burstY) - window.innerHeight * (0.1 + Math.random() * 0.2);
 
     // Quadratic bezier helper
     const bezier = (t: number, p0: number, p1: number, p2: number) =>
@@ -176,9 +179,9 @@ export function ShootingStarCanvas({
         }
 
         if (t >= 1) {
-          // Transition to firework at exit point
+          // Transition to firework at screen centre
           phase = "firework";
-          sparks = createSparks(x, y);
+          sparks = createSparks(burstX, burstY);
           fireworkStartTime = timestamp;
         }
       } else if (phase === "firework") {
