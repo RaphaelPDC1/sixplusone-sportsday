@@ -41,7 +41,7 @@ function AnimatedNumber({ value }: { value: number }) {
 function StatusBlock({ visible }: { visible: boolean }) {
   return (
     <div
-      className="relative overflow-hidden border border-white/8 bg-black/35 backdrop-blur-sm"
+      className="relative overflow-hidden border border-white/8 bg-black/20 backdrop-blur-sm"
       style={{
         transition: "opacity 0.8s ease 0.5s, transform 0.8s ease 0.5s",
         opacity: visible ? 1 : 0,
@@ -449,7 +449,7 @@ export default function Holding() {
             opacity: heroVisible ? 1 : 0,
           }}
         >
-          <div className="border border-white/8 bg-black/25 backdrop-blur-sm p-5">
+          <div className="border border-white/8 bg-black/15 backdrop-blur-sm p-5">
             <div className="flex items-start justify-between mb-4">
               <p className="font-mono text-[#444] text-xs tracking-[0.3em]">PLAYER PROFILE</p>
               <span className="font-mono text-[#FF5500] text-xs tracking-wider">
@@ -486,7 +486,7 @@ export default function Holding() {
             opacity: heroVisible ? 1 : 0,
           }}
         >
-          <div className="relative border border-[#FF5500]/20 bg-black/35 backdrop-blur-sm overflow-hidden">
+          <div className="relative border border-[#FF5500]/20 bg-black/20 backdrop-blur-sm overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF5500]/50 to-transparent" />
             <div className="p-6">
               <div className="flex items-center gap-3 mb-1">
@@ -532,7 +532,7 @@ export default function Holding() {
             opacity: heroVisible ? 1 : 0,
           }}
         >
-          <div className="border border-white/8 bg-black/25 backdrop-blur-sm p-6">
+          <div className="border border-white/8 bg-black/15 backdrop-blur-sm p-6">
             <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-4">BRING YOUR PEOPLE</p>
             <p className="font-mono text-[#F2F0EB]/80 text-sm tracking-wider mb-1">
               Invite 3 friends to join the Sports Day 002 list.
@@ -540,7 +540,7 @@ export default function Holding() {
             <p className="font-mono text-[#444] text-xs tracking-wider mb-4">
               Reward: extra merch discount + priority captain vote access
             </p>
-            <div className="bg-black/30 border border-white/8 p-3 mb-3">
+            <div className="bg-black/15 border border-white/8 p-3 mb-3">
               <p className="font-mono text-[#FF5500] text-xs tracking-wider break-all">
                 {referralLink || "Generating your link..."}
               </p>

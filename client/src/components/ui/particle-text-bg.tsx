@@ -185,7 +185,7 @@ export function ParticleTextBg({
     state.lastSwitch = performance.now();
 
     const animate = (now: number) => {
-      ctx.fillStyle = "rgba(10, 10, 10, 0.12)";
+      ctx.fillStyle = "rgba(10, 10, 10, 0.06)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       for (let i = state.particles.length - 1; i >= 0; i--) {
