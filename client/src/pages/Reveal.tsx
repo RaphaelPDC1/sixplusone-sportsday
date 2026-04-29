@@ -65,7 +65,7 @@ function RevealBackground({ teamColor }: { teamColor: string }) {
 }
 
 // ─── Confetti ─────────────────────────────────────────────────────────────────
-function useConfetti(active: boolean, colors: string[], colliderRef?: React.RefObject<HTMLElement | null>) {
+function useConfetti(active: boolean, colors: string[]) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -99,17 +99,10 @@ function useConfetti(active: boolean, colors: string[], colliderRef?: React.RefO
 
     const GRAVITY = 0.05;       // gentle, constant gravity
     const MAX_VY = 9;           // terminal velocity cap
-    const BOUNCE_DAMP = 0.45;   // energy lost on collision
 
     let frame: number;
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Get collider rect once per frame (cheap — just a getBoundingClientRect)
-      let cRect: DOMRect | null = null;
-      if (colliderRef?.current) {
-        cRect = colliderRef.current.getBoundingClientRect();
-      }
 
       for (const p of particles) {
         // Apply gravity with terminal velocity cap
@@ -117,39 +110,6 @@ function useConfetti(active: boolean, colors: string[], colliderRef?: React.RefO
         p.x += p.vx;
         p.y += p.vy;
         p.rot += p.rotV;
-
-        // AABB collision with team name text box
-        if (cRect) {
-          const px = p.x, py = p.y;
-          const hw = p.w / 2, hh = p.h / 2;
-          // Check if particle overlaps the collider rect
-          if (
-            px + hw > cRect.left &&
-            px - hw < cRect.right &&
-            py + hh > cRect.top &&
-            py - hh < cRect.bottom
-          ) {
-            // Determine which edge was hit — bounce off top or sides
-            const overlapTop = (py + hh) - cRect.top;
-            const overlapLeft = (px + hw) - cRect.left;
-            const overlapRight = cRect.right - (px - hw);
-
-            if (overlapTop < overlapLeft && overlapTop < overlapRight && p.vy > 0) {
-              // Hit from top — bounce vertically
-              p.y = cRect.top - hh - 1;
-              p.vy = -Math.abs(p.vy) * BOUNCE_DAMP;
-              p.vx += (Math.random() - 0.5) * 2; // slight horizontal scatter
-            } else if (overlapLeft < overlapRight) {
-              // Hit left wall — push left
-              p.x = cRect.left - hw - 1;
-              p.vx = -Math.abs(p.vx) * BOUNCE_DAMP;
-            } else {
-              // Hit right wall — push right
-              p.x = cRect.right + hw + 1;
-              p.vx = Math.abs(p.vx) * BOUNCE_DAMP;
-            }
-          }
-        }
 
         // Recycle off-screen particles with FRESH velocity (key fix for acceleration bug)
         if (p.y > canvas.height + 30) {
@@ -556,7 +516,6 @@ export default function Reveal() {
   const [aiIdentity, setAiIdentity] = useState<{ title: string; message: string } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const shareCanvasRef = useRef<HTMLCanvasElement>(null);
-  const teamNameRef = useRef<HTMLHeadingElement>(null);
 
   const { data: user } = trpc.sportsday.getUserStatus.useQuery(
     { id: userId! },
@@ -585,7 +544,7 @@ export default function Reveal() {
 
   const team = (user?.team ?? "red") as Team;
   const config = TEAM_CONFIG[team];
-  const confettiRef = useConfetti(phase === "reveal", config.confettiColors, teamNameRef as React.RefObject<HTMLElement | null>);
+  const confettiRef = useConfetti(phase === "reveal", config.confettiColors);
 
   const handleAnimationComplete = useCallback(() => {
     setPhase("reveal");
@@ -737,7 +696,7 @@ export default function Reveal() {
           <p className="font-display text-white/80 tracking-widest mb-1" style={{ fontSize: "clamp(0.9rem, 3.5vw, 1.3rem)" }}>
             YOU ARE
           </p>
-          <h1 ref={teamNameRef} className="font-display text-white leading-none mb-2"
+          <h1 className="font-display text-white leading-none mb-2"
             style={{ fontSize: "clamp(3.5rem, 16vw, 8rem)", textShadow: "0 0 80px rgba(0,0,0,0.5)" }}>
             {config.name}
           </h1>
