@@ -1,36 +1,35 @@
-import { useLocation } from "wouter";
+import { useRef } from "react";
+import { usePageTransition } from "@/contexts/PageTransitionContext";
 
 interface BackNavProps {
   to: string;
   label?: string;
-  /** Pass className to override positioning — defaults to fixed top-left */
+  /** Pass className to override positioning */
   className?: string;
-  /** If true, renders inline (no fixed positioning) — useful inside flex headers */
+  /** If true, renders inline — useful inside flex headers */
   inline?: boolean;
 }
 
 /**
  * Back navigation in the site's editorial mono style.
- * Default: fixed top-left overlay.
- * Pass inline=true to render as a plain inline element inside a header.
+ * Fires the shooting-star page transition animation on click.
  */
 export function BackNav({ to, label = "BACK", className, inline = false }: BackNavProps) {
-  const [, navigate] = useLocation();
+  const { triggerTransition } = usePageTransition();
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   const base =
     "flex items-center gap-2 font-mono text-xs tracking-[0.25em] text-white/40 hover:text-[#FF5500] transition-colors group";
 
-  const positioning = inline
-    ? ""
-    : "fixed top-5 left-5 z-50";
+  const positioning = inline ? "" : "fixed top-5 left-5 z-50";
 
   return (
     <button
-      onClick={() => navigate(to)}
+      ref={btnRef}
+      onClick={() => triggerTransition(to, btnRef.current)}
       className={`${base} ${positioning} ${className ?? ""}`}
-      aria-label={`Go back`}
+      aria-label="Go back"
     >
-      {/* Arrow — thin, no border/pill */}
       <svg
         width="12"
         height="12"

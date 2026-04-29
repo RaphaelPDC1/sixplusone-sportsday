@@ -4,6 +4,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { BackNav } from "@/components/ui/back-nav";
+import { EntrySplash } from "@/components/ui/entry-splash";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -92,6 +93,9 @@ function AdminPasswordGate({ onUnlock }: { onUnlock: () => void }) {
 export default function Admin() {
   const [, navigate] = useLocation();
   const { user, isAuthenticated, loading } = useAuth();
+  const [showSplash, setShowSplash] = useState(
+    () => sessionStorage.getItem("admin_splash_seen") !== "true"
+  );
   const [passwordUnlocked, setPasswordUnlocked] = useState(
     () => sessionStorage.getItem("admin_unlocked") === "true"
   );
@@ -257,6 +261,7 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB]">
+      {showSplash && <EntrySplash onComplete={() => { sessionStorage.setItem("admin_splash_seen", "true"); setShowSplash(false); }} />}
       <div className="h-[2px] bg-[#FF5500]" />
 
       {/* Header */}

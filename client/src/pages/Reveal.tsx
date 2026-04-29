@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { BackNav } from "@/components/ui/back-nav";
+import { EntrySplash } from "@/components/ui/entry-splash";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -473,6 +474,9 @@ function ChaoticWheelAnimation({ onComplete }: { onComplete: () => void }) {
 // ─── Main Reveal Page ─────────────────────────────────────────────────────────
 export default function Reveal() {
   const [, navigate] = useLocation();
+  const [showSplash, setShowSplash] = useState(
+    () => sessionStorage.getItem("reveal_splash_seen") !== "true"
+  );
   const [userId] = useState(() => localStorage.getItem("sd_user_id"));
   const [phase, setPhase] = useState<"tension" | "animation" | "reveal">("tension");
   const [aiIdentity, setAiIdentity] = useState<{ title: string; message: string } | null>(null);
@@ -614,6 +618,7 @@ export default function Reveal() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden transition-colors duration-1000"
       style={{ backgroundColor: phase === "reveal" ? config.color : "#0A0A0A" }}>
+      {showSplash && <EntrySplash onComplete={() => { sessionStorage.setItem("reveal_splash_seen", "true"); setShowSplash(false); }} />}
       {phase !== "reveal" && <RevealBackground teamColor={config.color} />}
       <canvas ref={confettiRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 10 }} />
       <canvas ref={shareCanvasRef} className="hidden" />

@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import WarpShaderBg from "@/components/ui/warp-shader";
 import StepParticles from "@/components/ui/step-particles";
+import { EntrySplash } from "@/components/ui/entry-splash";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -53,6 +54,13 @@ const STEP_PALETTES: string[][] = [
 
 export default function Enter() {
   const [, navigate] = useLocation();
+  const [showSplash, setShowSplash] = useState(
+    () => sessionStorage.getItem("enter_splash_seen") !== "true"
+  );
+  const handleSplashComplete = useCallback(() => {
+    sessionStorage.setItem("enter_splash_seen", "true");
+    setShowSplash(false);
+  }, []);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [animating, setAnimating] = useState(false);
@@ -201,6 +209,7 @@ export default function Enter() {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#0A0A0A]">
+      {showSplash && <EntrySplash onComplete={handleSplashComplete} />}
       {/* Animated Warp shader background */}
       <WarpShaderBg colors={palette} />
       {/* Per-step particles — persistent canvas, config changes with step */}

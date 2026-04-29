@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { NowHappening } from "@/components/ui/now-happening";
 import { BackNav } from "@/components/ui/back-nav";
+import { EntrySplash } from "@/components/ui/entry-splash";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -51,6 +52,9 @@ const LOCATION = {
 
 export default function TeamHub() {
   const [, navigate] = useLocation();
+  const [showSplash, setShowSplash] = useState(
+    () => sessionStorage.getItem("teamhub_splash_seen") !== "true"
+  );
   const userId = typeof window !== "undefined" ? localStorage.getItem("sd_user_id") ?? "" : "";
   const [activeTab, setActiveTab] = useState<"team" | "events" | "wildcards" | "awards" | "location">("team");
   const [votingFor, setVotingFor] = useState<AwardCategory | null>(null);
@@ -201,6 +205,7 @@ export default function TeamHub() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB]">
+      {showSplash && <EntrySplash onComplete={() => { sessionStorage.setItem("teamhub_splash_seen", "true"); setShowSplash(false); }} />}
       {/* Live event indicator */}
       <div className="px-5 pt-4">
         <NowHappening />
