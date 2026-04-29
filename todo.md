@@ -159,3 +159,39 @@
 
 ### Skill Creation
 - [ ] Package 6+1 Sports Day workflow as reusable skill
+
+
+## Phase 4: Team Hub Live Features (IN PROGRESS)
+- [x] Created TeamLiveFeatures component with team-specific modules:
+  - [x] Red team: Heat Score (daily reset, rises on interaction)
+  - [x] Blue team: Strategy Board (notes list + input)
+  - [x] Pink team: Energy Feed (activity stream)
+  - [x] Orange team: Chaos Meter (unpredictable, resets 4-6h)
+- [x] Integrated component into Team Hub team tab
+- [x] Fixed JSX syntax errors in TeamHub.tsx
+- [x] All TypeScript errors resolved (0 errors)
+- [ ] Verify white text is hex #FFFFFF across all team features
+- [ ] Test team member visibility in all team tabs
+- [ ] Verify live data updates (simulated for now)
+
+## Phase 5: Leaderboard, Voting, Awards
+- [ ] Build Leaderboard tab (event results, team scores, rankings)
+- [ ] Implement Wildcard voting (team-wide vote for secret wildcard player)
+- [ ] Implement Awards voting (funniest, MVP, most dramatic, etc.)
+- [ ] Add voting UI with team colour theming
+
+## Phase 6: Event Recommendations & Sponsors
+- [ ] Build Event Recommendations tab
+- [ ] Build Sponsors/Vendors tab
+- [ ] Add sponsor logos and descriptions
+
+## Phase 7: Global Post Feed
+- [ ] Build global scrolling post feed (images/videos)
+- [ ] Add post creation UI
+- [ ] Implement like/comment functionality
+
+## Phase 8: Shopify Payment Integration
+- [ ] Set up Shopify API connection for £10 Priority Player Pass
+- [ ] Map "UNLOCK MY TEAM" button to Shopify checkout
+- [ ] Handle successful payment → update registration to paid/unlocked
+- [ ] Test payment flow end-to-end

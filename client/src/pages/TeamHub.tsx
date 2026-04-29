@@ -6,6 +6,7 @@ import { NowHappening } from "@/components/ui/now-happening";
 import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
 import { HeroWave } from "@/components/ui/hero-wave";
+import { TeamLiveFeatures } from "@/components/ui/team-live-features";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -364,7 +365,9 @@ export default function TeamHub() {
                 You're the first one here. More teammates coming.
               </p>
             ) : (
-              <div className="space-y-3">
+              <>
+                {hub.team && <TeamLiveFeatures teamColor={hub.team as "red" | "blue" | "pink" | "orange"} teamName={hub.team} memberCount={hub.members.length} />}
+                <div className="space-y-3 mt-6">
                 {hub.members.map((member) => (
                   <div
                     key={member.id}
@@ -422,11 +425,11 @@ export default function TeamHub() {
                         {member.strongestEvent?.toUpperCase() ?? "—"}
                       </div>
                     </div>
-                  </div>
+                     </div>
                 ))}
               </div>
+            </>
             )}
-
             {/* Photo upload prompt if no photo */}
             {!myPhoto && (
               <div
