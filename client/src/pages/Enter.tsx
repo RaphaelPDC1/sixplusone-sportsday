@@ -433,9 +433,9 @@ export default function Enter() {
               <StepCard label="Which dates work for you?" caption="Select all that apply.">
                 <div className="space-y-3 mt-6">
                   {[
-                    { key: "date4July" as const, label: "4 JULY", sub: "Saturday" },
-                    { key: "date11July" as const, label: "11 JULY", sub: "Saturday" },
-                    { key: "date18July" as const, label: "18 JULY", sub: "Saturday" },
+                    { key: "date4July" as const, label: "4 JULY 2026", sub: "Saturday" },
+                    { key: "date11July" as const, label: "11 JULY 2026", sub: "Saturday" },
+                    { key: "date18July" as const, label: "18 JULY 2026", sub: "Saturday" },
                     { key: "dateAny" as const, label: "ANY DATE", sub: "I'm flexible" },
                   ].map(({ key, label, sub }) => (
                     <button

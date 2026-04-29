@@ -74,9 +74,17 @@ export default function Home() {
     setLoginError("");
     try {
       const result = await checkEmailQuery.refetch();
-      if (result.data?.exists) {
+      if (result.data?.exists && result.data?.id) {
+        localStorage.setItem("userEmail", email.trim());
+        localStorage.setItem("sd_user_id", result.data.id);
+        setLoginOpen(false);
+        setEmail("");
+        navigate("/holding");
+      } else if (result.data?.exists) {
+        // Found but no ID — still navigate, holding page will handle it
         localStorage.setItem("userEmail", email.trim());
         setLoginOpen(false);
+        setEmail("");
         navigate("/holding");
       } else {
         setLoginError("Email not found. Please register first.");
@@ -163,7 +171,7 @@ export default function Home() {
       {/* Shader Hero — full screen */}
       <AnimatedShaderHero
         trustBadge={{
-          text: "REGISTRATION OPEN — JULY 2025",
+          text: "REGISTRATION OPEN — 2026",
           icons: ["◈"],
         }}
         headline={{
@@ -195,7 +203,7 @@ export default function Home() {
           <InfoBlock
             number="03"
             title="SHOW UP"
-            body="Four teams. One day. Your identity is waiting. July 2025 — date TBC based on registrations."
+            body="Four teams. One day. Your identity is waiting. 2026 — date TBC based on registrations."
           />
         </div>
 
@@ -216,7 +224,7 @@ export default function Home() {
             style={{ filter: "invert(1)" }}
           />
           <p className="font-mono text-[#333] text-xs tracking-wider">
-            © 6+1 SPORTS DAY 002
+            © 6+1 SPORTS DAY 002 — 2026
           </p>
         </div>
       </div>

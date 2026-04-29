@@ -558,13 +558,13 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
     .input(z.object({ email: z.string().email() }))
     .query(async ({ input }) => {
       const db = await getDb();
-      if (!db) return { exists: false };
+      if (!db) return { exists: false, id: null };
       const result = await db
         .select()
         .from(sportsDayRegistrations)
         .where(eq(sportsDayRegistrations.email, input.email))
         .limit(1);
-      return { exists: result.length > 0 };
+      return { exists: result.length > 0, id: result[0]?.id ?? null };
     }),
 
   // Event Schedule (public)
