@@ -65,33 +65,103 @@ function RevealBackground({ teamColor }: { teamColor: string }) {
 }
 
 // ─── Confetti ─────────────────────────────────────────────────────────────────
-function useConfetti(active: boolean, colors: string[]) {
+function useConfetti(active: boolean, colors: string[], colliderRef?: React.RefObject<HTMLElement | null>) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
   useEffect(() => {
     if (!active) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const particles = Array.from({ length: 200 }, () => ({
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    // Fresh particle factory — always starts with safe initial velocity
+    const makeParticle = (startY?: number) => ({
       x: Math.random() * canvas.width,
-      y: Math.random() * -canvas.height * 0.5,
-      vx: (Math.random() - 0.5) * 6,
-      vy: Math.random() * 6 + 2,
+      y: startY ?? Math.random() * -canvas.height * 0.5,
+      vx: (Math.random() - 0.5) * 5,
+      vy: Math.random() * 4 + 1.5,   // initial downward speed, capped
       color: colors[Math.floor(Math.random() * colors.length)],
-      w: Math.random() * 14 + 5,
-      h: Math.random() * 7 + 3,
+      w: Math.random() * 12 + 5,
+      h: Math.random() * 6 + 3,
       rot: Math.random() * 360,
-      rotV: (Math.random() - 0.5) * 12,
-    }));
+      rotV: (Math.random() - 0.5) * 10,
+    });
+
+    const particles = Array.from({ length: 200 }, () => makeParticle());
+
+    const GRAVITY = 0.05;       // gentle, constant gravity
+    const MAX_VY = 9;           // terminal velocity cap
+    const BOUNCE_DAMP = 0.45;   // energy lost on collision
+
     let frame: number;
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Get collider rect once per frame (cheap — just a getBoundingClientRect)
+      let cRect: DOMRect | null = null;
+      if (colliderRef?.current) {
+        cRect = colliderRef.current.getBoundingClientRect();
+      }
+
       for (const p of particles) {
-        p.x += p.vx; p.y += p.vy; p.rot += p.rotV; p.vy += 0.06;
-        if (p.y > canvas.height + 20) { p.y = -20; p.x = Math.random() * canvas.width; }
+        // Apply gravity with terminal velocity cap
+        p.vy = Math.min(p.vy + GRAVITY, MAX_VY);
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.rotV;
+
+        // AABB collision with team name text box
+        if (cRect) {
+          const px = p.x, py = p.y;
+          const hw = p.w / 2, hh = p.h / 2;
+          // Check if particle overlaps the collider rect
+          if (
+            px + hw > cRect.left &&
+            px - hw < cRect.right &&
+            py + hh > cRect.top &&
+            py - hh < cRect.bottom
+          ) {
+            // Determine which edge was hit — bounce off top or sides
+            const overlapTop = (py + hh) - cRect.top;
+            const overlapLeft = (px + hw) - cRect.left;
+            const overlapRight = cRect.right - (px - hw);
+
+            if (overlapTop < overlapLeft && overlapTop < overlapRight && p.vy > 0) {
+              // Hit from top — bounce vertically
+              p.y = cRect.top - hh - 1;
+              p.vy = -Math.abs(p.vy) * BOUNCE_DAMP;
+              p.vx += (Math.random() - 0.5) * 2; // slight horizontal scatter
+            } else if (overlapLeft < overlapRight) {
+              // Hit left wall — push left
+              p.x = cRect.left - hw - 1;
+              p.vx = -Math.abs(p.vx) * BOUNCE_DAMP;
+            } else {
+              // Hit right wall — push right
+              p.x = cRect.right + hw + 1;
+              p.vx = Math.abs(p.vx) * BOUNCE_DAMP;
+            }
+          }
+        }
+
+        // Recycle off-screen particles with FRESH velocity (key fix for acceleration bug)
+        if (p.y > canvas.height + 30) {
+          const fresh = makeParticle(-20);
+          p.x = fresh.x; p.y = fresh.y;
+          p.vx = fresh.vx; p.vy = fresh.vy;   // ← reset velocity, not just position
+          p.rot = fresh.rot; p.rotV = fresh.rotV;
+        }
+        // Wrap horizontally
+        if (p.x < -20) p.x = canvas.width + 20;
+        if (p.x > canvas.width + 20) p.x = -20;
+
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate((p.rot * Math.PI) / 180);
@@ -102,8 +172,12 @@ function useConfetti(active: boolean, colors: string[]) {
       frame = requestAnimationFrame(draw);
     };
     frame = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(frame);
-  }, [active, colors]);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", resize);
+    };
+  }, [active, colors]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return canvasRef;
 }
 
@@ -482,6 +556,7 @@ export default function Reveal() {
   const [aiIdentity, setAiIdentity] = useState<{ title: string; message: string } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const shareCanvasRef = useRef<HTMLCanvasElement>(null);
+  const teamNameRef = useRef<HTMLHeadingElement>(null);
 
   const { data: user } = trpc.sportsday.getUserStatus.useQuery(
     { id: userId! },
@@ -510,7 +585,7 @@ export default function Reveal() {
 
   const team = (user?.team ?? "red") as Team;
   const config = TEAM_CONFIG[team];
-  const confettiRef = useConfetti(phase === "reveal", config.confettiColors);
+  const confettiRef = useConfetti(phase === "reveal", config.confettiColors, teamNameRef as React.RefObject<HTMLElement | null>);
 
   const handleAnimationComplete = useCallback(() => {
     setPhase("reveal");
@@ -662,7 +737,7 @@ export default function Reveal() {
           <p className="font-display text-white/80 tracking-widest mb-1" style={{ fontSize: "clamp(0.9rem, 3.5vw, 1.3rem)" }}>
             YOU ARE
           </p>
-          <h1 className="font-display text-white leading-none mb-2"
+          <h1 ref={teamNameRef} className="font-display text-white leading-none mb-2"
             style={{ fontSize: "clamp(3.5rem, 16vw, 8rem)", textShadow: "0 0 80px rgba(0,0,0,0.5)" }}>
             {config.name}
           </h1>
