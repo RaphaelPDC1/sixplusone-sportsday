@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
+import { ParticleTextBg } from "@/components/ui/particle-text-bg";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -11,74 +12,16 @@ const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 const SHOPIFY_STORE_URL = import.meta.env.VITE_SHOPIFY_STORE_URL || "https://your-store.myshopify.com";
 const SHOPIFY_VARIANT_ID = import.meta.env.VITE_SHOPIFY_VARIANT_ID || "12345678901234";
 
-// ─── Animated orb background ─────────────────────────────────────────────────
+// ─── Particle text background ──────────────────────────────────────────────────
 function HoldingBackground() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const frameRef = useRef<number>(0);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const resize = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
-
-    type Orb = { x: number; y: number; r: number; vx: number; vy: number; alpha: number };
-    const orbs: Orb[] = Array.from({ length: 4 }, () => ({
-      x: Math.random() * (canvas.width || 400),
-      y: Math.random() * (canvas.height || 800),
-      r: 100 + Math.random() * 180,
-      vx: (Math.random() - 0.5) * 0.25,
-      vy: (Math.random() - 0.5) * 0.25,
-      alpha: 0.025 + Math.random() * 0.04,
-    }));
-
-    const draw = () => {
-      const w = canvas.width;
-      const h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
-      for (const orb of orbs) {
-        orb.x += orb.vx;
-        orb.y += orb.vy;
-        if (orb.x < -orb.r) orb.x = w + orb.r;
-        if (orb.x > w + orb.r) orb.x = -orb.r;
-        if (orb.y < -orb.r) orb.y = h + orb.r;
-        if (orb.y > h + orb.r) orb.y = -orb.r;
-        const hex = Math.round(orb.alpha * 255).toString(16).padStart(2, "0");
-        const grad = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, orb.r);
-        grad.addColorStop(0, `#FF5500${hex}`);
-        grad.addColorStop(1, "transparent");
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      frameRef.current = requestAnimationFrame(draw);
-    };
-    frameRef.current = requestAnimationFrame(draw);
-
-    return () => {
-      cancelAnimationFrame(frameRef.current);
-      ro.disconnect();
-    };
-  }, []);
-
   return (
-    <canvas
-      ref={canvasRef}
+    <ParticleTextBg
+      words={["SPORTS DAY", "002", "GET READY", "YOUR TEAM", "AWAITS", "6+1", "JULY 2026"]}
+      interval={3200}
       className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ zIndex: 0 }}
     />
   );
 }
-
 // ─── Animated counter ─────────────────────────────────────────────────────────
 function AnimatedNumber({ value }: { value: number }) {
   const [display, setDisplay] = useState(0);

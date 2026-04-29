@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { NowHappening } from "@/components/ui/now-happening";
 import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
+import { LightningBg } from "@/components/ui/lightning-bg";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -13,6 +14,14 @@ const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; gl
   blue:   { bg: "bg-[#1A4FE8]",   text: "text-[#1A4FE8]",   border: "border-[#1A4FE8]",   glow: "rgba(26,79,232,0.4)",  hex: "#1A4FE8" },
   pink:   { bg: "bg-[#F72B8C]",   text: "text-[#F72B8C]",   border: "border-[#F72B8C]",   glow: "rgba(247,43,140,0.4)", hex: "#F72B8C" },
   orange: { bg: "bg-[#FF6B00]",   text: "text-[#FF6B00]",   border: "border-[#FF6B00]",   glow: "rgba(255,107,0,0.4)",  hex: "#FF6B00" },
+};
+
+// Approximate HSL hue for each team colour (used by LightningBg shader)
+const TEAM_HUE: Record<string, number> = {
+  red: 0,
+  blue: 220,
+  pink: 330,
+  orange: 25,
 };
 
 const EVENTS = [
@@ -214,10 +223,20 @@ export default function TeamHub() {
       <div
         className="relative overflow-hidden"
         style={{
-          background: `linear-gradient(135deg, #0A0A0A 0%, ${tc.hex}22 50%, #0A0A0A 100%)`,
+          background: "#0A0A0A",
           borderBottom: `1px solid ${tc.hex}33`,
         }}
       >
+        {/* Lightning background tinted to team colour */}
+        <LightningBg
+          hue={TEAM_HUE[hub.team ?? "red"] ?? 0}
+          intensity={0.5}
+          speed={1.4}
+          size={2}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+        />
+        {/* Dark overlay so text stays readable */}
+        <div className="absolute inset-0 bg-black/60 pointer-events-none" />
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center justify-between mb-5">
             <BackNav to="/holding" inline />
