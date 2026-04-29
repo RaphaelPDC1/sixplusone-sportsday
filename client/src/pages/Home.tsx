@@ -125,13 +125,18 @@ export default function Home() {
 
       {/* Login Dialog */}
       <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-        <DialogContent className="bg-[#1A1A1A] border-[#333]">
+        <DialogContent
+          className="bg-[#1A1A1A] border-[#333]"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="text-white font-bebas text-2xl">FIND YOUR ACCOUNT</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <Input
+            <input
               type="email"
+              inputMode="email"
+              autoComplete="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => {
@@ -141,7 +146,7 @@ export default function Home() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleLogin();
               }}
-              className="bg-[#0A0A0A] border-[#333] text-white placeholder-[#666]"
+              className="w-full bg-[#0A0A0A] border border-[#333] text-white placeholder-[#666] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#FF5500] transition-colors"
             />
             {loginError && <p className="text-[#FF5500] text-sm">{loginError}</p>}
             <Button

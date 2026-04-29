@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { BackNav } from "@/components/ui/back-nav";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -37,6 +38,7 @@ export default function UnlockSuccess() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center px-5">
+      <BackNav to="/holding" />
       <div className="h-[2px] bg-[#FF5500] absolute top-0 left-0 right-0" />
       <img src={LOGO_URL} alt="6+1" className="h-10 w-auto mb-12" style={{ filter: "invert(1)" }} />
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { BackNav } from "@/components/ui/back-nav";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -616,6 +617,7 @@ export default function Reveal() {
       {phase !== "reveal" && <RevealBackground teamColor={config.color} />}
       <canvas ref={confettiRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 10 }} />
       <canvas ref={shareCanvasRef} className="hidden" />
+      <BackNav to="/holding" />
 
       {/* Tension phase */}
       {phase === "tension" && (

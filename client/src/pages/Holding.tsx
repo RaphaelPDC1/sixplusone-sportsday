@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { BackNav } from "@/components/ui/back-nav";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -481,6 +482,7 @@ export default function Holding() {
       {showSplash && <EntrySplash onComplete={handleSplashComplete} />}
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
       <HoldingBackground />
+      <BackNav to="/" />
 
       {/* Scanlines */}
       <div

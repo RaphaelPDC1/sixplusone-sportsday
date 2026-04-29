@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import { BackNav } from "@/components/ui/back-nav";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -256,6 +257,7 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB]">
+      <BackNav to="/" />
       <div className="h-[2px] bg-[#FF5500]" />
 
       {/* Header */}

@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { NowHappening } from "@/components/ui/now-happening";
+import { BackNav } from "@/components/ui/back-nav";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -184,6 +185,7 @@ export default function TeamHub() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB]">
+      <BackNav to="/holding" />
       {/* Live event indicator */}
       <div className="px-5 pt-4">
         <NowHappening />
