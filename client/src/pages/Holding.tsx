@@ -291,15 +291,39 @@ function StatusRow({
 
 // ─── Login modal ──────────────────────────────────────────────────────────────
 function LoginModal({ onClose }: { onClose: () => void }) {
+  const [, navigate] = useLocation();
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = () => {
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error("Enter a valid email address.");
+  const checkQuery = trpc.sportsday.checkEmailExists.useQuery(
+    { email: email.trim() },
+    { enabled: false }
+  );
+
+  const handleSubmit = async () => {
+    const trimmed = email.trim();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setError("Enter a valid email address.");
       return;
     }
-    toast.info("Check your registration email for your unique link to access your profile.");
-    onClose();
+    setLoading(true);
+    setError("");
+    try {
+      const result = await checkQuery.refetch();
+      if (result.data?.exists && result.data?.id) {
+        localStorage.setItem("sd_user_id", result.data.id);
+        localStorage.setItem("userEmail", trimmed);
+        onClose();
+        navigate("/holding");
+      } else {
+        setError("Email not found. Not registered yet?");
+      }
+    } catch {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -312,24 +336,28 @@ function LoginModal({ onClose }: { onClose: () => void }) {
           ✕
         </button>
         <p className="font-mono text-[#555] text-xs tracking-[0.3em] mb-2">RETURNING PLAYER</p>
-        <h2 className="font-display text-[#F2F0EB] text-3xl tracking-widest mb-2">FIND MY SPOT</h2>
+        <h2 className="font-display text-[#F2F0EB] text-3xl tracking-widest mb-2">LOG IN</h2>
         <p className="font-mono text-[#444] text-xs tracking-wider mb-6">
-          Enter your registration email and we'll remind you how to access your profile.
+          Enter your registration email to access your profile.
         </p>
         <input
-          autoFocus
           type="email"
+          inputMode="email"
+          autoComplete="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => { setEmail(e.target.value); setError(""); }}
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           placeholder="your@email.com"
-          className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-lg py-3 placeholder:text-white/20 transition-colors mb-6"
+          className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-lg py-3 placeholder:text-white/20 transition-colors mb-2"
         />
+        {error && <p className="font-mono text-[#FF5500] text-xs mb-4">{error}</p>}
+        {!error && <div className="mb-4" />}
         <button
           onClick={handleSubmit}
-          className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest py-4 hover:bg-[#F2F0EB] transition-colors"
+          disabled={loading}
+          className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest py-4 hover:bg-[#F2F0EB] transition-colors disabled:opacity-50"
         >
-          FIND ME →
+          {loading ? "CHECKING..." : "LOG IN →"}
         </button>
         <div className="mt-4 text-center">
           <a href="/enter" className="font-mono text-[#444] text-xs tracking-wider hover:text-[#FF5500] transition-colors">
