@@ -2,11 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import AnimatedShaderHero from "@/components/ui/animated-shader-hero";
 import { ShootingStarCanvas } from "@/components/ui/shooting-star-canvas";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { trpc } from "@/lib/trpc";
-import { User } from "lucide-react";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -22,10 +17,6 @@ function InfoBlock({ number, title, body }: { number: string; title: string; bod
 
 export default function Home() {
   const [, navigate] = useLocation();
-  const [loginOpen, setLoginOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [loginError, setLoginError] = useState("");
-  const [loginLoading, setLoginLoading] = useState(false);
 
   // Shooting star easter egg state
   const logoRef = useRef<HTMLImageElement>(null);
@@ -59,43 +50,6 @@ export default function Home() {
     scheduleNext();
   }, [scheduleNext]);
 
-  // Email lookup query
-  const checkEmailQuery = trpc.sportsday.checkEmailExists.useQuery(
-    { email: email.trim() },
-    { enabled: false }
-  );
-
-  const handleLogin = async () => {
-    if (!email.trim()) {
-      setLoginError("Please enter your email");
-      return;
-    }
-    setLoginLoading(true);
-    setLoginError("");
-    try {
-      const result = await checkEmailQuery.refetch();
-      if (result.data?.exists && result.data?.id) {
-        localStorage.setItem("userEmail", email.trim());
-        localStorage.setItem("sd_user_id", result.data.id);
-        setLoginOpen(false);
-        setEmail("");
-        navigate("/holding");
-      } else if (result.data?.exists) {
-        // Found but no ID — still navigate, holding page will handle it
-        localStorage.setItem("userEmail", email.trim());
-        setLoginOpen(false);
-        setEmail("");
-        navigate("/holding");
-      } else {
-        setLoginError("Email not found. Please register first.");
-      }
-    } catch {
-      setLoginError("Error looking up email. Please try again.");
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
       {/* Shooting star canvas overlay — renders above everything */}
@@ -121,54 +75,8 @@ export default function Home() {
           <span className="font-mono text-[#FF5500] text-xs tracking-[0.3em]">
             SPORTS DAY 002
           </span>
-          <button
-            onClick={() => setLoginOpen(true)}
-            className="p-2 hover:bg-[#1A1A1A] rounded-lg transition-colors"
-            title="Login"
-          >
-            <User className="w-5 h-5 text-[#FF5500]" />
-          </button>
         </div>
       </nav>
-
-      {/* Login Dialog */}
-      <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-        <DialogContent
-          className="bg-[#1A1A1A] border-[#333]"
-          onOpenAutoFocus={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
-            <DialogTitle className="text-white font-bebas text-2xl">FIND YOUR ACCOUNT</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <input
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setLoginError("");
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleLogin();
-              }}
-              className="w-full bg-[#0A0A0A] border border-[#333] text-white placeholder-[#666] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#FF5500] transition-colors"
-            />
-            {loginError && <p className="text-[#FF5500] text-sm">{loginError}</p>}
-            <Button
-              onClick={handleLogin}
-              disabled={loginLoading}
-              className="w-full bg-[#FF5500] hover:bg-[#FF6B1A] text-white font-bebas tracking-wide"
-            >
-              {loginLoading ? "LOOKING UP..." : "FIND MY ACCOUNT"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Quick login hint removed — "Already registered?" now lives inside the form */}
 
       {/* Shader Hero — full screen */}
       <AnimatedShaderHero
@@ -185,10 +93,6 @@ export default function Home() {
           primary: {
             text: "REGISTER NOW →",
             onClick: () => navigate("/enter"),
-          },
-          secondary: {
-            text: "Already registered? →",
-            onClick: () => setLoginOpen(true),
           },
         }}
       />
