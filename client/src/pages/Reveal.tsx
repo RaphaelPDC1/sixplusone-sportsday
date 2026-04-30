@@ -350,8 +350,9 @@ function ClawAnimation({ onComplete }: { onComplete: () => void }) {
 }
 
 // ─── Slot Machine (Pink) ──────────────────────────────────────────────────────
-const SLOT_SYMBOLS = ["RED", "BLUE", "♥", "ORANGE", "RED", "♥", "BLUE", "ORANGE", "♥"];
-const SYMBOL_COLORS: Record<string, string> = { RED: "#E8232A", BLUE: "#1A4FE8", "♥": "#F72B8C", ORANGE: "#FF6B00" };
+// Each team gets a themed emoji symbol
+const SLOT_SYMBOLS = ["🔥", "⭐", "♥", "⚡", "🔥", "♥", "⭐", "⚡", "♥"];
+const SYMBOL_COLORS: Record<string, string> = { "🔥": "#E8232A", "⭐": "#1A4FE8", "♥": "#F72B8C", "⚡": "#FF6B00" };
 
 function SlotReel({ spinning, locked }: { spinning: boolean; locked: boolean }) {
   const [offset, setOffset] = useState(0);
@@ -375,18 +376,20 @@ function SlotReel({ spinning, locked }: { spinning: boolean; locked: boolean }) 
     if (locked) { cancelAnimationFrame(frameRef.current); stoppedRef.current = true; setOffset(0); }
   }, [locked]);
   const symbols = locked ? ["♥", "♥", "♥"] : SLOT_SYMBOLS;
+  // Emoji symbols use filter to tint them; ♥ is a text character so uses color directly
+  const isEmoji = (s: string) => s !== "♥";
   return (
     <div className="relative w-20 h-16 overflow-hidden border border-[#F72B8C]/30"
       style={{ background: "linear-gradient(180deg, #0D0008 0%, #050005 100%)", boxShadow: locked ? "0 0 20px #F72B8C60" : "none", transition: "box-shadow 0.4s ease" }}>
       <div className="absolute inset-0 pointer-events-none z-10" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.4) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.4) 100%)" }} />
       <div className="absolute left-0 right-0 flex flex-col" style={{ top: locked ? 0 : -offset, transition: locked ? "top 0.3s ease" : "none" }}>
         {symbols.map((sym, i) => (
-          <div key={i} className="h-16 flex items-center justify-center font-display shrink-0"
+          <div key={i} className="h-16 flex items-center justify-center shrink-0"
             style={{
-              color: SYMBOL_COLORS[sym] ?? "#F2F0EB",
-              fontSize: sym === "♥" ? "1.8rem" : "0.75rem",
-              letterSpacing: sym === "♥" ? "0" : "0.1em",
+              fontSize: "1.8rem",
+              color: sym === "♥" ? "#F72B8C" : undefined,
               animation: locked && sym === "♥" ? `heartbeat 0.9s ease-in-out ${i * 0.15}s infinite` : "none",
+              filter: isEmoji(sym) ? undefined : undefined,
             }}>
             {sym}
           </div>
@@ -396,40 +399,58 @@ function SlotReel({ spinning, locked }: { spinning: boolean; locked: boolean }) 
   );
 }
 
+// Floating heart particle for jackpot celebration
+function FloatingHeart({ delay, x }: { delay: number; x: number }) {
+  return (
+    <div
+      className="absolute pointer-events-none select-none"
+      style={{
+        left: `${x}%`,
+        bottom: "-10%",
+        fontSize: "1.4rem",
+        color: "#F72B8C",
+        animation: `floatHeart 1.8s ease-out ${delay}s forwards`,
+        opacity: 0,
+      }}>
+      ♥
+    </div>
+  );
+}
+
 function SlotAnimation({ onComplete }: { onComplete: () => void }) {
   const [spinning, setSpinning] = useState(false);
   const [locked, setLocked] = useState([false, false, false]);
   const [jackpot, setJackpot] = useState(false);
+  // Generate stable heart positions
+  const hearts = useState(() =>
+    Array.from({ length: 18 }, (_, i) => ({ id: i, x: 5 + (i * 5.5) % 90, delay: (i * 0.09) % 1.4 }))
+  )[0];
   useEffect(() => {
     const t0 = setTimeout(() => setSpinning(true), 300);
     const t1 = setTimeout(() => setLocked([true, false, false]), 1800);
     const t2 = setTimeout(() => setLocked([true, true, false]), 2800);
     const t3 = setTimeout(() => { setLocked([true, true, true]); setJackpot(true); }, 3800);
-    const t4 = setTimeout(onComplete, 5000);
+    const t4 = setTimeout(onComplete, 5800);
     return () => { clearTimeout(t0); clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); };
   }, [onComplete]);
   return (
-    <div className="flex flex-col items-center">
-      <p className="font-mono text-white/40 text-xs tracking-[0.3em] mb-4">PULLING THE LEVER...</p>
-      <div className="relative border-2 border-[#F72B8C]/40 p-6"
+    <div className="flex flex-col items-center w-full">
+      <p className="font-mono text-white/40 text-xs tracking-[0.3em] mb-4 text-center">PULLING THE LEVER...</p>
+      <div className="relative border-2 border-[#F72B8C]/40 p-6 w-full max-w-[280px] overflow-hidden"
         style={{ background: "linear-gradient(180deg, #0D0008 0%, #050005 100%)", boxShadow: jackpot ? "0 0 60px #F72B8C40, 0 0 120px #F72B8C20" : "0 0 20px #F72B8C10", transition: "box-shadow 0.5s ease" }}>
+        {/* Floating hearts on jackpot */}
+        {jackpot && hearts.map((h) => <FloatingHeart key={h.id} delay={h.delay} x={h.x} />)}
         <div className="flex items-center justify-center mb-4">
           <div className="font-display text-[#F72B8C] text-lg tracking-widest">SPORTS DAY 002</div>
         </div>
-        <div className="flex gap-3 mb-4">
+        <div className="flex gap-3 mb-4 justify-center">
           {[0, 1, 2].map((i) => (
             <SlotReel key={i} spinning={spinning} locked={locked[i]} />
           ))}
         </div>
         <div className="text-center font-display text-[#F72B8C] text-2xl tracking-widest transition-all duration-500"
           style={{ opacity: jackpot ? 1 : 0, transform: jackpot ? "scale(1)" : "scale(0.8)" }}>
-          JACKPOT!
-        </div>
-        <div className="flex gap-1 justify-center mt-3">
-          {Array.from({ length: 12 }, (_, i) => (
-            <div key={i} className="w-1.5 h-1.5 rounded-full"
-              style={{ backgroundColor: "#F72B8C", opacity: jackpot ? 1 : 0.2, animation: jackpot ? `pulse 0.4s ease-in-out ${i * 0.06}s infinite` : "none" }} />
-          ))}
+          ♥ JACKPOT! ♥
         </div>
       </div>
     </div>
@@ -671,14 +692,14 @@ export default function Reveal() {
 
       {/* Tension phase — TensionBuilder only mounts after splash so countdown always starts at 3 */}
       {phase === "tension" && (
-        <div className="relative z-20 flex flex-col items-center px-5 w-full max-w-sm flex-1 justify-center">
+        <div className="relative z-20 flex flex-col items-center px-5 w-full max-w-sm mx-auto flex-1 justify-center">
           {!showSplash && <TensionBuilder teamColor={config.color} onReady={() => setPhase("animation")} />}
         </div>
       )}
 
       {/* Animation phase */}
       {phase === "animation" && (
-        <div className="relative z-20 flex flex-col items-center px-5 w-full max-w-sm flex-1 justify-center">
+        <div className="relative z-20 flex flex-col items-center px-5 w-full max-w-sm mx-auto flex-1 justify-center">
           {team === "red" && <RouletteAnimation onComplete={handleAnimationComplete} />}
           {team === "blue" && <ClawAnimation onComplete={handleAnimationComplete} />}
           {team === "pink" && <SlotAnimation onComplete={handleAnimationComplete} />}
@@ -688,7 +709,7 @@ export default function Reveal() {
 
       {/* Reveal phase */}
       {phase === "reveal" && (
-        <div className="relative z-20 flex flex-col items-center px-5 text-center w-full max-w-sm flex-1 justify-center pb-12">
+        <div className="relative z-20 flex flex-col items-center px-5 text-center w-full max-w-sm mx-auto flex-1 justify-center pb-12">
           <div className="h-[1px] bg-white/30 w-full mb-6" />
           <p className="font-display text-white/80 tracking-widest mb-1" style={{ fontSize: "clamp(0.9rem, 3.5vw, 1.3rem)" }}>
             YOU ARE
