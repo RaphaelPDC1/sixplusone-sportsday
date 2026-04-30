@@ -350,8 +350,8 @@ function ClawAnimation({ onComplete }: { onComplete: () => void }) {
 }
 
 // ─── Slot Machine (Pink) ──────────────────────────────────────────────────────
-const SLOT_SYMBOLS = ["RED", "BLUE", "PINK", "ORANGE", "RED", "PINK", "BLUE", "ORANGE", "PINK"];
-const SYMBOL_COLORS: Record<string, string> = { RED: "#E8232A", BLUE: "#1A4FE8", PINK: "#F72B8C", ORANGE: "#FF6B00" };
+const SLOT_SYMBOLS = ["RED", "BLUE", "♥", "ORANGE", "RED", "♥", "BLUE", "ORANGE", "♥"];
+const SYMBOL_COLORS: Record<string, string> = { RED: "#E8232A", BLUE: "#1A4FE8", "♥": "#F72B8C", ORANGE: "#FF6B00" };
 
 function SlotReel({ spinning, locked }: { spinning: boolean; locked: boolean }) {
   const [offset, setOffset] = useState(0);
@@ -374,15 +374,20 @@ function SlotReel({ spinning, locked }: { spinning: boolean; locked: boolean }) 
   useEffect(() => {
     if (locked) { cancelAnimationFrame(frameRef.current); stoppedRef.current = true; setOffset(0); }
   }, [locked]);
-  const symbols = locked ? ["PINK", "PINK", "PINK"] : SLOT_SYMBOLS;
+  const symbols = locked ? ["♥", "♥", "♥"] : SLOT_SYMBOLS;
   return (
     <div className="relative w-20 h-16 overflow-hidden border border-[#F72B8C]/30"
       style={{ background: "linear-gradient(180deg, #0D0008 0%, #050005 100%)", boxShadow: locked ? "0 0 20px #F72B8C60" : "none", transition: "box-shadow 0.4s ease" }}>
       <div className="absolute inset-0 pointer-events-none z-10" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.4) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.4) 100%)" }} />
       <div className="absolute left-0 right-0 flex flex-col" style={{ top: locked ? 0 : -offset, transition: locked ? "top 0.3s ease" : "none" }}>
         {symbols.map((sym, i) => (
-          <div key={i} className="h-16 flex items-center justify-center font-display text-xs tracking-widest shrink-0"
-            style={{ color: SYMBOL_COLORS[sym] ?? "#F2F0EB" }}>
+          <div key={i} className="h-16 flex items-center justify-center font-display shrink-0"
+            style={{
+              color: SYMBOL_COLORS[sym] ?? "#F2F0EB",
+              fontSize: sym === "♥" ? "1.8rem" : "0.75rem",
+              letterSpacing: sym === "♥" ? "0" : "0.1em",
+              animation: locked && sym === "♥" ? `heartbeat 0.9s ease-in-out ${i * 0.15}s infinite` : "none",
+            }}>
             {sym}
           </div>
         ))}
@@ -650,33 +655,30 @@ export default function Reveal() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden transition-colors duration-1000"
+    <div className="min-h-screen flex flex-col relative overflow-hidden transition-colors duration-1000"
       style={{ backgroundColor: phase === "reveal" ? config.color : "#0A0A0A" }}>
       {showSplash && <EntrySplash onComplete={() => { sessionStorage.setItem("reveal_splash_seen", "true"); setShowSplash(false); }} />}
       {phase !== "reveal" && <RevealBackground teamColor={config.color} />}
       <canvas ref={confettiRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 10 }} />
       <canvas ref={shareCanvasRef} className="hidden" />
 
+      {/* Sticky top header — always visible at top of screen */}
+      <header className="relative z-30 w-full flex items-center justify-between px-6 pt-safe pt-4 pb-3">
+        <BackNav to="/holding" inline />
+        <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: phase === "reveal" ? "brightness(0) invert(1)" : "invert(1)" }} />
+        <div className="w-16" />
+      </header>
+
       {/* Tension phase — TensionBuilder only mounts after splash so countdown always starts at 3 */}
       {phase === "tension" && (
-        <div className="relative z-20 flex flex-col items-center px-5 w-full max-w-sm">
-          <div className="w-full flex items-center justify-between mb-10">
-            <BackNav to="/holding" inline />
-            <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: "invert(1)" }} />
-            <div className="w-16" />
-          </div>
+        <div className="relative z-20 flex flex-col items-center px-5 w-full max-w-sm flex-1 justify-center">
           {!showSplash && <TensionBuilder teamColor={config.color} onReady={() => setPhase("animation")} />}
         </div>
       )}
 
       {/* Animation phase */}
       {phase === "animation" && (
-        <div className="relative z-20 flex flex-col items-center px-5 w-full max-w-sm">
-          <div className="w-full flex items-center justify-between mb-8">
-            <BackNav to="/holding" inline />
-            <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: "invert(1)" }} />
-            <div className="w-16" />
-          </div>
+        <div className="relative z-20 flex flex-col items-center px-5 w-full max-w-sm flex-1 justify-center">
           {team === "red" && <RouletteAnimation onComplete={handleAnimationComplete} />}
           {team === "blue" && <ClawAnimation onComplete={handleAnimationComplete} />}
           {team === "pink" && <SlotAnimation onComplete={handleAnimationComplete} />}
@@ -686,12 +688,7 @@ export default function Reveal() {
 
       {/* Reveal phase */}
       {phase === "reveal" && (
-        <div className="relative z-20 flex flex-col items-center px-5 text-center w-full max-w-sm py-12">
-          <div className="w-full flex items-center justify-between mb-6">
-            <BackNav to="/holding" inline />
-            <img src={LOGO_URL} alt="6+1" className="h-10 w-auto" style={{ filter: "brightness(0) invert(1)" }} />
-            <div className="w-16" />
-          </div>
+        <div className="relative z-20 flex flex-col items-center px-5 text-center w-full max-w-sm flex-1 justify-center pb-12">
           <div className="h-[1px] bg-white/30 w-full mb-6" />
           <p className="font-display text-white/80 tracking-widest mb-1" style={{ fontSize: "clamp(0.9rem, 3.5vw, 1.3rem)" }}>
             YOU ARE
