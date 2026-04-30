@@ -450,7 +450,7 @@ function SlotAnimation({ onComplete }: { onComplete: () => void }) {
         </div>
         <div className="text-center font-display text-[#F72B8C] text-2xl tracking-widest transition-all duration-500"
           style={{ opacity: jackpot ? 1 : 0, transform: jackpot ? "scale(1)" : "scale(0.8)" }}>
-          ♥ JACKPOT! ♥
+          JACKPOT!
         </div>
       </div>
     </div>
