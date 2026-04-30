@@ -75,6 +75,17 @@ export default function Home() {
           <span className="font-mono text-[#FF5500] text-xs tracking-[0.3em]">
             SPORTS DAY 002
           </span>
+          <button
+            onClick={() => navigate("/holding")}
+            title="Already registered? Log in"
+            className="text-white/30 hover:text-[#FF5500] transition-colors"
+            aria-label="Returning player login"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </button>
         </div>
       </nav>
 
