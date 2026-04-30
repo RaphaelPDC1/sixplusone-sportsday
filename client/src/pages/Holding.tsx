@@ -127,96 +127,12 @@ function StatusRow({
   );
 }
 
-// ─── Login modal ──────────────────────────────────────────────────────────────
-function LoginModal({ onClose }: { onClose: () => void }) {
-  const [, navigate] = useLocation();
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const checkQuery = trpc.sportsday.checkEmailExists.useQuery(
-    { email: email.trim() },
-    { enabled: false }
-  );
-
-  const handleSubmit = async () => {
-    const trimmed = email.trim();
-    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      setError("Enter a valid email address.");
-      return;
-    }
-    setLoading(true);
-    setError("");
-    try {
-      const result = await checkQuery.refetch();
-      if (result.data?.exists && result.data?.id) {
-        localStorage.setItem("sd_user_id", result.data.id);
-        localStorage.setItem("userEmail", trimmed);
-        // Clear all splash/session flags so animations play fresh on login
-        sessionStorage.removeItem("holding_splash_seen");
-        sessionStorage.removeItem("reveal_splash_seen");
-        sessionStorage.removeItem("teamhub_splash_seen");
-        sessionStorage.removeItem("came_from_teamhub");
-        onClose();
-        navigate("/holding");
-      } else {
-        setError("Email not found. Not registered yet?");
-      }
-    } catch {
-      setError("Something went wrong. Try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm px-5">
-      <div className="w-full max-w-sm bg-[#0D0D0D] border border-white/10 p-8 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-white/30 hover:text-white/70 font-mono text-sm transition-colors"
-        >
-          ✕
-        </button>
-        <p className="font-mono text-[#555] text-xs tracking-[0.3em] mb-2">RETURNING PLAYER</p>
-        <h2 className="font-display text-[#F2F0EB] text-3xl tracking-widest mb-2">LOG IN</h2>
-        <p className="font-mono text-[#444] text-xs tracking-wider mb-6">
-          Enter your registration email to access your profile.
-        </p>
-        <input
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => { setEmail(e.target.value); setError(""); }}
-          onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          placeholder="your@email.com"
-          className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-lg py-3 placeholder:text-white/20 transition-colors mb-2"
-        />
-        {error && <p className="font-mono text-[#FF5500] text-xs mb-4">{error}</p>}
-        {!error && <div className="mb-4" />}
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest py-4 hover:bg-[#F2F0EB] transition-colors disabled:opacity-50"
-        >
-          {loading ? "CHECKING..." : "LOG IN →"}
-        </button>
-        <div className="mt-4 text-center">
-          <a href="/enter" className="font-mono text-[#444] text-xs tracking-wider hover:text-[#FF5500] transition-colors">
-            Not registered yet? → ENTER THE SYSTEM
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-}
+// ─── Login modal removed per user request ────────────────────────────────────
 // ─── Main Holding Page ─────────────────────────────────────────────────────────────
 export default function Holding() {
   const [, navigate] = useLocation();
   const [userId, setUserId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
   const [heroVisible, setHeroVisible] = useState(false);
   // Show splash only once per session
   const [showSplash, setShowSplash] = useState(
@@ -300,47 +216,27 @@ export default function Holding() {
     window.location.href = checkoutUrl;
   };
 
-  // ── No userId in localStorage — show "find my spot" state ──
+  // ── No userId in localStorage — redirect to registration ──
   if (!userId) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden">
+      <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden flex items-center justify-center">
         <HoldingBackground />
-        <div className="h-[2px] bg-[#FF5500] relative z-10" />
-        <header className="relative z-10 flex items-center justify-between px-6 pt-6 pb-4">
-          <BackNav to="/" inline />
-          <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: "invert(1)" }} />
-          <button
-            onClick={() => setShowLogin(true)}
-            className="flex items-center gap-2 font-mono text-[#F2F0EB]/40 hover:text-[#FF5500] text-xs tracking-[0.2em] transition-colors"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            FIND MY SPOT
-          </button>
-        </header>
-        <div className="relative z-10 flex flex-col items-center justify-center min-h-[80vh] px-5 text-center">
-          <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-4">SPORTS DAY 002</p>
-          <h1 className="font-display text-[#F2F0EB] leading-none mb-4" style={{ fontSize: "clamp(3rem, 14vw, 6rem)" }}>
-            ALREADY<br />
-            <span className="text-[#FF5500]">REGISTERED?</span>
+        <div className="relative z-10 flex flex-col items-center px-5 text-center">
+          <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-6">SPORTS DAY 002</p>
+          <h1 className="font-display text-[#F2F0EB] leading-none mb-6" style={{ fontSize: "clamp(2.5rem, 12vw, 5rem)" }}>
+            READY TO<br />
+            <span className="text-[#FF5500]">JOIN?</span>
           </h1>
           <p className="font-mono text-[#F2F0EB]/40 text-sm tracking-wider mb-8 max-w-xs">
-            Use the link from your registration email, or find your spot below.
+            Register to get your team assignment and unlock your sports day identity.
           </p>
-          <button
-            onClick={() => setShowLogin(true)}
-            className="bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest px-10 py-4 hover:bg-[#F2F0EB] transition-colors mb-4"
+          <a
+            href="/enter"
+            className="bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest px-10 py-4 hover:bg-[#F2F0EB] transition-colors"
           >
-            FIND MY SPOT →
-          </button>
-          <a href="/enter" className="font-mono text-[#444] text-xs tracking-wider hover:text-[#FF5500] transition-colors">
-            Not registered yet? → ENTER THE SYSTEM
+            REGISTER NOW →
           </a>
         </div>
-        {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
-        {showSplash && <EntrySplash onComplete={handleSplashComplete} />}
       </div>
     );
   }
@@ -358,8 +254,6 @@ export default function Holding() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden">
       {showSplash && <EntrySplash onComplete={handleSplashComplete} />}
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
-
       {/* Full-page particle text background — fixed behind all content */}
       <ParticleTextBg
         words={["SPORTS DAY", "002", "GET READY", "YOUR TEAM", "AWAITS", "6+1", "JULY 2026"]}
@@ -384,19 +278,7 @@ export default function Holding() {
       <header className="relative z-10 flex items-center justify-between px-6 pt-6 pb-4">
         <BackNav to="/" inline />
         <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: "invert(1)" }} />
-        <div className="flex items-center gap-4">
-          <span className="font-mono text-[#FF5500] text-xs tracking-[0.2em]">SPORTS DAY 002</span>
-          <button
-            onClick={() => setShowLogin(true)}
-            title="Switch account"
-            className="text-white/20 hover:text-[#FF5500] transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-          </button>
-        </div>
+        <span className="font-mono text-[#FF5500] text-xs tracking-[0.2em]">SPORTS DAY 002</span>
       </header>
 
       <div className="relative z-10 max-w-lg mx-auto px-5 pb-16 space-y-8">
@@ -584,7 +466,6 @@ export default function Holding() {
         </section>
       </div>
 
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </div>
   );
 }

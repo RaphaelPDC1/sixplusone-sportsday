@@ -271,22 +271,6 @@ export default function Enter() {
                 />
                 {errors.fullName && <ErrorMsg msg={errors.fullName} />}
                 {form.fullName.trim() && <NextBtn onClick={handleNext} className="mt-6" />}
-                {/* Already registered link */}
-                <div className="mt-8 pt-6 border-t border-white/10">
-                  <p className="font-mono text-xs text-[#999] mb-2">Already registered?</p>
-                  <button
-                    onClick={() => {
-                      const email = prompt("Enter your email:");
-                      if (email) {
-                        localStorage.setItem("userEmail", email.trim());
-                        navigate("/holding");
-                      }
-                    }}
-                    className="font-mono text-sm text-[#FF5500] hover:text-white transition-colors"
-                  >
-                    Log in here →
-                  </button>
-                </div>
               </StepCard>
             )}
 

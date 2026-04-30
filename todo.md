@@ -208,3 +208,10 @@
 - [ ] Add VITE_SHOPIFY_STORE_URL env var
 - [ ] Add VITE_SHOPIFY_VARIANT_ID env var
 - [ ] Test payment flow end-to-end with live Shopify
+
+## Registration Flow Cleanup (requested 30 Apr)
+- [ ] Remove "Already registered? Log in here" link from question 1 of registration form
+- [ ] Remove native browser prompt() popup triggered by that link
+- [ ] Remove "FIND MY SPOT" button from registration form nav header
+- [ ] Remove the "Already Registered?" interstitial page/route
+- [ ] Remove "RETURNING PLAYER / LOG IN" modal from Enter page
