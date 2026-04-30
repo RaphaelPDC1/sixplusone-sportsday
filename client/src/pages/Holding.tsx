@@ -127,7 +127,124 @@ function StatusRow({
   );
 }
 
-// ─── Login modal removed per user request ────────────────────────────────────
+// ─── Welcome Back (no-session login screen) ───────────────────────────────────
+function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [focused, setFocused] = useState(false);
+
+  const checkQuery = trpc.sportsday.checkEmailExists.useQuery(
+    { email: email.trim() },
+    { enabled: false }
+  );
+
+  const handleSubmit = async () => {
+    const trimmed = email.trim();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const result = await checkQuery.refetch();
+      if (result.data?.exists && result.data?.id) {
+        localStorage.setItem("sd_user_id", result.data.id);
+        localStorage.setItem("userEmail", trimmed);
+        sessionStorage.removeItem("holding_splash_seen");
+        sessionStorage.removeItem("reveal_splash_seen");
+        sessionStorage.removeItem("teamhub_splash_seen");
+        sessionStorage.removeItem("came_from_teamhub");
+        onLogin(result.data.id);
+      } else {
+        setError("No registration found for that email.");
+      }
+    } catch {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden flex flex-col">
+      <HoldingBackground />
+
+      {/* Top accent bar */}
+      <div className="h-[2px] bg-[#FF5500] relative z-10" />
+
+      {/* Header */}
+      <header className="relative z-10 flex items-center justify-between px-6 pt-6 pb-4">
+        <BackNav to="/" inline />
+        <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: "invert(1)" }} />
+        <span className="font-mono text-[#FF5500] text-xs tracking-[0.2em]">SPORTS DAY 002</span>
+      </header>
+
+      {/* Main content */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-5 pb-16">
+        {/* Label */}
+        <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-4">RETURNING PLAYER</p>
+
+        {/* Headline */}
+        <h1
+          className="font-display text-[#F2F0EB] leading-none text-center mb-2"
+          style={{ fontSize: "clamp(2.8rem, 13vw, 5.5rem)" }}
+        >
+          WELCOME<br />
+          <span className="text-[#FF5500]">BACK.</span>
+        </h1>
+
+        <p className="font-mono text-[#F2F0EB]/30 text-xs tracking-wider text-center mb-10 max-w-[260px]">
+          Enter your registration email to pick up where you left off.
+        </p>
+
+        {/* Email input block */}
+        <div className="w-full max-w-sm">
+          <div
+            className="border-b-2 transition-colors duration-300 mb-1"
+            style={{ borderColor: focused ? "#FF5500" : error ? "#FF5500" : "rgba(255,255,255,0.15)" }}
+          >
+            <input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setError(""); }}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              placeholder="YOUR EMAIL"
+              className="w-full bg-transparent outline-none text-[#F2F0EB] font-mono text-lg py-3 placeholder:text-white/15 tracking-wider"
+            />
+          </div>
+          {error && (
+            <p className="font-mono text-[#FF5500] text-xs tracking-wider mt-2 mb-0">{error}</p>
+          )}
+          {!error && <div className="h-5" />}
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !email.trim()}
+            className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest py-4 mt-2 hover:bg-[#F2F0EB] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {loading ? "CHECKING..." : "FIND MY SPOT →"}
+          </button>
+
+          <div className="mt-6 text-center">
+            <a
+              href="/enter"
+              className="font-mono text-[#444] text-xs tracking-[0.2em] hover:text-[#FF5500] transition-colors"
+            >
+              Not registered yet? → ENTER THE SYSTEM
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Holding Page ─────────────────────────────────────────────────────────────
 export default function Holding() {
   const [, navigate] = useLocation();
@@ -216,29 +333,9 @@ export default function Holding() {
     window.location.href = checkoutUrl;
   };
 
-  // ── No userId in localStorage — redirect to registration ──
+  // ── No userId in localStorage — show Welcome Back login screen ──
   if (!userId) {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden flex items-center justify-center">
-        <HoldingBackground />
-        <div className="relative z-10 flex flex-col items-center px-5 text-center">
-          <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-6">SPORTS DAY 002</p>
-          <h1 className="font-display text-[#F2F0EB] leading-none mb-6" style={{ fontSize: "clamp(2.5rem, 12vw, 5rem)" }}>
-            READY TO<br />
-            <span className="text-[#FF5500]">JOIN?</span>
-          </h1>
-          <p className="font-mono text-[#F2F0EB]/40 text-sm tracking-wider mb-8 max-w-xs">
-            Register to get your team assignment and unlock your sports day identity.
-          </p>
-          <a
-            href="/enter"
-            className="bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest px-10 py-4 hover:bg-[#F2F0EB] transition-colors"
-          >
-            REGISTER NOW →
-          </a>
-        </div>
-      </div>
-    );
+    return <WelcomeBack onLogin={(id) => { setUserId(id); }} />;
   }
 
   if (isLoading || !user) {
