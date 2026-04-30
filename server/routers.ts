@@ -212,9 +212,17 @@ const sportsDayRouter = router({
       const reg = await getRegistrationById(input.id);
       if (!reg) throw new TRPCError({ code: "NOT_FOUND" });
       if (reg.revealStatus !== "unlocked") throw new TRPCError({ code: "FORBIDDEN", message: "Team not yet revealed" });
-      // Return cached identity if already generated
-      if (reg.aiTeamIdentity) return { aiTeamIdentity: reg.aiTeamIdentity };
+      // Return cached identity only if it matches the user's actual team (prevents stale cross-team content)
       const teamName = reg.team ? reg.team.charAt(0).toUpperCase() + reg.team.slice(1) : "Unknown";
+      const teamUpper = teamName.toUpperCase();
+      if (reg.aiTeamIdentity) {
+        const cached = reg.aiTeamIdentity.toUpperCase();
+        // Validate the cached text mentions the correct team name
+        const isCorrectTeam = cached.includes(`TEAM ${teamUpper}`) || cached.includes(teamUpper);
+        if (isCorrectTeam) return { aiTeamIdentity: reg.aiTeamIdentity };
+        // Stale/wrong team — clear it and regenerate below
+        console.log(`[AI Identity] Stale cache detected for ${input.id}: expected ${teamUpper}, clearing.`);
+      }
       const prompt = `You are the identity engine for 6+1 Sports Day 002 — a high-energy competitive sports event. 
 A participant has just been revealed as TEAM ${teamName.toUpperCase()}.
 
