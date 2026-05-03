@@ -52,7 +52,7 @@ export default function UnlockSuccess() {
             VERIFYING
           </div>
           <p className="font-mono text-[#555] text-sm tracking-wider">
-            Confirming your payment...
+            Confirming payment...
           </p>
           <div className="mt-8 flex gap-2 justify-center">
             {[0, 1, 2].map((i) => (
@@ -72,7 +72,7 @@ export default function UnlockSuccess() {
             PAYMENT CONFIRMED.
           </div>
           <p className="font-mono text-[#F2F0EB] opacity-60 text-sm tracking-wider">
-            Preparing your reveal...
+            Your reveal is loading...
           </p>
         </div>
       )}
@@ -83,13 +83,13 @@ export default function UnlockSuccess() {
             SOMETHING WENT WRONG.
           </div>
           <p className="font-mono text-[#555] text-sm tracking-wider mb-8">
-            Your payment may still be processing. Check back in a moment.
+            Payment may still be processing. Give it a moment, then check back.
           </p>
           <button
             onClick={() => navigate("/holding")}
             className="border border-[#FF5500] text-[#FF5500] font-mono text-sm tracking-widest px-8 py-4 hover:bg-[#FF5500]/10 transition-colors"
           >
-            BACK TO HOLDING PAGE
+            ← BACK TO HOLDING
           </button>
         </div>
       )}

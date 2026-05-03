@@ -28,7 +28,7 @@ const MOCK_POSTS: Post[] = [
     id: "1",
     author: "Alex",
     team: "red",
-    content: "🔥 Just crushed the sprint relay! Team Red is on FIRE!",
+    content: "Sprint relay done. Team Red showed up.",
     timestamp: Date.now() - 5 * 60000,
     likes: 24,
     comments: 3,
@@ -38,7 +38,7 @@ const MOCK_POSTS: Post[] = [
     id: "2",
     author: "Jordan",
     team: "blue",
-    content: "Strategy Board update: We're plotting our comeback 🎯",
+    content: "Strategy board updated. Comeback is on.",
     timestamp: Date.now() - 15 * 60000,
     likes: 18,
     comments: 5,
@@ -48,7 +48,7 @@ const MOCK_POSTS: Post[] = [
     id: "3",
     author: "Casey",
     team: "pink",
-    content: "Energy levels at 💯 Let's go team!",
+    content: "Energy is there. Let's keep it.",
     timestamp: Date.now() - 30 * 60000,
     likes: 42,
     comments: 8,
@@ -58,7 +58,7 @@ const MOCK_POSTS: Post[] = [
     id: "4",
     author: "Morgan",
     team: "orange",
-    content: "The chaos is real but we're having a blast! 🎉",
+    content: "Chaos meter is maxed. Still standing.",
     timestamp: Date.now() - 45 * 60000,
     likes: 31,
     comments: 6,
@@ -68,7 +68,7 @@ const MOCK_POSTS: Post[] = [
     id: "5",
     author: "Sam",
     team: "red",
-    content: "Hydration check! Gatorade is keeping us going 💧",
+    content: "Hydration check. Don't skip it.",
     timestamp: Date.now() - 60 * 60000,
     likes: 15,
     comments: 2,
@@ -151,7 +151,7 @@ function PostFeed() {
               onClick={() => setShowComposer(true)}
               className="w-full py-3 px-4 border border-white/10 text-white/50 hover:text-white/70 transition-colors font-mono text-sm tracking-wider"
             >
-              SHARE YOUR MOMENT →
+              POST TO THE FEED →
             </button>
           ) : (
             <div className="space-y-3">
@@ -159,7 +159,7 @@ function PostFeed() {
                 ref={textareaRef}
                 value={newPostContent}
                 onChange={(e) => setNewPostContent(e.target.value)}
-                placeholder="What's happening?"
+                placeholder="What's going on?"
                 className="w-full bg-white/5 border border-white/10 text-white placeholder-white/30 p-3 font-mono text-sm resize-none focus:outline-none focus:border-white/30 transition-colors"
                 rows={3}
               />
@@ -262,7 +262,7 @@ function PostFeed() {
         {/* Load more */}
         <div className="py-4 text-center">
           <button className="font-mono text-xs tracking-wider text-white/40 hover:text-white/60 transition-colors">
-            LOAD MORE →
+            MORE POSTS →
           </button>
         </div>
       </div>

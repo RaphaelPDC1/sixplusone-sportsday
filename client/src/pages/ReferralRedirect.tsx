@@ -15,7 +15,7 @@ export default function ReferralRedirect() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
       <div className="text-[#FF5500] font-display text-3xl tracking-widest animate-pulse">
-        ENTERING THE SYSTEM...
+        LOADING...
       </div>
     </div>
   );

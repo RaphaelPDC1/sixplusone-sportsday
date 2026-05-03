@@ -9,9 +9,9 @@ interface TeamLiveFeaturesProps {
 export function TeamLiveFeatures({ teamColor, teamName, memberCount }: TeamLiveFeaturesProps) {
   const [heatScore, setHeatScore] = useState(45);
   const [strategyNotes, setStrategyNotes] = useState([
-    "Focus on relay timing",
-    "Red team weak on endurance",
-    "Practice handoffs",
+    "Lock in relay timing.",
+    "Hit transitions hard.",
+    "No excuses on handoffs.",
   ]);
   const [noteInput, setNoteInput] = useState("");
   const [energyFeed, setEnergyFeed] = useState([
@@ -39,11 +39,11 @@ export function TeamLiveFeatures({ teamColor, teamName, memberCount }: TeamLiveF
       updateIntervalRef.current = setInterval(() => {
         if (Math.random() > 0.7) {
           const sampleNotes = [
-            "Adjust pacing for 400m",
-            "Warm up 15 mins early",
-            "Focus on transitions",
-            "Hydrate between events",
-            "Check shoe fit before race",
+            "Pace the 400m — don't blow up early.",
+            "15 mins warm-up minimum.",
+            "Transitions win races.",
+            "Hydrate. You'll forget otherwise.",
+            "Shoes sorted before race day.",
           ];
           const randomNote = sampleNotes[Math.floor(Math.random() * sampleNotes.length)];
           setStrategyNotes((prev) => [randomNote, ...prev.slice(0, 2)]);
@@ -55,11 +55,11 @@ export function TeamLiveFeatures({ teamColor, teamName, memberCount }: TeamLiveF
         if (Math.random() > 0.6) {
           const names = ["Alex", "Jordan", "Casey", "Morgan", "Sam"];
           const actions = [
-            "posted a comment",
-            "liked a post",
-            "joined the chat",
-            "shared energy",
-            "cheered on teammates",
+            "just checked in",
+            "unlocked their reveal",
+            "joined the team",
+            "added a strategy note",
+            "is ready",
           ];
           const randomName = names[Math.floor(Math.random() * names.length)];
           const randomAction = actions[Math.floor(Math.random() * actions.length)];
@@ -108,7 +108,7 @@ export function TeamLiveFeatures({ teamColor, teamName, memberCount }: TeamLiveF
             />
           </div>
           <p className="font-mono text-[10px] mt-2" style={{ color: "rgba(255, 255, 255, 0.4)" }}>
-            Resets daily. Rises when team members interact.
+            Resets daily. Rises as the team shows up.
           </p>
         </div>
       </div>
@@ -134,7 +134,7 @@ export function TeamLiveFeatures({ teamColor, teamName, memberCount }: TeamLiveF
           <div className="flex gap-2 mt-3">
             <input
               type="text"
-              placeholder="Add a note (max 60 chars)"
+              placeholder="Drop a note (60 chars)"
               maxLength={60}
               value={noteInput}
               onChange={(e) => setNoteInput(e.target.value)}
@@ -197,7 +197,7 @@ export function TeamLiveFeatures({ teamColor, teamName, memberCount }: TeamLiveF
             />
           </div>
           <p className="font-mono text-[10px] mt-2" style={{ color: "rgba(255, 255, 255, 0.4)" }}>
-            Resets every 4–6 hours. Fills unpredictably.
+            Resets every 4–6 hours. Nobody controls this.
           </p>
         </div>
       </div>

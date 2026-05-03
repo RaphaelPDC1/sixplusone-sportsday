@@ -99,7 +99,7 @@ export default function Home() {
           line1: "SPORTS DAY",
           line2: "002",
         }}
-        subtitle="Get your team. Unlock your identity. Built with the people who actually want to be there."
+        subtitle="Your team is waiting. Your identity is hidden. Show up and earn it."
         buttons={{
           primary: {
             text: "REGISTER NOW →",
@@ -114,17 +114,17 @@ export default function Home() {
           <InfoBlock
             number="01"
             title="REGISTER"
-            body="Fill in your profile. We use every answer to build your sports day identity and assign you to a team."
+            body="Fill in your profile. Every answer shapes your team identity. No filler questions."
           />
           <InfoBlock
             number="02"
             title="GET YOUR TEAM"
-            body="Unlock your team reveal with a £10 Priority Player Pass — or earn it free by referring 3 friends."
+            body="Unlock your reveal with a Priority Player Pass. Or refer 3 friends. Either way, earn it."
           />
           <InfoBlock
             number="03"
             title="SHOW UP"
-            body="Four teams. One day. Your identity is waiting. 2026 — date TBC based on registrations."
+            body="Four teams. One day. 11 July 2026. Come ready."
           />
         </div>
 

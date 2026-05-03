@@ -301,7 +301,7 @@ function ClawAnimation({ onComplete }: { onComplete: () => void }) {
   const clawOpen = clawPhase === "descend";
   return (
     <div className="flex flex-col items-center">
-      <p className="font-mono text-white/40 text-xs tracking-[0.3em] mb-4">CLAW MACHINE ACTIVATED...</p>
+      <p className="font-mono text-white/40 text-xs tracking-[0.3em] mb-4">SELECTING YOUR TEAM...</p>
       <div className="relative w-72 h-80 border border-[#1A4FE8]/30 overflow-hidden"
         style={{ background: "linear-gradient(180deg, #020818 0%, #050520 100%)", boxShadow: "0 0 40px #1A4FE820 inset" }}>
         <div className="absolute top-0 left-0 right-0 h-5 bg-gradient-to-b from-[#1A1A3E] to-[#0D0D2E] border-b border-[#1A4FE8]/40 flex items-center justify-center">
@@ -435,7 +435,7 @@ function SlotAnimation({ onComplete }: { onComplete: () => void }) {
   }, [onComplete]);
   return (
     <div className="flex flex-col items-center w-full">
-      <p className="font-mono text-white/40 text-xs tracking-[0.3em] mb-4 text-center">PULLING THE LEVER...</p>
+      <p className="font-mono text-white/40 text-xs tracking-[0.3em] mb-4 text-center">DRAWING YOUR TEAM...</p>
       <div className="relative border-2 border-[#F72B8C]/40 p-6 w-full max-w-[280px] overflow-hidden"
         style={{ background: "linear-gradient(180deg, #0D0008 0%, #050005 100%)", boxShadow: jackpot ? "0 0 60px #F72B8C40, 0 0 120px #F72B8C20" : "0 0 20px #F72B8C10", transition: "box-shadow 0.5s ease" }}>
         {/* Floating hearts on jackpot */}
@@ -522,7 +522,7 @@ function ChaoticWheelAnimation({ onComplete }: { onComplete: () => void }) {
   }, [onComplete]);
   return (
     <div className="flex flex-col items-center">
-      <p className="font-mono text-white/40 text-xs tracking-[0.3em] mb-4">CHAOS INCOMING...</p>
+      <p className="font-mono text-white/40 text-xs tracking-[0.3em] mb-4">DRAWING YOUR TEAM...</p>
       <div className="relative">
         <div className="absolute inset-0 rounded-full" style={{ boxShadow: "0 0 60px #FF6B0040, 0 0 120px #FF6B0020" }} />
         <canvas ref={canvasRef} style={{ width: 300, height: 300 }} />
@@ -712,7 +712,7 @@ export default function Reveal() {
         <div className="relative z-20 flex flex-col items-center px-5 text-center w-full max-w-sm mx-auto flex-1 justify-center pb-12">
           <div className="h-[1px] bg-white/30 w-full mb-6" />
           <p className="font-display text-white/80 tracking-widest mb-1" style={{ fontSize: "clamp(0.9rem, 3.5vw, 1.3rem)" }}>
-            YOU ARE
+            YOUR TEAM IS
           </p>
           <h1 className="font-display text-white leading-none mb-2"
             style={{ fontSize: "clamp(3.5rem, 16vw, 8rem)", textShadow: "0 0 80px rgba(0,0,0,0.5)" }}>
@@ -742,14 +742,14 @@ export default function Reveal() {
                   {user.sportsDayProfile ?? "THE COMPETITOR"}
                 </p>
                 <p className="font-mono text-white/70 text-sm leading-relaxed">
-                  {user.profileTagline ?? "You were built for this."}
+                  {user.profileTagline ?? "You were built for this. Now prove it."}
                 </p>
               </div>
             )}
           </div>
           <div className="flex flex-col gap-3 w-full">
             <button onClick={handleShare}
-              className="w-full bg-white text-black font-display text-xl tracking-widest py-5 hover:bg-black hover:text-white transition-colors active:scale-[0.98]">
+              className="w-full bg-white text-black font-display text-xl tracking-widest py-5 hover:bg-black hover:text-white transition-colors active:scale-[0.98]" >
               SHARE YOUR TEAM →
             </button>
             <button onClick={() => navigate("/team-hub")}
@@ -758,7 +758,7 @@ export default function Reveal() {
             </button>
           </div>
           <p className="font-mono text-white/50 text-xs tracking-wider mt-4">
-            Share to your Instagram Story and tag @6plus1
+            Share to your story. Tag @6plus1.
           </p>
         </div>
       )}

@@ -258,7 +258,7 @@ export default function Enter() {
 
             {/* ─── STEP 0 — Name ─── */}
             {step === 0 && (
-              <StepCard label="What's your name?" caption="First name is fine.">
+              <StepCard label="What's your name?" caption="First name works.">
                 <input
                   type="text"
                   value={form.fullName}
@@ -274,7 +274,7 @@ export default function Enter() {
 
             {/* ─── STEP 1 — Email ─── */}
             {step === 1 && (
-              <StepCard label="Your email address." caption="We'll send your team reveal link here.">
+              <StepCard label="Your email." caption="Your reveal link goes here.">
                 <input
                   type="email"
                   value={form.email}
@@ -290,7 +290,7 @@ export default function Enter() {
 
             {/* ─── STEP 2 — Instagram ─── */}
             {step === 2 && (
-              <StepCard label="Instagram handle?" caption="We'll tag you when your team drops.">
+              <StepCard label="Instagram handle?" caption="We'll tag you when your team drops. Skip if not.">
                 <div className="flex items-center border-b-2 border-white/20 focus-within:border-[#FF5500] transition-colors">
                   <span className="text-white/30 font-mono text-2xl py-3 mr-1">@</span>
                   <input
@@ -311,7 +311,7 @@ export default function Enter() {
 
             {/* ─── STEP 3 — Attended before ─── */}
             {step === 3 && (
-              <StepCard label="Did you come to Sports Day 001?">
+              <StepCard label="Sports Day 001 — were you there?">
                 <div className="grid grid-cols-2 gap-3 mt-6">
                   {[
                     { label: "YES, I WAS THERE", val: true, icon: "🏆" },
@@ -331,7 +331,7 @@ export default function Enter() {
 
             {/* ─── STEP 4 — Solo or group ─── */}
             {step === 4 && (
-              <StepCard label="Coming solo or with others?">
+              <StepCard label="Solo or with a crew?">
                 <div className="grid grid-cols-2 gap-3 mt-6">
                   {[
                     { label: "FLYING SOLO", val: "solo" as const, icon: "🎯" },
@@ -362,7 +362,7 @@ export default function Enter() {
 
             {/* ─── STEP 5 — Group code ─── */}
             {step === 5 && (
-              <StepCard label="Create or join a group." caption="Groups stay together during team assignment.">
+              <StepCard label="Create or join a group." caption="Groups stay together. No guarantees — but we try.">
                 <div className="space-y-4 mt-6">
                   <button
                     onClick={() => {
@@ -434,22 +434,17 @@ export default function Enter() {
 
             {/* ─── STEP 6 — Scratch card date reveal ─── */}
             {step === 6 && (
-              <StepCard label="Your date is locked in." caption="Scratch to reveal the confirmed date.">
+              <StepCard label="The date is set." caption="Match 3 to confirm your spot.">
                 <div className="mt-4">
                   <ScratchCardGrid
                     onComplete={() => {
                       setScratchCompleted(true);
-                      // Auto-set the confirmed date
                       set("date11July", true);
                     }}
                   />
                 </div>
                 {scratchCompleted && (
                   <div className="mt-5">
-                    <div className="text-center mb-4">
-                      <p className="font-display text-[#FFD700] text-2xl tracking-widest">11 JULY 2026</p>
-                      <p className="font-mono text-white/40 text-xs tracking-wider mt-1">Saturday · Save the date</p>
-                    </div>
                     <NextBtn onClick={handleNext} />
                   </div>
                 )}
@@ -458,7 +453,7 @@ export default function Enter() {
 
             {/* ─── STEP 7 — Competitiveness ─── */}
             {step === 7 && (
-              <StepCard label="How competitive are you?" caption="Be honest. We're building teams.">
+              <StepCard label="How competitive are you?" caption="Be honest. It shapes your team.">
                 <div className="space-y-3 mt-6">
                   {[
                     { val: "vibes" as const, label: "HERE FOR THE VIBES", sub: "I just want to have fun", icon: "🌊" },
@@ -481,7 +476,7 @@ export default function Enter() {
 
             {/* ─── STEP 8 — Teammate type ─── */}
             {step === 8 && (
-              <StepCard label="What kind of teammate are you?">
+              <StepCard label="What kind of teammate are you?" caption="Pick the one that fits.">
                 <div className="space-y-3 mt-6">
                   {[
                     { val: "motivator" as const, label: "THE MOTIVATOR", sub: "Energy is my sport", icon: "📣" },
@@ -506,7 +501,7 @@ export default function Enter() {
 
             {/* ─── STEP 9 — Strongest event ─── */}
             {step === 9 && (
-              <StepCard label="Where do you shine?" caption="Your strongest event type.">
+              <StepCard label="Where do you shine?" caption="Pick your strongest.">
                 <div className="grid grid-cols-2 gap-3 mt-6">
                   {[
                     { val: "speed" as const, label: "SPEED", icon: "💨" },
@@ -529,7 +524,7 @@ export default function Enter() {
 
             {/* ─── STEP 10 — Biggest fear ─── */}
             {step === 10 && (
-              <StepCard label="What's your biggest fear on the day?">
+              <StepCard label="Biggest fear on the day?">
                 <div className="space-y-3 mt-6">
                   {[
                     { val: "sprinting" as const, label: "SPRINTING IN PUBLIC", icon: "😬" },
@@ -553,7 +548,7 @@ export default function Enter() {
 
             {/* ─── STEP 11 — Shirt ─── */}
             {step === 11 && (
-              <StepCard label="Shirt size and fit." caption="Your team kit.">
+              <StepCard label="Shirt size and fit." caption="Your team kit. We order once.">
                 <div className="space-y-6 mt-6">
                   <div>
                     <p className="font-mono text-white/40 text-xs tracking-widest mb-3">SIZE</p>
@@ -601,11 +596,11 @@ export default function Enter() {
 
             {/* ─── STEP 12 — Health + Consent ─── */}
             {step === 12 && (
-              <StepCard label="Almost there." caption="A few final things.">
+              <StepCard label="Last few things.">
                 <div className="space-y-6 mt-4">
                   <div>
                     <p className="font-mono text-white/40 text-xs tracking-widest mb-2">
-                      Any injuries, health notes, or access needs?
+                      Injuries, health notes, or access needs?
                     </p>
                     <textarea
                       value={form.healthNotes}
@@ -618,7 +613,7 @@ export default function Enter() {
                   {/* Camera consent removed — not collecting this */}
                   <div>
                     <p className="font-mono text-white/40 text-xs tracking-widest mb-3">
-                      Would you vote for team captains on Instagram?
+                      Would you vote for team captains?
                     </p>
                     <div className="grid grid-cols-3 gap-2">
                       {[
@@ -647,7 +642,7 @@ export default function Enter() {
 
             {/* ─── STEP 13 — Motivation + Submit ─── */}
             {step === 13 && (
-              <StepCard label="What would make this worth it?" caption="Optional — but we're listening.">
+              <StepCard label="What would make this worth it?" caption="Optional. We read these.">
                 <textarea
                   value={form.eventMotivation}
                   onChange={(e) => set("eventMotivation", e.target.value)}
@@ -663,7 +658,7 @@ export default function Enter() {
                   {registerMutation.isPending ? "ENTERING THE SYSTEM..." : "ENTER THE SYSTEM →"}
                 </button>
                 <p className="font-mono text-white/20 text-xs text-center mt-4 tracking-wider">
-                  By submitting, you agree to be contacted about Sports Day 002.
+                  Submitting means we can contact you about Sports Day 002.
                 </p>
               </StepCard>
             )}

@@ -135,7 +135,7 @@ export default function TeamHub() {
         <div className="text-center space-y-5 px-6">
           <img src={LOGO_URL} alt="6+1" className="h-8 w-auto mx-auto opacity-40" style={{ filter: "invert(1)" }} />
           <p className="font-mono text-white/40 text-sm">
-            {code === "FORBIDDEN" ? "Team not unlocked yet — complete payment to access your hub." : "No registration found."}
+            {code === "FORBIDDEN" ? "Your team is locked. Complete payment to get in." : "No registration found."}
           </p>
           <button
             onClick={() => navigate("/holding")}
@@ -159,7 +159,7 @@ export default function TeamHub() {
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <div className="text-center space-y-5 px-6">
           <img src={LOGO_URL} alt="6+1" className="h-8 w-auto mx-auto opacity-40" style={{ filter: "invert(1)" }} />
-          <p className="font-mono text-white/40 text-sm">No registration found.</p>
+          <p className="font-mono text-white/40 text-sm">We don't recognise this registration.</p>
           <button onClick={() => navigate("/holding")} className="block font-display text-[#FF5500] text-xl tracking-widest hover:opacity-80 transition-opacity">
             ← BACK TO HOLDING
           </button>
@@ -173,7 +173,7 @@ export default function TeamHub() {
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <div className="text-center space-y-3">
           <div className="w-8 h-8 border-2 border-[#FF5500] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="font-mono text-white/30 text-xs tracking-widest">LOADING YOUR TEAM HUB...</p>
+              <p className="font-mono text-white/30 text-xs tracking-widest">LOADING...</p>
         </div>
       </div>
     );
@@ -183,7 +183,7 @@ export default function TeamHub() {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="font-mono text-white/40 text-sm">Team not unlocked yet.</p>
+          <p className="font-mono text-white/40 text-sm">Team not unlocked yet. Unlock to get in.</p>
           <button onClick={() => navigate("/holding")} className="font-display text-[#FF5500] text-xl tracking-widest">
             ← BACK TO HOLDING
           </button>
@@ -365,7 +365,7 @@ export default function TeamHub() {
             <SectionHeader label="YOUR SQUAD" />
             {hub.members.length === 0 ? (
               <p className="font-mono text-white/30 text-sm text-center py-8">
-                You're the first one here. More teammates coming.
+                First one in. Your teammates are on their way.
               </p>
             ) : (
               <>
@@ -443,7 +443,7 @@ export default function TeamHub() {
                   📷 ADD YOUR PROFILE PHOTO
                 </p>
                 <p className="font-mono text-white/20 text-[10px] mt-1">
-                  Used for fun awards voting
+                  Shows up in the awards vote
                 </p>
               </div>
             )}
@@ -522,9 +522,9 @@ export default function TeamHub() {
           <div className="space-y-4">
             <SectionHeader label="TEAM STANDINGS" />
             {sortedTeams.length === 0 ? (
-              <p className="font-mono text-white/30 text-sm text-center py-8">
-                No results yet. Events coming soon.
-              </p>
+              <p className="font-mono text-white/30 text-xs tracking-wider">
+              No results yet. Check back on the day.
+            </p>
             ) : (
               <>
                 <div className="space-y-3">
@@ -551,7 +551,7 @@ export default function TeamHub() {
                                 {index + 1}. {team} TEAM
                               </div>
                               <div className="font-mono text-white/40 text-xs mt-0.5">
-                                {teamEventCount} events completed
+                                {teamEventCount} event{teamEventCount !== 1 ? 's' : ''} done
                               </div>
                             </div>
                           </div>
@@ -627,7 +627,7 @@ export default function TeamHub() {
           <div className="space-y-4">
             <SectionHeader label="TEAM WILDCARDS" />
             <p className="font-mono text-white/30 text-xs tracking-wider">
-              Your team has 3 wildcards. Vote to activate one. Majority wins.
+              3 wildcards. Vote to activate one. Majority rules.
             </p>
             <div className="space-y-3">
               {WILDCARDS.map((wc) => {
@@ -706,7 +706,7 @@ export default function TeamHub() {
           <div className="space-y-4">
             <SectionHeader label="FUN AWARDS" />
             <p className="font-mono text-white/30 text-xs tracking-wider">
-              Vote for your teammates. One vote per category.
+              One vote per category. Make it count.
             </p>
 
             {AWARD_CATEGORIES.map((cat) => {
@@ -810,7 +810,7 @@ export default function TeamHub() {
           <div className="space-y-4">
             <SectionHeader label="RECOMMENDED EVENTS" />
             <p className="font-mono text-white/30 text-xs tracking-wider">
-              Based on your team's performance, try these next.
+              Based on how your team is doing.
             </p>
             <div className="space-y-3">
               {EVENTS.slice(0, 3).map((event) => (
@@ -844,14 +844,14 @@ export default function TeamHub() {
           <div className="space-y-4">
             <SectionHeader label="SPONSORS & VENDORS" />
             <p className="font-mono text-white/30 text-xs tracking-wider">
-              Thanks to our partners making this day possible.
+              The people making the day happen.
             </p>
             <div className="space-y-3">
               {[
-                { name: "Nike", desc: "Official athletic partner" },
-                { name: "Gatorade", desc: "Hydration sponsor" },
-                { name: "GoPro", desc: "Media partner" },
-                { name: "Local Cafe", desc: "Refreshments" },
+                { name: "TBC", desc: "Sponsor details coming soon" },
+                { name: "TBC", desc: "Sponsor details coming soon" },
+                { name: "TBC", desc: "Sponsor details coming soon" },
+                { name: "TBC", desc: "Sponsor details coming soon" },
               ].map((sponsor) => (
                 <div
                   key={sponsor.name}
@@ -940,7 +940,7 @@ export default function TeamHub() {
           <div className="border-t border-white/8 pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-mono text-white/25 text-[10px] tracking-[0.3em] mb-0.5">LOGGED IN AS</p>
+                <p className="font-mono text-white/25 text-[10px] tracking-[0.3em] mb-0.5">REGISTERED AS</p>
                 <p className="font-mono text-white/50 text-xs tracking-wider">{typeof window !== "undefined" ? localStorage.getItem("userEmail") ?? "" : ""}</p>
               </div>
               <button

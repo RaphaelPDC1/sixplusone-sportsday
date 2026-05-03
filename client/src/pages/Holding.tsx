@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
 import { ParticleTextBg } from "@/components/ui/particle-text-bg";
+import { ScratchCardGrid } from "@/components/ui/scratch-card";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
-
 
 const SHOPIFY_STORE_URL = import.meta.env.VITE_SHOPIFY_STORE_URL || "https://your-store.myshopify.com";
 const SHOPIFY_VARIANT_ID = import.meta.env.VITE_SHOPIFY_VARIANT_ID || "12345678901234";
@@ -22,6 +22,7 @@ function HoldingBackground() {
     />
   );
 }
+
 // ─── Animated counter ─────────────────────────────────────────────────────────
 function AnimatedNumber({ value }: { value: number }) {
   const [display, setDisplay] = useState(0);
@@ -127,6 +128,171 @@ function StatusRow({
   );
 }
 
+// ─── Scratch card replay section ──────────────────────────────────────────────
+function ScratchReplaySection({ visible }: { visible: boolean }) {
+  const [showCard, setShowCard] = useState(false);
+  const [replaying, setReplaying] = useState(false);
+  const [replayKey, setReplayKey] = useState(0);
+  const [showShareCard, setShowShareCard] = useState(false);
+
+  const handleReplay = () => {
+    setShowCard(true);
+    setReplaying(true);
+    setReplayKey((k) => k + 1);
+    setShowShareCard(false);
+  };
+
+  const handleScratchComplete = useCallback(() => {
+    setReplaying(false);
+    setShowShareCard(true);
+  }, []);
+
+  return (
+    <section
+      style={{
+        transition: "opacity 0.7s ease 0.7s",
+        opacity: visible ? 1 : 0,
+      }}
+    >
+      <div className="border border-white/8 bg-black/15 backdrop-blur-sm overflow-hidden">
+        <div className="p-6">
+          <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-3">YOUR GOLDEN TICKET</p>
+          <p className="font-mono text-[#F2F0EB]/60 text-xs tracking-wider mb-5 leading-relaxed">
+            11 July 2026. The date is confirmed. Scratch again or share your card.
+          </p>
+
+          {!showCard && (
+            <button
+              onClick={handleReplay}
+              className="w-full border border-[#FF5500]/40 text-[#FF5500] font-mono text-sm tracking-widest py-3 hover:bg-[#FF5500]/5 transition-all"
+            >
+              SCRATCH AGAIN
+            </button>
+          )}
+
+          {showCard && (
+            <div className="mt-2">
+              <ScratchCardGrid
+                key={replayKey}
+                onComplete={handleScratchComplete}
+                autoReveal={!replaying}
+              />
+              {!replaying && (
+                <button
+                  onClick={handleReplay}
+                  className="w-full mt-3 border border-white/10 text-white/30 font-mono text-xs tracking-widest py-2 hover:border-[#FF5500]/30 hover:text-[#FF5500]/60 transition-all"
+                >
+                  SCRATCH AGAIN
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Share card */}
+        {showShareCard && <ShareCard />}
+      </div>
+    </section>
+  );
+}
+
+// ─── Shareable share card ─────────────────────────────────────────────────────
+function ShareCard() {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const shareText = "I'm in. 11 July 2026. 6+1 Sports Day 002.";
+  const shareUrl = typeof window !== "undefined" ? window.location.origin : "";
+
+  const handleShare = async () => {
+    setSharing(true);
+    try {
+      // Try Web Share API first (mobile)
+      if (navigator.share) {
+        await navigator.share({
+          title: "6+1 Sports Day 002",
+          text: shareText,
+          url: shareUrl,
+        });
+      } else {
+        // Fallback: copy text to clipboard
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        setCopied(true);
+        toast.success("Share text copied to clipboard.");
+        setTimeout(() => setCopied(false), 3000);
+      }
+    } catch {
+      // User cancelled or error — silently ignore
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  return (
+    <div className="border-t border-white/8 p-6 bg-black/10">
+      <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-4">SHARE YOUR SPOT</p>
+
+      {/* Visual share card */}
+      <div
+        ref={cardRef}
+        className="relative overflow-hidden mb-4"
+        style={{
+          background: "linear-gradient(135deg, #0A0A0A 0%, #1a0800 50%, #0A0A0A 100%)",
+          border: "1px solid rgba(255,85,0,0.3)",
+          aspectRatio: "9/16",
+          maxHeight: "280px",
+        }}
+      >
+        {/* Background starburst */}
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            background: "repeating-conic-gradient(rgba(255,85,0,0.2) 0deg, transparent 15deg, transparent 30deg)",
+          }}
+        />
+
+        {/* Top accent */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#FF5500]" />
+
+        {/* Content */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+          <img src={LOGO_URL} alt="6+1" className="w-12 h-12 object-contain mb-4" style={{ filter: "invert(1)" }} />
+          <p className="font-mono text-[#444] text-[10px] tracking-[0.4em] mb-3">SPORTS DAY 002</p>
+          <p className="font-display text-[#F2F0EB] leading-none mb-1" style={{ fontSize: "clamp(1.8rem, 8vw, 2.5rem)" }}>
+            I'M IN.
+          </p>
+          <p className="font-display text-[#FF5500] leading-none" style={{ fontSize: "clamp(1.2rem, 5vw, 1.8rem)" }}>
+            11 JULY 2026
+          </p>
+          <div className="mt-4 w-12 h-[1px] bg-[#FF5500]/40" />
+          <p className="font-mono text-[#F2F0EB]/30 text-[9px] tracking-[0.3em] mt-3">
+            BETTER EVERYDAY. BETTER TOGETHER.
+          </p>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="absolute bottom-0 left-0 right-0 px-4 py-2 flex items-center justify-between" style={{ background: "rgba(0,0,0,0.5)" }}>
+          <span className="font-mono text-[#444] text-[8px] tracking-[0.2em]">6PLUS1.COM</span>
+          <span className="font-mono text-[#FF5500] text-[8px] tracking-[0.2em]">SD002</span>
+        </div>
+      </div>
+
+      {/* Share button */}
+      <button
+        onClick={handleShare}
+        disabled={sharing}
+        className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-lg tracking-widest py-4 hover:bg-[#F2F0EB] transition-all active:scale-[0.98] disabled:opacity-50"
+      >
+        {sharing ? "SHARING..." : copied ? "✓ COPIED" : "SHARE TO STORY →"}
+      </button>
+      <p className="font-mono text-[#333] text-[10px] text-center mt-2 tracking-wider">
+        Opens share sheet on mobile. Copies text on desktop.
+      </p>
+    </div>
+  );
+}
+
 // ─── Welcome Back (no-session login screen) ───────────────────────────────────
 function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
   const [email, setEmail] = useState("");
@@ -195,8 +361,8 @@ function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
           <span className="text-[#FF5500]">BACK.</span>
         </h1>
 
-        <p className="font-mono text-[#F2F0EB]/30 text-xs tracking-wider text-center mb-10 max-w-[260px]">
-          Enter your registration email to pick up where you left off.
+          <p className="font-mono text-[#F2F0EB]/30 text-xs tracking-wider text-center mb-10 max-w-[260px]">
+          Enter your registration email to get back in.
         </p>
 
         {/* Email input block */}
@@ -228,7 +394,7 @@ function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
             disabled={loading || !email.trim()}
             className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest py-4 mt-2 hover:bg-[#F2F0EB] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {loading ? "CHECKING..." : "FIND MY SPOT →"}
+            {loading ? "CHECKING..." : "GET BACK IN →"}
           </button>
 
           <div className="mt-6 text-center">
@@ -236,7 +402,7 @@ function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
               href="/enter"
               className="font-mono text-[#444] text-xs tracking-[0.2em] hover:text-[#FF5500] transition-colors"
             >
-              Not registered yet? → ENTER THE SYSTEM
+              Not registered? → ENTER THE SYSTEM
             </a>
           </div>
         </div>
@@ -284,7 +450,7 @@ export default function Holding() {
     {
       enabled: !!userId,
       refetchInterval: 15000,
-      retry: false, // Don't retry on NOT_FOUND — prevents console spam
+      retry: false,
     }
   );
 
@@ -324,7 +490,7 @@ export default function Holding() {
     try {
       await navigator.clipboard.writeText(referralLink);
       setCopied(true);
-      toast.success("Link copied!");
+      toast.success("Link copied.");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Could not copy — try manually.");
@@ -394,7 +560,7 @@ export default function Holding() {
               transform: heroVisible ? "translateY(0)" : "translateY(24px)",
             }}
           >
-            <p className="font-mono text-[#444] text-xs tracking-[0.35em] mb-3">YOU'RE IN THE SYSTEM</p>
+            <p className="font-mono text-[#444] text-xs tracking-[0.35em] mb-3">YOU'RE REGISTERED</p>
             <h1
               className="font-display text-[#F2F0EB] leading-[0.88] mb-5"
               style={{ fontSize: "clamp(3.2rem, 14vw, 6.5rem)" }}
@@ -435,7 +601,7 @@ export default function Holding() {
         >
           <div className="border border-white/8 bg-black/15 backdrop-blur-sm p-5">
             <div className="flex items-start justify-between mb-4">
-              <p className="font-mono text-[#444] text-xs tracking-[0.3em]">PLAYER PROFILE</p>
+              <p className="font-mono text-[#444] text-xs tracking-[0.3em]">YOUR PROFILE</p>
               <span className="font-mono text-[#FF5500] text-xs tracking-wider">
                 {user.sportsDayProfile?.replace(/_/g, " ").toUpperCase() ?? "COMPETITOR"}
               </span>
@@ -461,14 +627,13 @@ export default function Holding() {
           <StatusBlock visible={heroVisible} />
         </section>
 
-        {/* ── Particle breathing space ── */}
-        {/* Tall empty zone so the fixed particle canvas text is readable while scrolling */}
-        <div
-          aria-hidden="true"
-          style={{ height: "60vh", pointerEvents: "none" }}
-        />
+        {/* ── Section 4: Scratch Card Replay + Share ── */}
+        <ScratchReplaySection visible={heroVisible} />
 
-        {/* ── Section 4: Unlock CTA ── */}
+        {/* ── Particle breathing space ── */}
+        <div aria-hidden="true" style={{ height: "40vh", pointerEvents: "none" }} />
+
+        {/* ── Section 5: Unlock CTA ── */}
         <section
           style={{
             transition: "opacity 0.7s ease 0.9s",
@@ -483,16 +648,16 @@ export default function Holding() {
                 <p className="font-mono text-[#444] text-xs tracking-[0.3em]">LIMITED ACCESS</p>
               </div>
               <h2 className="font-display text-[#FF5500] text-2xl tracking-widest mb-5">
-                PRIORITY PLAYER PASS — £10
+                PRIORITY PLAYER PASS
               </h2>
               <ul className="space-y-2.5 mb-6">
                 {[
                   "Instant team reveal",
-                  "Custom team-colour shirt (early drop)",
+                  "Custom team-colour shirt",
                   "Early merch access",
-                  "Sponsor goodies",
-                  "Priority access to event release",
-                  "First access to dashboard",
+                  "Sponsor drops",
+                  "Priority event access",
+                  "First into the dashboard",
                   "Early announcements",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 font-mono text-[#F2F0EB]/65 text-xs tracking-wider">
@@ -508,13 +673,13 @@ export default function Holding() {
                 UNLOCK MY TEAM →
               </button>
               <p className="font-mono text-[#333] text-xs text-center mt-3 tracking-wider">
-                Priority Player Passes are limited. Once early reveals close, you'll wait for public allocation.
+                Limited passes. Once they're gone, you wait for public allocation.
               </p>
             </div>
           </div>
         </section>
 
-        {/* ── Section 5: Referral Block ── */}
+        {/* ── Section 6: Referral Block ── */}
         <section
           style={{
             transition: "opacity 0.7s ease 1.1s",
@@ -524,10 +689,10 @@ export default function Holding() {
           <div className="border border-white/8 bg-black/15 backdrop-blur-sm p-6">
             <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-4">BRING YOUR PEOPLE</p>
             <p className="font-mono text-[#F2F0EB]/80 text-sm tracking-wider mb-1">
-              Invite 3 friends to join the Sports Day 002 list.
+              Refer 3 friends. Earn your unlock.
             </p>
             <p className="font-mono text-[#444] text-xs tracking-wider mb-4">
-              Reward: extra merch discount + priority captain vote access
+              Reward: merch discount + priority captain vote
             </p>
             <div className="bg-black/15 border border-white/8 p-3 mb-3">
               <p className="font-mono text-[#FF5500] text-xs tracking-wider break-all">

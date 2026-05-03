@@ -41,7 +41,7 @@ export function NowHappening() {
             }}
           />
         </div>
-        <span className="font-display text-[#FF5500] tracking-[0.3em] text-sm">NOW HAPPENING</span>
+        <span className="font-display text-[#FF5500] tracking-[0.3em] text-sm">LIVE NOW</span>
       </div>
 
       {/* Event info */}

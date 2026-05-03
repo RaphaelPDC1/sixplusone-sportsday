@@ -225,3 +225,17 @@
 - [ ] Holding page: replace in-app payment with Shopify redirect button (hype, no price shown)
 - [ ] Holding page: add Unity Unlock Code input field for people who have paid
 - [ ] Holding page: add scratch-to-reveal golden ticket interaction with audio
+
+## Brand Voice Audit (requested 3 May)
+- [x] Apply 6+1 brand voice to Home.tsx
+- [x] Apply 6+1 brand voice to Enter.tsx (all 14 step labels and captions)
+- [x] Apply 6+1 brand voice to Reveal.tsx
+- [x] Apply 6+1 brand voice to TeamHub.tsx
+- [x] Apply 6+1 brand voice to Holding.tsx (WelcomeBack + main page)
+- [x] Apply 6+1 brand voice to UnlockSuccess.tsx
+- [x] Apply 6+1 brand voice to PostFeed.tsx
+- [x] Apply 6+1 brand voice to scratch-card.tsx (win state, progress hint)
+- [x] Apply 6+1 brand voice to team-live-features.tsx
+- [x] Apply 6+1 brand voice to now-happening.tsx
+- [x] Redesign NotFound.tsx in full 6+1 brand style
+- [x] All 20 tests passing, TypeScript clean (0 errors)
