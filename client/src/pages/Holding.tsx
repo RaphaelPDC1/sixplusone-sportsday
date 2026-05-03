@@ -295,116 +295,98 @@ function ShareCard() {
   };
 
   return (
-    <div className="border-t border-white/8 bg-black/10">
+    <div className="border-t border-white/8 bg-black/10 p-5 space-y-4">
+      <p className="font-mono text-[#444] text-[10px] tracking-[0.3em]">SHARE YOUR SPOT</p>
+
       {/* ── Story card visual ── */}
       <div
         ref={cardRef}
-        className="relative overflow-hidden"
+        className="w-full overflow-hidden"
         style={{
-          background: "#0A0A0A",
-          aspectRatio: "9/16",
-          maxHeight: "340px",
+          background: "linear-gradient(160deg, #1a0a00 0%, #0A0A0A 60%, #1a0a00 100%)",
+          border: "1px solid rgba(255,85,0,0.25)",
+          borderRadius: "4px",
         }}
       >
-        {/* Full-bleed orange gradient wash */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: "radial-gradient(ellipse 80% 60% at 50% 70%, rgba(255,85,0,0.22) 0%, transparent 70%), linear-gradient(180deg, #0A0A0A 0%, #1a0800 60%, #0A0A0A 100%)",
-          }}
-        />
+        {/* Top accent */}
+        <div className="h-[3px] w-full" style={{ background: "linear-gradient(90deg, transparent 0%, #FF5500 50%, transparent 100%)" }} />
 
-        {/* Diagonal grid texture */}
-        <div
-          className="absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage: "repeating-linear-gradient(45deg, #FF5500 0px, #FF5500 1px, transparent 1px, transparent 24px), repeating-linear-gradient(-45deg, #FF5500 0px, #FF5500 1px, transparent 1px, transparent 24px)",
-          }}
-        />
-
-        {/* Top accent bar */}
-        <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: "linear-gradient(90deg, transparent, #FF5500, transparent)" }} />
-
-        {/* Top label */}
-        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-4">
+        {/* Header row */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-2">
           <span className="font-mono text-white/20 text-[9px] tracking-[0.3em]">SPORTS DAY</span>
-          <img src={LOGO_URL} alt="6+1" className="h-5 w-auto opacity-60" style={{ filter: "invert(1)" }} />
+          <img src={LOGO_URL} alt="6+1" className="h-5 w-auto" style={{ filter: "invert(1)", opacity: 0.5 }} />
           <span className="font-mono text-white/20 text-[9px] tracking-[0.3em]">002</span>
         </div>
 
-        {/* Centre content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
-          {/* Overline */}
-          <p className="font-mono text-[#FF5500]/70 text-[9px] tracking-[0.4em] mb-5">CONFIRMED</p>
+        {/* Main content */}
+        <div
+          className="flex flex-col items-center justify-center text-center px-6 py-10"
+          style={{
+            background: "radial-gradient(ellipse 90% 70% at 50% 60%, rgba(255,85,0,0.18) 0%, transparent 70%)",
+          }}
+        >
+          <p className="font-mono text-[#FF5500]/60 text-[10px] tracking-[0.4em] mb-6">CONFIRMED</p>
 
-          {/* Hero date */}
           <p
             className="font-display text-[#FF5500] leading-none"
-            style={{ fontSize: "clamp(2.8rem, 14vw, 4.5rem)", textShadow: "0 0 40px rgba(255,85,0,0.5)" }}
+            style={{ fontSize: "3.5rem", textShadow: "0 0 30px rgba(255,85,0,0.6)" }}
           >
             11 JULY
           </p>
           <p
-            className="font-display text-[#F2F0EB] leading-none"
-            style={{ fontSize: "clamp(2rem, 10vw, 3.2rem)" }}
+            className="font-display text-[#F2F0EB] leading-none mb-8"
+            style={{ fontSize: "2.8rem" }}
           >
             2026
           </p>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-5 w-full max-w-[160px]">
+          <div className="flex items-center gap-3 mb-8 w-32">
             <div className="flex-1 h-px bg-[#FF5500]/30" />
             <div className="w-1.5 h-1.5 rounded-full bg-[#FF5500]" />
             <div className="flex-1 h-px bg-[#FF5500]/30" />
           </div>
 
-          {/* Statement */}
           <p
             className="font-display text-[#F2F0EB] leading-none mb-2"
-            style={{ fontSize: "clamp(1.4rem, 7vw, 2.2rem)" }}
+            style={{ fontSize: "2rem" }}
           >
             I'M IN.
           </p>
-          <p className="font-mono text-[#F2F0EB]/35 text-[9px] tracking-[0.3em]">
+          <p className="font-mono text-[#F2F0EB]/30 text-[10px] tracking-[0.3em]">
             6+1 SPORTS DAY 002
           </p>
         </div>
 
-        {/* Bottom bar */}
-        <div
-          className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-5 py-3"
-          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent)" }}
-        >
+        {/* Footer */}
+        <div className="flex items-center justify-between px-5 py-3 border-t border-white/5">
           <span className="font-mono text-white/20 text-[8px] tracking-[0.25em]">6PLUS1.COM</span>
-          <div className="flex gap-1">
+          <div className="flex gap-1.5">
             {["#FF5500", "#1A4FE8", "#F72B8C", "#FF6B00"].map((c) => (
-              <div key={c} className="w-1.5 h-1.5 rounded-full" style={{ background: c }} />
+              <div key={c} className="w-2 h-2 rounded-full" style={{ background: c }} />
             ))}
           </div>
-          <span className="font-mono text-[#FF5500]/50 text-[8px] tracking-[0.2em]">SD002</span>
+          <span className="font-mono text-[#FF5500]/40 text-[8px] tracking-[0.2em]">SD002</span>
         </div>
       </div>
 
-      {/* Share actions */}
-      <div className="p-5 space-y-3">
-        <button
-          onClick={handleShare}
-          disabled={sharing || downloading}
-          className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-lg tracking-widest py-4 hover:bg-[#F2F0EB] transition-all active:scale-[0.98] disabled:opacity-50"
-        >
-          {sharing ? "SHARING..." : copied ? "✓ COPIED" : "SHARE TO STORY →"}
-        </button>
-        <button
-          onClick={handleDownload}
-          disabled={sharing || downloading}
-          className="w-full border border-white/10 text-white/50 font-mono text-xs tracking-widest py-3 hover:border-[#FF5500]/30 hover:text-[#FF5500]/60 transition-all disabled:opacity-40"
-        >
-          {downloading ? "SAVING..." : "↓ DOWNLOAD STORY CARD"}
-        </button>
-        <p className="font-mono text-[#333] text-[10px] text-center tracking-wider">
-          Share opens your share sheet. Download saves the image.
-        </p>
-      </div>
+      {/* Actions */}
+      <button
+        onClick={handleShare}
+        disabled={sharing || downloading}
+        className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-lg tracking-widest py-4 hover:bg-[#F2F0EB] transition-all active:scale-[0.98] disabled:opacity-50"
+      >
+        {sharing ? "SHARING..." : copied ? "✓ COPIED" : "SHARE TO STORY →"}
+      </button>
+      <button
+        onClick={handleDownload}
+        disabled={sharing || downloading}
+        className="w-full border border-white/10 text-white/40 font-mono text-xs tracking-widest py-3 hover:border-[#FF5500]/30 hover:text-[#FF5500]/60 transition-all disabled:opacity-40"
+      >
+        {downloading ? "SAVING..." : "↓ DOWNLOAD STORY CARD"}
+      </button>
+      <p className="font-mono text-[#333] text-[10px] text-center tracking-wider">
+        Share opens your share sheet. Download saves the image.
+      </p>
     </div>
   );
 }
