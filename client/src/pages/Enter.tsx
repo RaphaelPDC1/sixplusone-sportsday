@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import WarpShaderBg from "@/components/ui/warp-shader";
 import StepParticles from "@/components/ui/step-particles";
 import { EntrySplash } from "@/components/ui/entry-splash";
+import { ScratchCardGrid } from "@/components/ui/scratch-card";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -68,6 +69,7 @@ export default function Enter() {
   const [generatedGroupCode, setGeneratedGroupCode] = useState("");
   const [groupCodeInput, setGroupCodeInput] = useState("");
   const [groupCodeVerified, setGroupCodeVerified] = useState(false);
+  const [scratchCompleted, setScratchCompleted] = useState(false);
 
   const [form, setForm] = useState<FormData>({
     fullName: "",
@@ -151,11 +153,7 @@ export default function Enter() {
       if (!form.email.trim()) newErrors.email = "Email is required.";
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = "Enter a valid email.";
     }
-    if (step === 6) {
-      if (!form.date4July && !form.date11July && !form.date18July && !form.dateAny) {
-        newErrors.dates = "Select at least one date.";
-      }
-    }
+    // Step 6 is now the scratch card — date11July is auto-set on completion, no validation needed
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -434,36 +432,26 @@ export default function Enter() {
               </StepCard>
             )}
 
-            {/* ─── STEP 6 — Date preferences ─── */}
+            {/* ─── STEP 6 — Scratch card date reveal ─── */}
             {step === 6 && (
-              <StepCard label="Which dates work for you?" caption="Select all that apply.">
-                <div className="space-y-3 mt-6">
-                  {[
-                    { key: "date4July" as const, label: "4 JULY 2026", sub: "Saturday" },
-                    { key: "date11July" as const, label: "11 JULY 2026", sub: "Saturday" },
-                    { key: "date18July" as const, label: "18 JULY 2026", sub: "Saturday" },
-                    { key: "dateAny" as const, label: "ANY DATE", sub: "I'm flexible" },
-                  ].map(({ key, label, sub }) => (
-                    <button
-                      key={key}
-                      onClick={() => set(key, !form[key])}
-                      className={`w-full flex items-center justify-between px-5 py-4 border transition-all active:scale-[0.98] ${
-                        form[key]
-                          ? "border-[#FF5500] bg-[#FF5500]/10 text-[#FF5500]"
-                          : "border-white/20 text-[#F2F0EB] hover:border-white/40"
-                      }`}
-                    >
-                      <span className="font-display text-xl tracking-widest">{label}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono text-xs tracking-wider opacity-50">{sub}</span>
-                        {form[key] && <span>✓</span>}
-                      </div>
-                    </button>
-                  ))}
-                  {errors.dates && <ErrorMsg msg={errors.dates} />}
+              <StepCard label="Your date is locked in." caption="Scratch to reveal the confirmed date.">
+                <div className="mt-4">
+                  <ScratchCardGrid
+                    onComplete={() => {
+                      setScratchCompleted(true);
+                      // Auto-set the confirmed date
+                      set("date11July", true);
+                    }}
+                  />
                 </div>
-                {(form.date4July || form.date11July || form.date18July || form.dateAny) && (
-                  <NextBtn onClick={handleNext} className="mt-6" />
+                {scratchCompleted && (
+                  <div className="mt-5">
+                    <div className="text-center mb-4">
+                      <p className="font-display text-[#FFD700] text-2xl tracking-widest">11 JULY 2026</p>
+                      <p className="font-mono text-white/40 text-xs tracking-wider mt-1">Saturday · Save the date</p>
+                    </div>
+                    <NextBtn onClick={handleNext} />
+                  </div>
                 )}
               </StepCard>
             )}
@@ -627,30 +615,7 @@ export default function Enter() {
                       className="w-full bg-black/30 border border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-sm p-4 transition-colors placeholder:text-white/20 resize-none"
                     />
                   </div>
-                  <div>
-                    <p className="font-mono text-white/40 text-xs tracking-widest mb-3">
-                      Happy for 6+1 to use photos/videos of you for social content?
-                    </p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { val: "yes" as const, label: "YES" },
-                        { val: "no" as const, label: "NO" },
-                        { val: "ask" as const, label: "ASK ME" },
-                      ].map(({ val, label }) => (
-                        <button
-                          key={val}
-                          onClick={() => set("contentConsent", val)}
-                          className={`py-4 border font-display text-lg tracking-widest transition-all active:scale-95 ${
-                            form.contentConsent === val
-                              ? "border-[#FF5500] text-[#FF5500] bg-[#FF5500]/10"
-                              : "border-white/20 text-[#F2F0EB] hover:border-white/40"
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  {/* Camera consent removed — not collecting this */}
                   <div>
                     <p className="font-mono text-white/40 text-xs tracking-widest mb-3">
                       Would you vote for team captains on Instagram?

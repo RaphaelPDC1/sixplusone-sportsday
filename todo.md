@@ -215,3 +215,13 @@
 - [ ] Remove "FIND MY SPOT" button from registration form nav header
 - [ ] Remove the "Already Registered?" interstitial page/route
 - [ ] Remove "RETURNING PLAYER / LOG IN" modal from Enter page
+
+## UX Polish Round 2 (requested 3 May)
+- [ ] Landing page: refine typography to high-end editorial (less bloated, more minimal/luxury)
+- [ ] Landing page: remove Easter egg click trigger, keep random auto-firing shooting stars
+- [ ] Registration form step 13: remove camera consent question entirely
+- [ ] Date question: update to show 12 July 2026 as the confirmed/selected date (remove other options or mark as confirmed)
+- [ ] Holding page: remove £10 price from Priority Player Pass card
+- [ ] Holding page: replace in-app payment with Shopify redirect button (hype, no price shown)
+- [ ] Holding page: add Unity Unlock Code input field for people who have paid
+- [ ] Holding page: add scratch-to-reveal golden ticket interaction with audio

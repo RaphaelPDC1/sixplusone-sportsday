@@ -248,12 +248,19 @@ function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
 // ─── Main Holding Page ─────────────────────────────────────────────────────────────
 export default function Holding() {
   const [, navigate] = useLocation();
-  const [userId, setUserId] = useState<string | null>(null);
+  // Initialise directly from localStorage so no-session state is known on first render (no blank flash)
+  const [userId, setUserId] = useState<string | null>(
+    () => (typeof window !== "undefined" ? localStorage.getItem("sd_user_id") : null)
+  );
   const [copied, setCopied] = useState(false);
   const [heroVisible, setHeroVisible] = useState(false);
-  // Show splash only once per session
+  // Show splash only once per session — only when user HAS a session
   const [showSplash, setShowSplash] = useState(
-    () => sessionStorage.getItem("holding_splash_seen") !== "true"
+    () => {
+      if (typeof window === "undefined") return false;
+      const hasSession = !!localStorage.getItem("sd_user_id");
+      return hasSession && sessionStorage.getItem("holding_splash_seen") !== "true";
+    }
   );
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
@@ -264,15 +271,13 @@ export default function Holding() {
   };
 
   useEffect(() => {
-    const id = localStorage.getItem("sd_user_id");
-    if (!id) return; // Don't redirect — show "find my spot" state
-    setUserId(id);
+    if (!userId) return;
     // Delay hero fade-in until after splash completes
     const splashDone = sessionStorage.getItem("holding_splash_seen") === "true";
     const delay = splashDone ? 120 : 1800; // wait for splash if first visit
     const t = setTimeout(() => setHeroVisible(true), delay);
     return () => clearTimeout(t);
-  }, []);
+  }, [userId]);
 
   const { data: user, isLoading, error } = trpc.sportsday.getUserStatus.useQuery(
     { id: userId! },
