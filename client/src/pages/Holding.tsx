@@ -6,6 +6,7 @@ import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
 import { ParticleTextBg } from "@/components/ui/particle-text-bg";
 import { ScratchCardGrid } from "@/components/ui/scratch-card";
+import { toPng } from "html-to-image";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -130,6 +131,7 @@ function StatusRow({
 
 // ─── Scratch card replay section ──────────────────────────────────────────────
 function ScratchReplaySection({ visible }: { visible: boolean }) {
+  const [expanded, setExpanded] = useState(false);
   const [showCard, setShowCard] = useState(false);
   const [replaying, setReplaying] = useState(false);
   const [replayKey, setReplayKey] = useState(0);
@@ -147,6 +149,10 @@ function ScratchReplaySection({ visible }: { visible: boolean }) {
     setShowShareCard(true);
   }, []);
 
+  const handleToggle = () => {
+    setExpanded((e) => !e);
+  };
+
   return (
     <section
       style={{
@@ -155,42 +161,68 @@ function ScratchReplaySection({ visible }: { visible: boolean }) {
       }}
     >
       <div className="border border-white/8 bg-black/15 backdrop-blur-sm overflow-hidden">
-        <div className="p-6">
-          <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-3">YOUR GOLDEN TICKET</p>
-          <p className="font-mono text-[#F2F0EB]/60 text-xs tracking-wider mb-5 leading-relaxed">
-            11 July 2026. The date is confirmed. Scratch again or share your card.
-          </p>
+        {/* ── Header row ── always visible, tap to expand/collapse */}
+        <button
+          onClick={handleToggle}
+          className="w-full flex items-center justify-between px-6 py-5 hover:bg-white/[0.02] transition-colors"
+        >
+          <div className="text-left">
+            <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-0.5">YOUR GOLDEN TICKET</p>
+            <p className="font-mono text-[#F2F0EB]/40 text-[10px] tracking-wider">
+              {expanded ? "Tap to close" : "11 July 2026 · Scratch again or share"}
+            </p>
+          </div>
+          {/* Chevron */}
+          <div
+            className="w-6 h-6 flex items-center justify-center border border-white/10 flex-shrink-0 transition-transform duration-300"
+            style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
+          >
+            <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+              <path d="M1 1L5 5L9 1" stroke="#FF5500" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        </button>
 
-          {!showCard && (
-            <button
-              onClick={handleReplay}
-              className="w-full border border-[#FF5500]/40 text-[#FF5500] font-mono text-sm tracking-widest py-3 hover:bg-[#FF5500]/5 transition-all"
-            >
-              SCRATCH AGAIN
-            </button>
-          )}
+        {/* ── Collapsible body ── */}
+        <div
+          style={{
+            maxHeight: expanded ? "1200px" : "0px",
+            overflow: "hidden",
+            transition: "max-height 0.45s cubic-bezier(0.4,0,0.2,1)",
+          }}
+        >
+          <div className="px-6 pb-6">
+            {!showCard && (
+              <button
+                onClick={handleReplay}
+                className="w-full border border-[#FF5500]/40 text-[#FF5500] font-mono text-sm tracking-widest py-3 hover:bg-[#FF5500]/5 transition-all"
+              >
+                SCRATCH AGAIN
+              </button>
+            )}
 
-          {showCard && (
-            <div className="mt-2">
-              <ScratchCardGrid
-                key={replayKey}
-                onComplete={handleScratchComplete}
-                autoReveal={!replaying}
-              />
-              {!replaying && (
-                <button
-                  onClick={handleReplay}
-                  className="w-full mt-3 border border-white/10 text-white/30 font-mono text-xs tracking-widest py-2 hover:border-[#FF5500]/30 hover:text-[#FF5500]/60 transition-all"
-                >
-                  SCRATCH AGAIN
-                </button>
-              )}
-            </div>
-          )}
+            {showCard && (
+              <div className="mt-2">
+                <ScratchCardGrid
+                  key={replayKey}
+                  onComplete={handleScratchComplete}
+                  autoReveal={!replaying}
+                />
+                {!replaying && (
+                  <button
+                    onClick={handleReplay}
+                    className="w-full mt-3 border border-white/10 text-white/30 font-mono text-xs tracking-widest py-2 hover:border-[#FF5500]/30 hover:text-[#FF5500]/60 transition-all"
+                  >
+                    SCRATCH AGAIN
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Share card — only shown after scratch complete */}
+          {showShareCard && <ShareCard />}
         </div>
-
-        {/* Share card */}
-        {showShareCard && <ShareCard />}
       </div>
     </section>
   );
@@ -200,95 +232,179 @@ function ScratchReplaySection({ visible }: { visible: boolean }) {
 function ShareCard() {
   const cardRef = useRef<HTMLDivElement>(null);
   const [sharing, setSharing] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const shareText = "I'm in. 11 July 2026. 6+1 Sports Day 002.";
   const shareUrl = typeof window !== "undefined" ? window.location.origin : "";
 
+  const getCardPng = async (): Promise<Blob | null> => {
+    if (!cardRef.current) return null;
+    try {
+      const dataUrl = await toPng(cardRef.current, { pixelRatio: 3, cacheBust: true });
+      const res = await fetch(dataUrl);
+      return await res.blob();
+    } catch {
+      return null;
+    }
+  };
+
   const handleShare = async () => {
     setSharing(true);
     try {
-      // Try Web Share API first (mobile)
-      if (navigator.share) {
+      const blob = await getCardPng();
+      if (blob && navigator.canShare && navigator.canShare({ files: [new File([blob], "sd002.png", { type: "image/png" })] })) {
+        // Share the actual image file (mobile)
         await navigator.share({
           title: "6+1 Sports Day 002",
           text: shareText,
-          url: shareUrl,
+          files: [new File([blob], "sd002.png", { type: "image/png" })],
         });
+      } else if (navigator.share) {
+        await navigator.share({ title: "6+1 Sports Day 002", text: shareText, url: shareUrl });
       } else {
-        // Fallback: copy text to clipboard
         await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
         setCopied(true);
-        toast.success("Share text copied to clipboard.");
+        toast.success("Copied to clipboard.");
         setTimeout(() => setCopied(false), 3000);
       }
     } catch {
-      // User cancelled or error — silently ignore
+      // cancelled
     } finally {
       setSharing(false);
     }
   };
 
-  return (
-    <div className="border-t border-white/8 p-6 bg-black/10">
-      <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-4">SHARE YOUR SPOT</p>
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const blob = await getCardPng();
+      if (!blob) { toast.error("Could not generate image."); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "6plus1-sd002.png";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Story card saved.");
+    } catch {
+      toast.error("Download failed.");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
-      {/* Visual share card */}
+  return (
+    <div className="border-t border-white/8 bg-black/10">
+      {/* ── Story card visual ── */}
       <div
         ref={cardRef}
-        className="relative overflow-hidden mb-4"
+        className="relative overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, #0A0A0A 0%, #1a0800 50%, #0A0A0A 100%)",
-          border: "1px solid rgba(255,85,0,0.3)",
+          background: "#0A0A0A",
           aspectRatio: "9/16",
-          maxHeight: "280px",
+          maxHeight: "340px",
         }}
       >
-        {/* Background starburst */}
+        {/* Full-bleed orange gradient wash */}
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0"
           style={{
-            background: "repeating-conic-gradient(rgba(255,85,0,0.2) 0deg, transparent 15deg, transparent 30deg)",
+            background: "radial-gradient(ellipse 80% 60% at 50% 70%, rgba(255,85,0,0.22) 0%, transparent 70%), linear-gradient(180deg, #0A0A0A 0%, #1a0800 60%, #0A0A0A 100%)",
           }}
         />
 
-        {/* Top accent */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#FF5500]" />
+        {/* Diagonal grid texture */}
+        <div
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage: "repeating-linear-gradient(45deg, #FF5500 0px, #FF5500 1px, transparent 1px, transparent 24px), repeating-linear-gradient(-45deg, #FF5500 0px, #FF5500 1px, transparent 1px, transparent 24px)",
+          }}
+        />
 
-        {/* Content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-          <img src={LOGO_URL} alt="6+1" className="w-12 h-12 object-contain mb-4" style={{ filter: "invert(1)" }} />
-          <p className="font-mono text-[#444] text-[10px] tracking-[0.4em] mb-3">SPORTS DAY 002</p>
-          <p className="font-display text-[#F2F0EB] leading-none mb-1" style={{ fontSize: "clamp(1.8rem, 8vw, 2.5rem)" }}>
+        {/* Top accent bar */}
+        <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: "linear-gradient(90deg, transparent, #FF5500, transparent)" }} />
+
+        {/* Top label */}
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-5 pt-4">
+          <span className="font-mono text-white/20 text-[9px] tracking-[0.3em]">SPORTS DAY</span>
+          <img src={LOGO_URL} alt="6+1" className="h-5 w-auto opacity-60" style={{ filter: "invert(1)" }} />
+          <span className="font-mono text-white/20 text-[9px] tracking-[0.3em]">002</span>
+        </div>
+
+        {/* Centre content */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center">
+          {/* Overline */}
+          <p className="font-mono text-[#FF5500]/70 text-[9px] tracking-[0.4em] mb-5">CONFIRMED</p>
+
+          {/* Hero date */}
+          <p
+            className="font-display text-[#FF5500] leading-none"
+            style={{ fontSize: "clamp(2.8rem, 14vw, 4.5rem)", textShadow: "0 0 40px rgba(255,85,0,0.5)" }}
+          >
+            11 JULY
+          </p>
+          <p
+            className="font-display text-[#F2F0EB] leading-none"
+            style={{ fontSize: "clamp(2rem, 10vw, 3.2rem)" }}
+          >
+            2026
+          </p>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 my-5 w-full max-w-[160px]">
+            <div className="flex-1 h-px bg-[#FF5500]/30" />
+            <div className="w-1.5 h-1.5 rounded-full bg-[#FF5500]" />
+            <div className="flex-1 h-px bg-[#FF5500]/30" />
+          </div>
+
+          {/* Statement */}
+          <p
+            className="font-display text-[#F2F0EB] leading-none mb-2"
+            style={{ fontSize: "clamp(1.4rem, 7vw, 2.2rem)" }}
+          >
             I'M IN.
           </p>
-          <p className="font-display text-[#FF5500] leading-none" style={{ fontSize: "clamp(1.2rem, 5vw, 1.8rem)" }}>
-            11 JULY 2026
-          </p>
-          <div className="mt-4 w-12 h-[1px] bg-[#FF5500]/40" />
-          <p className="font-mono text-[#F2F0EB]/30 text-[9px] tracking-[0.3em] mt-3">
-            BETTER EVERYDAY. BETTER TOGETHER.
+          <p className="font-mono text-[#F2F0EB]/35 text-[9px] tracking-[0.3em]">
+            6+1 SPORTS DAY 002
           </p>
         </div>
 
         {/* Bottom bar */}
-        <div className="absolute bottom-0 left-0 right-0 px-4 py-2 flex items-center justify-between" style={{ background: "rgba(0,0,0,0.5)" }}>
-          <span className="font-mono text-[#444] text-[8px] tracking-[0.2em]">6PLUS1.COM</span>
-          <span className="font-mono text-[#FF5500] text-[8px] tracking-[0.2em]">SD002</span>
+        <div
+          className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-5 py-3"
+          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent)" }}
+        >
+          <span className="font-mono text-white/20 text-[8px] tracking-[0.25em]">6PLUS1.COM</span>
+          <div className="flex gap-1">
+            {["#FF5500", "#1A4FE8", "#F72B8C", "#FF6B00"].map((c) => (
+              <div key={c} className="w-1.5 h-1.5 rounded-full" style={{ background: c }} />
+            ))}
+          </div>
+          <span className="font-mono text-[#FF5500]/50 text-[8px] tracking-[0.2em]">SD002</span>
         </div>
       </div>
 
-      {/* Share button */}
-      <button
-        onClick={handleShare}
-        disabled={sharing}
-        className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-lg tracking-widest py-4 hover:bg-[#F2F0EB] transition-all active:scale-[0.98] disabled:opacity-50"
-      >
-        {sharing ? "SHARING..." : copied ? "✓ COPIED" : "SHARE TO STORY →"}
-      </button>
-      <p className="font-mono text-[#333] text-[10px] text-center mt-2 tracking-wider">
-        Opens share sheet on mobile. Copies text on desktop.
-      </p>
+      {/* Share actions */}
+      <div className="p-5 space-y-3">
+        <button
+          onClick={handleShare}
+          disabled={sharing || downloading}
+          className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-lg tracking-widest py-4 hover:bg-[#F2F0EB] transition-all active:scale-[0.98] disabled:opacity-50"
+        >
+          {sharing ? "SHARING..." : copied ? "✓ COPIED" : "SHARE TO STORY →"}
+        </button>
+        <button
+          onClick={handleDownload}
+          disabled={sharing || downloading}
+          className="w-full border border-white/10 text-white/50 font-mono text-xs tracking-widest py-3 hover:border-[#FF5500]/30 hover:text-[#FF5500]/60 transition-all disabled:opacity-40"
+        >
+          {downloading ? "SAVING..." : "↓ DOWNLOAD STORY CARD"}
+        </button>
+        <p className="font-mono text-[#333] text-[10px] text-center tracking-wider">
+          Share opens your share sheet. Download saves the image.
+        </p>
+      </div>
     </div>
   );
 }

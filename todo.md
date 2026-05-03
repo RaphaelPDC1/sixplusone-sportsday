@@ -239,3 +239,8 @@
 - [x] Apply 6+1 brand voice to now-happening.tsx
 - [x] Redesign NotFound.tsx in full 6+1 brand style
 - [x] All 20 tests passing, TypeScript clean (0 errors)
+
+## Scratch Card Fixes (requested 3 May)
+- [x] Retheme scratch card outer frame from red to on-brand orange/dark palette
+- [x] Redesign share-to-story card to look premium and visually shareable on socials
+- [x] Add collapse/minimise toggle to scratch card section on holding page

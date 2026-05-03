@@ -288,18 +288,18 @@ export function ScratchCardGrid({ onComplete, autoReveal = false }: ScratchCardG
     <div className="w-full max-w-sm mx-auto relative">
       {showConfetti && <WinConfetti />}
 
-      {/* ── Outer card frame (red gradient like real scratch card) ── */}
+      {/* ── Outer card frame (on-brand orange/dark) ── */}
       <div
         className="rounded-lg overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, #cc1a00 0%, #ff3300 40%, #cc1a00 100%)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)",
+          background: "linear-gradient(135deg, #FF5500 0%, #FF7A00 40%, #FF5500 100%)",
+          boxShadow: "0 8px 32px rgba(255,85,0,0.35), inset 0 1px 0 rgba(255,255,255,0.15)",
           padding: "3px",
         }}
       >
         <div
           className="rounded-lg overflow-hidden"
-          style={{ background: "linear-gradient(135deg, #b81500 0%, #e82d00 40%, #b81500 100%)" }}
+          style={{ background: "linear-gradient(160deg, #1a0a00 0%, #2d1400 50%, #0A0A0A 100%)" }}
         >
           {/* ── Top row: branding left + title right ── */}
           <div className="flex items-stretch" style={{ minHeight: "90px" }}>
