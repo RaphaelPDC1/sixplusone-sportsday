@@ -186,7 +186,7 @@ function ScratchReplaySection({ visible }: { visible: boolean }) {
         {/* ── Collapsible body ── */}
         <div
           style={{
-            maxHeight: expanded ? "1200px" : "0px",
+            maxHeight: expanded ? "9999px" : "0px",
             overflow: "hidden",
             transition: "max-height 0.45s cubic-bezier(0.4,0,0.2,1)",
           }}
