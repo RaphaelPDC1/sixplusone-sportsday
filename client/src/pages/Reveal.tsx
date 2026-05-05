@@ -542,6 +542,7 @@ export default function Reveal() {
   const [aiIdentity, setAiIdentity] = useState<{ title: string; message: string } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const shareCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [shareCardDataUrl, setShareCardDataUrl] = useState<string | null>(null);
 
   const { data: user } = trpc.sportsday.getUserStatus.useQuery(
     { id: userId! },
@@ -625,6 +626,12 @@ export default function Reveal() {
         const logoH = 150, logoW = (logoImg.width / logoImg.height) * logoH;
         ctx.drawImage(logoImg, (1080 - logoW) / 2, 65, logoW, logoH);
         ctx.restore();
+        // Capture as data URL for display and sharing
+        setShareCardDataUrl(canvas.toDataURL("image/png"));
+      };
+      logoImg.onerror = () => {
+        // Logo failed to load — still capture the card without it
+        setShareCardDataUrl(canvas.toDataURL("image/png"));
       };
       logoImg.src = LOGO_URL;
     };
@@ -639,23 +646,24 @@ export default function Reveal() {
       .catch(() => { drawWithLogo("'Arial Narrow', Arial, sans-serif"); });
   }, [phase, config.color, team]);
 
-  const handleShare = () => {
-    const canvas = shareCanvasRef.current;
-    if (!canvas) return;
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      const file = new File([blob], `team-${team}-sports-day-002.png`, { type: "image/png" });
-      if (navigator.canShare?.({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: `I'm Team ${team.toUpperCase()} — Sports Day 002`, text: "Just found out my team. @6plus1 #SportsDay002" });
-          return;
-        } catch { /* fall through */ }
-      }
-      const link = document.createElement("a");
-      link.download = `team-${team}-sports-day-002.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    }, "image/png");
+  const handleShare = async () => {
+    const dataUrl = shareCardDataUrl;
+    if (!dataUrl) return;
+    // Convert data URL to blob
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], `team-${team}-sports-day-002.png`, { type: "image/png" });
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: `I'm Team ${team.toUpperCase()} — Sports Day 002`, text: "Just found out my team. @6plus1 #SportsDay002" });
+        return;
+      } catch { /* cancelled or unsupported — fall through to download */ }
+    }
+    // Fallback: trigger download
+    const link = document.createElement("a");
+    link.download = `team-${team}-sports-day-002.png`;
+    link.href = dataUrl;
+    link.click();
   };
 
   if (!user) {
@@ -681,7 +689,8 @@ export default function Reveal() {
       {showSplash && <EntrySplash onComplete={() => { sessionStorage.setItem("reveal_splash_seen", "true"); setShowSplash(false); }} />}
       {phase !== "reveal" && <RevealBackground teamColor={config.color} />}
       <canvas ref={confettiRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 10 }} />
-      <canvas ref={shareCanvasRef} className="hidden" />
+      {/* Hidden off-screen canvas used only for drawing — output captured to shareCardDataUrl state */}
+      <canvas ref={shareCanvasRef} style={{ position: "absolute", left: "-9999px", top: "-9999px", width: 1, height: 1 }} />
 
       {/* Sticky top header — always visible at top of screen */}
       <header className="relative z-30 w-full flex items-center justify-between px-6 pt-safe pt-4 pb-3">
@@ -750,37 +759,46 @@ export default function Reveal() {
             )}
           </div>
 
-          {/* Share card preview — 9:16 canvas rendered as visible img */}
+          {/* Share card preview — rendered from canvas data URL */}
           <div className="w-full mb-4">
             <p className="font-mono text-white/40 text-[10px] tracking-[0.3em] mb-2 text-left">YOUR STORY CARD</p>
-            <canvas
-              ref={shareCanvasRef}
-              className="w-full rounded-sm"
-              style={{
-                display: "block",
-                aspectRatio: "9/16",
-                objectFit: "contain",
-                border: "1px solid rgba(255,255,255,0.15)",
-              }}
-            />
+            {shareCardDataUrl ? (
+              <img
+                src={shareCardDataUrl}
+                alt={`I'm Team ${team.toUpperCase()} — Sports Day 002`}
+                className="w-full rounded-sm"
+                style={{
+                  display: "block",
+                  aspectRatio: "9/16",
+                  objectFit: "contain",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                }}
+              />
+            ) : (
+              <div
+                className="w-full rounded-sm animate-pulse"
+                style={{ aspectRatio: "9/16", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}
+              />
+            )}
           </div>
 
           {/* Action buttons */}
           <div className="flex flex-col gap-3 w-full">
             <button onClick={handleShare}
-              className="w-full bg-white text-black font-display text-xl tracking-widest py-5 hover:bg-black hover:text-white transition-colors active:scale-[0.98]">
-              SHARE TO STORY →
+              disabled={!shareCardDataUrl}
+              className="w-full bg-white text-black font-display text-xl tracking-widest py-5 hover:bg-black hover:text-white transition-colors active:scale-[0.98] disabled:opacity-50">
+              {shareCardDataUrl ? "SHARE TO STORY →" : "GENERATING CARD..."}
             </button>
             <button
               onClick={() => {
-                const canvas = shareCanvasRef.current;
-                if (!canvas) return;
+                if (!shareCardDataUrl) return;
                 const link = document.createElement("a");
                 link.download = `team-${team}-sports-day-002.png`;
-                link.href = canvas.toDataURL("image/png");
+                link.href = shareCardDataUrl;
                 link.click();
               }}
-              className="w-full border border-white/30 text-white/60 font-mono text-xs tracking-widest py-3 hover:border-white/60 hover:text-white/80 transition-colors active:scale-[0.98]">
+              disabled={!shareCardDataUrl}
+              className="w-full border border-white/30 text-white/60 font-mono text-xs tracking-widest py-3 hover:border-white/60 hover:text-white/80 transition-colors active:scale-[0.98] disabled:opacity-40">
               ↓ DOWNLOAD STORY CARD
             </button>
             <button onClick={() => navigate("/team-hub")}
