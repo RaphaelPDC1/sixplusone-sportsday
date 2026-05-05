@@ -549,6 +549,9 @@ export default function Holding() {
       enabled: !!userId,
       refetchInterval: 15000,
       retry: false,
+      // NOT_FOUND means the stored ID is stale — handled below by clearing localStorage.
+      // Mark as handled so it doesn't surface in the global error reporter.
+      throwOnError: false,
     }
   );
 
