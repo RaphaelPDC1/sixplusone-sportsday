@@ -709,8 +709,8 @@ export default function Reveal() {
 
       {/* Reveal phase */}
       {phase === "reveal" && (
-        <div className="relative z-20 flex flex-col items-center px-5 text-center w-full max-w-sm mx-auto flex-1 justify-center pb-12">
-          <div className="h-[1px] bg-white/30 w-full mb-6" />
+        <div className="relative z-20 flex flex-col items-center px-5 text-center w-full max-w-sm mx-auto flex-1 justify-start pt-4 pb-12">
+          <div className="h-[1px] bg-white/30 w-full mb-5" />
           <p className="font-display text-white/80 tracking-widest mb-1" style={{ fontSize: "clamp(0.9rem, 3.5vw, 1.3rem)" }}>
             YOUR TEAM IS
           </p>
@@ -718,8 +718,10 @@ export default function Reveal() {
             style={{ fontSize: "clamp(3.5rem, 16vw, 8rem)", textShadow: "0 0 80px rgba(0,0,0,0.5)" }}>
             {config.name}
           </h1>
-          <div className="h-[1px] bg-white/30 w-full mb-8" />
-          <div className="w-full mb-8 min-h-[100px] flex flex-col items-center justify-center">
+          <div className="h-[1px] bg-white/30 w-full mb-5" />
+
+          {/* AI identity */}
+          <div className="w-full mb-5 min-h-[80px] flex flex-col items-center justify-center">
             {aiLoading ? (
               <div className="space-y-2 w-full">
                 <div className="h-5 bg-white/20 animate-pulse rounded w-3/4 mx-auto" />
@@ -747,18 +749,47 @@ export default function Reveal() {
               </div>
             )}
           </div>
+
+          {/* Share card preview — 9:16 canvas rendered as visible img */}
+          <div className="w-full mb-4">
+            <p className="font-mono text-white/40 text-[10px] tracking-[0.3em] mb-2 text-left">YOUR STORY CARD</p>
+            <canvas
+              ref={shareCanvasRef}
+              className="w-full rounded-sm"
+              style={{
+                display: "block",
+                aspectRatio: "9/16",
+                objectFit: "contain",
+                border: "1px solid rgba(255,255,255,0.15)",
+              }}
+            />
+          </div>
+
+          {/* Action buttons */}
           <div className="flex flex-col gap-3 w-full">
             <button onClick={handleShare}
-              className="w-full bg-white text-black font-display text-xl tracking-widest py-5 hover:bg-black hover:text-white transition-colors active:scale-[0.98]" >
-              SHARE YOUR TEAM →
+              className="w-full bg-white text-black font-display text-xl tracking-widest py-5 hover:bg-black hover:text-white transition-colors active:scale-[0.98]">
+              SHARE TO STORY →
+            </button>
+            <button
+              onClick={() => {
+                const canvas = shareCanvasRef.current;
+                if (!canvas) return;
+                const link = document.createElement("a");
+                link.download = `team-${team}-sports-day-002.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+              }}
+              className="w-full border border-white/30 text-white/60 font-mono text-xs tracking-widest py-3 hover:border-white/60 hover:text-white/80 transition-colors active:scale-[0.98]">
+              ↓ DOWNLOAD STORY CARD
             </button>
             <button onClick={() => navigate("/team-hub")}
               className="w-full border-2 border-white text-white font-display text-xl tracking-widest py-5 hover:bg-white/10 transition-colors active:scale-[0.98]">
               ENTER TEAM HUB →
             </button>
           </div>
-          <p className="font-mono text-white/50 text-xs tracking-wider mt-4">
-            Share to your story. Tag @6plus1.
+          <p className="font-mono text-white/40 text-xs tracking-wider mt-3">
+            Tap share to post to your story. Tag @6plus1.
           </p>
         </div>
       )}

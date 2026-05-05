@@ -248,3 +248,7 @@
 ## Share Card + Lock Button (requested 5 May)
 - [x] Upload branded share card image and use it as the shareable/downloadable asset
 - [x] Lock the unlock team button with chain/padlock visual on holding page
+
+## Reveal Page Share Card (requested 5 May)
+- [x] Fix share card proportions on Reveal page (date reveal post-to-story)
+- [x] Add Share to Story + Download buttons to Reveal page share card
