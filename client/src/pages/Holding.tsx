@@ -202,13 +202,35 @@ function ScratchReplaySection({ visible }: { visible: boolean }) {
             )}
 
             {showCard && (
-              <div className="mt-2">
+              <div className="mt-2 relative">
                 <ScratchCardGrid
                   key={replayKey}
                   onComplete={handleScratchComplete}
                   autoReveal={!replaying}
                 />
-
+                {/* Tap-to-scratch prompt — only shown while actively replaying (before first scratch) */}
+                {replaying && (
+                  <div
+                    className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center justify-end pb-4"
+                    style={{ zIndex: 20 }}
+                  >
+                    <div
+                      className="flex items-center gap-2 px-4 py-2 rounded-full"
+                      style={{
+                        background: "rgba(10,10,10,0.75)",
+                        border: "1px solid rgba(255,85,0,0.35)",
+                        backdropFilter: "blur(6px)",
+                        animation: "pulse 1.8s ease-in-out infinite",
+                      }}
+                    >
+                      {/* Finger tap icon */}
+                      <svg width="14" height="18" viewBox="0 0 14 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7 1C5.9 1 5 1.9 5 3V9.5C4.4 9.2 3.7 9 3 9C1.9 9 1 9.9 1 11C1 13.8 3.2 17 7 17C10.8 17 13 13.8 13 11V5C13 3.9 12.1 3 11 3C10.6 3 10.3 3.1 10 3.3C9.7 2 8.5 1 7 1Z" stroke="#FF5500" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span className="font-mono text-[#FF5500] text-[10px] tracking-[0.25em]">TAP &amp; DRAG TO SCRATCH</span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
