@@ -244,3 +244,7 @@
 - [x] Retheme scratch card outer frame from red to on-brand orange/dark palette
 - [x] Redesign share-to-story card to look premium and visually shareable on socials
 - [x] Add collapse/minimise toggle to scratch card section on holding page
+
+## Share Card + Lock Button (requested 5 May)
+- [x] Upload branded share card image and use it as the shareable/downloadable asset
+- [x] Lock the unlock team button with chain/padlock visual on holding page

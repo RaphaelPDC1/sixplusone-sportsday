@@ -229,8 +229,9 @@ function ScratchReplaySection({ visible }: { visible: boolean }) {
 }
 
 // ─── Shareable share card ─────────────────────────────────────────────────────
+const SHARE_CARD_URL = "/manus-storage/share-card-sd002_9d2fded2.png";
+
 function ShareCard() {
-  const cardRef = useRef<HTMLDivElement>(null);
   const [sharing, setSharing] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -238,11 +239,11 @@ function ShareCard() {
   const shareText = "I'm in. 11 July 2026. 6+1 Sports Day 002.";
   const shareUrl = typeof window !== "undefined" ? window.location.origin : "";
 
-  const getCardPng = async (): Promise<Blob | null> => {
-    if (!cardRef.current) return null;
+  // Fetch the hosted image as a Blob for native file sharing / download
+  const getCardBlob = async (): Promise<Blob | null> => {
     try {
-      const dataUrl = await toPng(cardRef.current, { pixelRatio: 3, cacheBust: true });
-      const res = await fetch(dataUrl);
+      const res = await fetch(SHARE_CARD_URL);
+      if (!res.ok) return null;
       return await res.blob();
     } catch {
       return null;
@@ -252,9 +253,8 @@ function ShareCard() {
   const handleShare = async () => {
     setSharing(true);
     try {
-      const blob = await getCardPng();
+      const blob = await getCardBlob();
       if (blob && navigator.canShare && navigator.canShare({ files: [new File([blob], "sd002.png", { type: "image/png" })] })) {
-        // Share the actual image file (mobile)
         await navigator.share({
           title: "6+1 Sports Day 002",
           text: shareText,
@@ -278,8 +278,8 @@ function ShareCard() {
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      const blob = await getCardPng();
-      if (!blob) { toast.error("Could not generate image."); return; }
+      const blob = await getCardBlob();
+      if (!blob) { toast.error("Could not fetch image."); return; }
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -298,76 +298,13 @@ function ShareCard() {
     <div className="border-t border-white/8 bg-black/10 p-5 space-y-4">
       <p className="font-mono text-[#444] text-[10px] tracking-[0.3em]">SHARE YOUR SPOT</p>
 
-      {/* ── Story card visual ── */}
-      <div
-        ref={cardRef}
-        className="w-full overflow-hidden"
-        style={{
-          background: "linear-gradient(160deg, #1a0a00 0%, #0A0A0A 60%, #1a0a00 100%)",
-          border: "1px solid rgba(255,85,0,0.25)",
-          borderRadius: "4px",
-        }}
-      >
-        {/* Top accent */}
-        <div className="h-[3px] w-full" style={{ background: "linear-gradient(90deg, transparent 0%, #FF5500 50%, transparent 100%)" }} />
-
-        {/* Header row */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-2">
-          <span className="font-mono text-white/20 text-[9px] tracking-[0.3em]">SPORTS DAY</span>
-          <img src={LOGO_URL} alt="6+1" className="h-5 w-auto" style={{ filter: "invert(1)", opacity: 0.5 }} />
-          <span className="font-mono text-white/20 text-[9px] tracking-[0.3em]">002</span>
-        </div>
-
-        {/* Main content */}
-        <div
-          className="flex flex-col items-center justify-center text-center px-6 py-10"
-          style={{
-            background: "radial-gradient(ellipse 90% 70% at 50% 60%, rgba(255,85,0,0.18) 0%, transparent 70%)",
-          }}
-        >
-          <p className="font-mono text-[#FF5500]/60 text-[10px] tracking-[0.4em] mb-6">CONFIRMED</p>
-
-          <p
-            className="font-display text-[#FF5500] leading-none"
-            style={{ fontSize: "3.5rem", textShadow: "0 0 30px rgba(255,85,0,0.6)" }}
-          >
-            11 JULY
-          </p>
-          <p
-            className="font-display text-[#F2F0EB] leading-none mb-8"
-            style={{ fontSize: "2.8rem" }}
-          >
-            2026
-          </p>
-
-          <div className="flex items-center gap-3 mb-8 w-32">
-            <div className="flex-1 h-px bg-[#FF5500]/30" />
-            <div className="w-1.5 h-1.5 rounded-full bg-[#FF5500]" />
-            <div className="flex-1 h-px bg-[#FF5500]/30" />
-          </div>
-
-          <p
-            className="font-display text-[#F2F0EB] leading-none mb-2"
-            style={{ fontSize: "2rem" }}
-          >
-            I'M IN.
-          </p>
-          <p className="font-mono text-[#F2F0EB]/30 text-[10px] tracking-[0.3em]">
-            6+1 SPORTS DAY 002
-          </p>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-white/5">
-          <span className="font-mono text-white/20 text-[8px] tracking-[0.25em]">6PLUS1.COM</span>
-          <div className="flex gap-1.5">
-            {["#FF5500", "#1A4FE8", "#F72B8C", "#FF6B00"].map((c) => (
-              <div key={c} className="w-2 h-2 rounded-full" style={{ background: c }} />
-            ))}
-          </div>
-          <span className="font-mono text-[#FF5500]/40 text-[8px] tracking-[0.2em]">SD002</span>
-        </div>
-      </div>
+      {/* ── Story card image ── */}
+      <img
+        src={SHARE_CARD_URL}
+        alt="6+1 Sports Day 002 — 11 July 2026"
+        className="w-full rounded-sm"
+        style={{ display: "block" }}
+      />
 
       {/* Actions */}
       <button
@@ -767,14 +704,52 @@ export default function Holding() {
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={handleUnlock}
-                className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-2xl tracking-widest py-5 hover:bg-[#F2F0EB] transition-all active:scale-[0.98]"
-              >
-                UNLOCK MY TEAM →
-              </button>
+              {/* ── Locked button — coming soon ── */}
+              <div className="relative w-full select-none">
+                {/* Chain links top */}
+                <div className="flex items-center justify-center gap-2 mb-2 opacity-40">
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-5 h-3 rounded-full border border-[#FF5500]/60"
+                      style={{ transform: i % 2 === 0 ? "rotate(0deg)" : "rotate(90deg)" }}
+                    />
+                  ))}
+                </div>
+
+                {/* Locked button face */}
+                <div
+                  className="w-full flex items-center justify-center gap-4 py-5 font-display text-2xl tracking-widest cursor-not-allowed"
+                  style={{
+                    background: "linear-gradient(135deg, #1a0a00 0%, #0d0d0d 50%, #1a0a00 100%)",
+                    border: "1px solid rgba(255,85,0,0.25)",
+                    color: "rgba(255,85,0,0.35)",
+                  }}
+                >
+                  {/* Padlock SVG */}
+                  <svg width="22" height="26" viewBox="0 0 22 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1" y="11" width="20" height="14" rx="2" stroke="#FF5500" strokeOpacity="0.5" strokeWidth="1.5" />
+                    <path d="M6 11V7.5C6 4.46 8.24 2 11 2C13.76 2 16 4.46 16 7.5V11" stroke="#FF5500" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" />
+                    <circle cx="11" cy="17" r="2" fill="#FF5500" fillOpacity="0.4" />
+                    <line x1="11" y1="19" x2="11" y2="22" stroke="#FF5500" strokeOpacity="0.4" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  LOCKED
+                </div>
+
+                {/* Chain links bottom */}
+                <div className="flex items-center justify-center gap-2 mt-2 opacity-40">
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-5 h-3 rounded-full border border-[#FF5500]/60"
+                      style={{ transform: i % 2 === 0 ? "rotate(0deg)" : "rotate(90deg)" }}
+                    />
+                  ))}
+                </div>
+              </div>
+
               <p className="font-mono text-[#333] text-xs text-center mt-3 tracking-wider">
-                Limited passes. Once they're gone, you wait for public allocation.
+                Priority Player Pass drops closer to the date. Stay tuned.
               </p>
             </div>
           </div>
