@@ -393,7 +393,10 @@ function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 pt-6 pb-4">
         <BackNav to="/" inline />
-        <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: "invert(1)" }} />
+        {/* Logo absolutely centred so it's not pushed by unequal side elements */}
+        <div className="absolute inset-x-0 flex justify-center pointer-events-none">
+          <img src={LOGO_URL} alt="6+1" className="h-8 w-auto pointer-events-auto" style={{ filter: "invert(1)" }} />
+        </div>
         <span className="font-mono text-[#FF5500] text-xs tracking-[0.2em]">SPORTS DAY 002</span>
       </header>
 
@@ -598,7 +601,10 @@ export default function Holding() {
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 pt-6 pb-4">
         <BackNav to="/" inline />
-        <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: "invert(1)" }} />
+        {/* Logo absolutely centred so it's not pushed by unequal side elements */}
+        <div className="absolute inset-x-0 flex justify-center pointer-events-none">
+          <img src={LOGO_URL} alt="6+1" className="h-8 w-auto pointer-events-auto" style={{ filter: "invert(1)" }} />
+        </div>
         <span className="font-mono text-[#FF5500] text-xs tracking-[0.2em]">SPORTS DAY 002</span>
       </header>
 
