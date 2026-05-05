@@ -250,7 +250,7 @@ export default function TeamHub() {
                 sessionStorage.removeItem("reveal_splash_seen");
               }}
             />
-            <img src={LOGO_URL} alt="6+1" className="h-7 w-auto" style={{ filter: "invert(1)" }} />
+            <img src={LOGO_URL} alt="6+1" className="h-10 w-auto" style={{ filter: "invert(1)" }} />
           </div>
 
           {/* Team identity */}

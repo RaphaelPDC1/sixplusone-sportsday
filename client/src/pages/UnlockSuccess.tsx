@@ -41,7 +41,7 @@ export default function UnlockSuccess() {
       <div className="h-[2px] bg-[#FF5500]" />
       <header className="flex items-center justify-between py-5">
         <BackNav to="/holding" inline />
-        <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: "invert(1)" }} />
+        <img src={LOGO_URL} alt="6+1" className="h-12 w-auto" style={{ filter: "invert(1)" }} />
         <div className="w-16" />
       </header>
       <div className="flex-1 flex flex-col items-center justify-center">

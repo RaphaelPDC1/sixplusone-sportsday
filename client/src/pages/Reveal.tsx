@@ -695,7 +695,7 @@ export default function Reveal() {
       {/* Sticky top header — always visible at top of screen */}
       <header className="relative z-30 w-full flex items-center justify-between px-6 pt-safe pt-4 pb-3">
         <BackNav to="/holding" inline />
-        <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" style={{ filter: phase === "reveal" ? "brightness(0) invert(1)" : "invert(1)" }} />
+        <img src={LOGO_URL} alt="6+1" className="h-12 w-auto" style={{ filter: phase === "reveal" ? "brightness(0) invert(1)" : "invert(1)" }} />
         <div className="w-16" />
       </header>
 

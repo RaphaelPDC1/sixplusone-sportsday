@@ -221,7 +221,7 @@ export default function Enter() {
         >
           ← BACK
         </button>
-        <img src={LOGO_URL} alt="6+1" className="h-7 w-auto" style={{ filter: "invert(1)" }} />
+        <img src={LOGO_URL} alt="6+1" className="h-10 w-auto" style={{ filter: "invert(1)" }} />
         <span className="font-mono text-[#FF5500] text-xs tracking-wider">
           {step + 1}/{TOTAL_STEPS}
         </span>

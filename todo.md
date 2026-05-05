@@ -252,3 +252,7 @@
 ## Reveal Page Share Card (requested 5 May)
 - [x] Fix share card proportions on Reveal page (date reveal post-to-story)
 - [x] Add Share to Story + Download buttons to Reveal page share card
+
+## PWA Icon + Header Logo (requested 5 May)
+- [x] Fix PWA home screen icon — generate correct 192x192 and 512x512 icons, update manifest, add apple-touch-icon
+- [x] Increase header logo size across the app (h-7/h-8 → h-10/h-12)
