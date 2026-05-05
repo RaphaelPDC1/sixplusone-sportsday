@@ -323,18 +323,13 @@ function ShareCard() {
     <div className="border-t border-white/8 bg-black/10 p-5 space-y-4">
       <p className="font-mono text-[#444] text-[10px] tracking-[0.3em]">SHARE YOUR SPOT</p>
 
-      {/* ── Story card image — full 9:16 portrait, no cropping ── */}
-      <div
-        className="w-full rounded-sm overflow-hidden"
-        style={{ aspectRatio: "9/16" }}
-      >
-        <img
-          src={SHARE_CARD_URL}
-          alt="6+1 Sports Day 002 — 11 July 2026"
-          className="w-full h-full"
-          style={{ display: "block", objectFit: "contain", background: "#E8520A" }}
-        />
-      </div>
+      {/* ── Story card image — full natural height, no cropping ── */}
+      <img
+        src={SHARE_CARD_URL}
+        alt="6+1 Sports Day 002 — 11 July 2026"
+        className="w-full block rounded-sm"
+        style={{ height: "auto" }}
+      />
 
       {/* Actions */}
       <button
