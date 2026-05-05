@@ -193,12 +193,22 @@ function ScratchReplaySection({ visible }: { visible: boolean }) {
         >
           <div className="px-6 pb-6">
             {!showCard && (
-              <button
-                onClick={handleReplay}
-                className="w-full border border-[#FF5500]/40 text-[#FF5500] font-mono text-sm tracking-widest py-3 hover:bg-[#FF5500]/5 transition-all"
-              >
-                SCRATCH AGAIN
-              </button>
+              <div className="space-y-4">
+                {/* Teaser copy */}
+                <div className="border border-[#FF5500]/20 bg-[#FF5500]/5 px-4 py-4 space-y-1">
+                  <p className="font-mono text-[#FF5500] text-xs tracking-[0.25em]">YOUR TICKET IS LIVE.</p>
+                  <p className="font-mono text-[#F2F0EB]/50 text-[10px] tracking-wider leading-relaxed">
+                    Scratch the card to reveal your confirmed date. Share it. Flex it.
+                  </p>
+                </div>
+                {/* Bold CTA */}
+                <button
+                  onClick={handleReplay}
+                  className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-base tracking-widest py-4 hover:bg-[#F2F0EB] transition-all active:scale-[0.98]"
+                >
+                  REVEAL YOUR TICKET →
+                </button>
+              </div>
             )}
 
             {showCard && (
@@ -313,13 +323,18 @@ function ShareCard() {
     <div className="border-t border-white/8 bg-black/10 p-5 space-y-4">
       <p className="font-mono text-[#444] text-[10px] tracking-[0.3em]">SHARE YOUR SPOT</p>
 
-      {/* ── Story card image ── */}
-      <img
-        src={SHARE_CARD_URL}
-        alt="6+1 Sports Day 002 — 11 July 2026"
-        className="w-full rounded-sm"
-        style={{ display: "block" }}
-      />
+      {/* ── Story card image — full 9:16 portrait, no cropping ── */}
+      <div
+        className="w-full rounded-sm overflow-hidden"
+        style={{ aspectRatio: "9/16" }}
+      >
+        <img
+          src={SHARE_CARD_URL}
+          alt="6+1 Sports Day 002 — 11 July 2026"
+          className="w-full h-full"
+          style={{ display: "block", objectFit: "contain", background: "#E8520A" }}
+        />
+      </div>
 
       {/* Actions */}
       <button
