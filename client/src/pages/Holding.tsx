@@ -503,9 +503,12 @@ export default function Holding() {
     {
       enabled: !!userId,
       refetchInterval: 15000,
+      // Never retry — NOT_FOUND is handled below; network errors are transient
       retry: false,
-      // NOT_FOUND means the stored ID is stale — handled below by clearing localStorage.
-      // Mark as handled so it doesn't surface in the global error reporter.
+      retryOnMount: false,
+      // Suppress all errors from the global error reporter:
+      // - NOT_FOUND → stale localStorage ID (handled below)
+      // - Failed to fetch → transient network blip or analytics CORS noise (auto-recovers on next refetch)
       throwOnError: false,
     }
   );
