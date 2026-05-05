@@ -169,7 +169,7 @@ function ScratchReplaySection({ visible }: { visible: boolean }) {
           <div className="text-left">
             <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-0.5">YOUR GOLDEN TICKET</p>
             <p className="font-mono text-[#F2F0EB]/40 text-[10px] tracking-wider">
-              {expanded ? "Tap to close" : "11 July 2026 · Scratch again or share"}
+              {expanded ? "Tap to close" : "11 July 2026 · Your confirmed spot"}
             </p>
           </div>
           {/* Chevron */}
@@ -208,14 +208,7 @@ function ScratchReplaySection({ visible }: { visible: boolean }) {
                   onComplete={handleScratchComplete}
                   autoReveal={!replaying}
                 />
-                {!replaying && (
-                  <button
-                    onClick={handleReplay}
-                    className="w-full mt-3 border border-white/10 text-white/30 font-mono text-xs tracking-widest py-2 hover:border-[#FF5500]/30 hover:text-[#FF5500]/60 transition-all"
-                  >
-                    SCRATCH AGAIN
-                  </button>
-                )}
+
               </div>
             )}
           </div>
