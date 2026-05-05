@@ -113,6 +113,8 @@ export function ParticleTextBg({
     const state = stateRef.current;
 
     const loadWord = (word: string) => {
+      // Guard: canvas must have non-zero dimensions before getImageData
+      if (!canvas.width || !canvas.height) return;
       const off = document.createElement("canvas");
       off.width = canvas.width;
       off.height = canvas.height;
