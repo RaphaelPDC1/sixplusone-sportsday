@@ -114,7 +114,7 @@ const sportsDayRouter = router({
         if (input.groupRole === "creator") {
           finalGroupCode = await createGroupCode(id);
         } else if (input.groupRole === "joiner" && input.groupCode) {
-          const joined = await joinGroupCode(input.groupCode);
+          const joined = await joinGroupCode(input.groupCode.trim().toUpperCase());
           if (!joined) {
             throw new TRPCError({ code: "NOT_FOUND", message: "Group code not found." });
           }
@@ -287,10 +287,11 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return { valid: false };
+      const normalised = input.code.trim().toUpperCase();
       const rows = await db
         .select()
         .from(groupCodes)
-        .where(eq(groupCodes.code, input.code))
+        .where(eq(groupCodes.code, normalised))
         .limit(1);
       return { valid: rows.length > 0, memberCount: rows[0]?.memberCount ?? 0 };
     }),

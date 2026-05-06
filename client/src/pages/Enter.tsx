@@ -400,7 +400,7 @@ export default function Enter() {
                       type="text"
                       value={groupCodeInput}
                       onChange={(e) => {
-                        setGroupCodeInput(e.target.value.toUpperCase());
+                        setGroupCodeInput(e.target.value.trim().toUpperCase());
                         setGroupCodeVerified(false);
                       }}
                       placeholder="ENTER A CODE"
