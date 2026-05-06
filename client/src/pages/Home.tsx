@@ -78,14 +78,16 @@ export default function Home() {
           <button
             onClick={() => navigate("/holding")}
             title="Already registered? Log in"
-            className="flex items-center gap-1.5 border border-white/30 hover:border-[#FF5500] hover:text-[#FF5500] text-white/70 hover:text-[#FF5500] transition-all px-3 py-1.5 rounded text-xs font-mono tracking-widest uppercase"
+            className="flex items-center gap-2 bg-[#FF5500] hover:bg-[#ff6a1a] active:scale-95 text-white font-mono text-xs tracking-widest uppercase px-4 py-2 rounded font-bold transition-all"
+            style={{ boxShadow: '0 0 18px rgba(255,85,0,0.55), 0 0 6px rgba(255,85,0,0.3)', animation: 'loginPulse 2.5s ease-in-out infinite' }}
             aria-label="Returning player login"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+              <polyline points="10 17 15 12 10 7" />
+              <line x1="15" y1="12" x2="3" y2="12" />
             </svg>
-            LOG IN
+            ALREADY IN? →
           </button>
         </div>
       </nav>
