@@ -256,3 +256,15 @@
 ## PWA Icon + Header Logo (requested 5 May)
 - [x] Fix PWA home screen icon — generate correct 192x192 and 512x512 icons, update manifest, add apple-touch-icon
 - [x] Increase header logo size across the app (h-7/h-8 → h-10/h-12)
+
+## Group Code Debug + Security (requested 6 May)
+- [x] BUG: Client generates group code with Math.random() before DB save — code shared before registration completes = "not found" for joiners
+- [x] BUG: No max member cap on group codes — unlimited people can join one code
+- [x] SECURITY: verifyGroupCode endpoint has no rate limiting — brute-forceable
+- [x] SECURITY: register mutation has no rate limiting — spam registrations possible
+- [x] SECURITY: group code only 3 random chars (~32k combos) — too guessable
+- [x] FIX: Pre-create group code in DB immediately when user clicks "Create a group code" button (new createGroupCodeEarly procedure)
+- [x] FIX: Add in-memory rate limiter to verifyGroupCode (max 10 req/min per IP)
+- [x] FIX: Add in-memory rate limiter to register mutation (max 5 req/min per IP)
+- [x] FIX: Increase group code entropy to 5 chars (32^5 = ~33M combos)
+- [x] FIX: Add max member cap (20) to group code join

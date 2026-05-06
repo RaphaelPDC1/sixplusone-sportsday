@@ -59,7 +59,8 @@ export async function generateUniqueReferralCode(): Promise<string> {
 export function generateGroupCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "SD002-";
-  for (let i = 0; i < 3; i++) {
+  // 5 chars = 32^5 = ~33M combinations — not brute-forceable
+  for (let i = 0; i < 5; i++) {
     code += chars[Math.floor(Math.random() * chars.length)];
   }
   return code;
@@ -74,6 +75,28 @@ export async function createGroupCode(createdBy: string): Promise<string> {
   return code;
 }
 
+// Pre-create a group code in the DB before registration is complete.
+// Uses a temporary placeholder createdBy ("pending-" + random) that gets
+// updated to the real registration ID when the user finishes registering.
+export async function createGroupCodeEarly(): Promise<string> {
+  const db = await getDb();
+  // Generate a unique code (retry up to 5 times on collision)
+  let code = generateGroupCode();
+  if (!db) return code;
+  for (let i = 0; i < 5; i++) {
+    const existing = await db
+      .select({ code: groupCodes.code })
+      .from(groupCodes)
+      .where(eq(groupCodes.code, code))
+      .limit(1);
+    if (existing.length === 0) break;
+    code = generateGroupCode();
+  }
+  const tempId = `pending-${crypto.randomUUID()}`;
+  await db.insert(groupCodes).values({ code, createdBy: tempId, memberCount: 0 });
+  return code;
+}
+
 export async function joinGroupCode(code: string): Promise<boolean> {
   const db = await getDb();
   if (!db) return false;
@@ -85,6 +108,10 @@ export async function joinGroupCode(code: string): Promise<boolean> {
     .limit(1);
 
   if (existing.length === 0) return false;
+
+  // Hard cap: max 20 members per group
+  const currentCount = existing[0].memberCount ?? 0;
+  if (currentCount >= 20) return false;
 
   await db
     .update(groupCodes)

@@ -8,6 +8,7 @@ import {
   buildKlaviyoTags,
   buildPaymentKlaviyoTags,
   createGroupCode,
+  createGroupCodeEarly,
   generateProfile,
   generateUniqueReferralCode,
   getAdminStats,
@@ -26,6 +27,21 @@ import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { ENV } from "./_core/env";
 import { invokeLLM } from "./_core/llm";
 import { TRPCError } from "@trpc/server";
+
+// ─── In-memory rate limiter ───────────────────────────────────────────────────
+// Simple sliding-window rate limiter — no external dependency needed.
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+function checkRateLimit(key: string, maxRequests: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + windowMs });
+    return true; // allowed
+  }
+  if (entry.count >= maxRequests) return false; // blocked
+  entry.count++;
+  return true;
+}
 
 // ─── Admin Guard ──────────────────────────────────────────────────────────────
 
@@ -72,13 +88,16 @@ const sportsDayRouter = router({
         referredBy: z.string().optional(),
       })
     )
-    .mutation(async ({ input, ctx }) => {
+     .mutation(async ({ input, ctx }) => {
+      // Rate limit: 5 registrations per minute per IP
+      const ip = ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown";
+      if (!checkRateLimit(`register:${ip}`, 5, 60_000)) {
+        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Too many attempts. Please wait a minute and try again." });
+      }
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-
       const email = input.email.toLowerCase().trim();
-
-      // Check for duplicate email
+      // Check for duplicate emaill
       const existing = await getRegistrationByEmail(email);
       if (existing) {
         throw new TRPCError({ code: "CONFLICT", message: "This email is already registered." });
@@ -284,16 +303,35 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
 
   verifyGroupCode: publicProcedure
     .input(z.object({ code: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      // Rate limit: 15 lookups per minute per IP
+      const ip = ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown";
+      if (!checkRateLimit(`verify:${ip}`, 15, 60_000)) {
+        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Too many attempts. Try again in a minute." });
+      }
       const db = await getDb();
       if (!db) return { valid: false };
       const normalised = input.code.trim().toUpperCase();
+      if (normalised.length < 6) return { valid: false };
       const rows = await db
         .select()
         .from(groupCodes)
         .where(eq(groupCodes.code, normalised))
         .limit(1);
-      return { valid: rows.length > 0, memberCount: rows[0]?.memberCount ?? 0 };
+      return { valid: rows.length > 0, memberCount: rows[0]?.memberCount ?? 0, full: (rows[0]?.memberCount ?? 0) >= 20 };
+    }),
+
+  // Pre-create a group code in the DB immediately when the user clicks
+  // "Create a group code" — so friends can join before registration completes.
+  createGroupCodeEarly: publicProcedure
+    .mutation(async ({ ctx }) => {
+      // Rate limit: 3 code creations per minute per IP (prevent spam)
+      const ip = ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown";
+      if (!checkRateLimit(`create-code:${ip}`, 3, 60_000)) {
+        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Too many code creations. Try again in a minute." });
+      }
+      const code = await createGroupCodeEarly();
+      return { code };
     }),
 
   confirmPayment: publicProcedure

@@ -114,8 +114,19 @@ export default function Enter() {
 
   const verifyGroupCodeQuery = trpc.sportsday.verifyGroupCode.useQuery(
     { code: groupCodeInput },
-    { enabled: groupCodeInput.length >= 9 }
+    { enabled: groupCodeInput.length >= 9, retry: false }
   );
+
+  const createGroupCodeEarlyMutation = trpc.sportsday.createGroupCodeEarly.useMutation({
+    onSuccess: (data) => {
+      setGeneratedGroupCode(data.code);
+      set("groupCode", data.code);
+      set("groupRole", "creator");
+    },
+    onError: () => {
+      toast.error("Couldn't create a code right now. Try again.");
+    },
+  });
 
   const goNext = useCallback(() => {
     if (animating) return;
@@ -366,20 +377,20 @@ export default function Enter() {
                 <div className="space-y-4 mt-6">
                   <button
                     onClick={() => {
-                      if (!generatedGroupCode) {
-                        const code = `SD002-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
-                        setGeneratedGroupCode(code);
-                        set("groupCode", code);
-                        set("groupRole", "creator");
+                      if (!generatedGroupCode && !createGroupCodeEarlyMutation.isPending) {
+                        createGroupCodeEarlyMutation.mutate();
                       }
                     }}
+                    disabled={createGroupCodeEarlyMutation.isPending}
                     className={`w-full p-5 border text-left transition-all ${
                       form.groupRole === "creator"
                         ? "border-[#FF5500] bg-[#FF5500]/10"
                         : "border-white/20 hover:border-white/40"
-                    }`}
+                    } disabled:opacity-50`}
                   >
-                    {generatedGroupCode ? (
+                    {createGroupCodeEarlyMutation.isPending ? (
+                      <span className="font-mono text-white/40 text-sm tracking-widest">GENERATING…</span>
+                    ) : generatedGroupCode ? (
                       <div>
                         <div className="text-[#FF5500] font-display text-3xl tracking-widest">{generatedGroupCode}</div>
                         <div className="text-white/40 font-mono text-xs mt-1 tracking-wider">Share this with your crew</div>
@@ -419,7 +430,10 @@ export default function Enter() {
                       </button>
                     )}
                     {groupCodeInput.length >= 9 && verifyGroupCodeQuery.data?.valid === false && (
-                      <p className="font-mono text-[#FF5500] text-xs tracking-wider">Code not found.</p>
+                      <p className="font-mono text-[#FF5500] text-xs tracking-wider">Code not found. Check it with whoever created it.</p>
+                    )}
+                    {verifyGroupCodeQuery.data?.valid && verifyGroupCodeQuery.data?.full && (
+                      <p className="font-mono text-[#FF5500] text-xs tracking-wider">This group is full (20 max). Ask your crew to create a new one.</p>
                     )}
                   </div>
                 </div>
