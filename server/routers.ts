@@ -18,6 +18,7 @@ import {
   getRegistrationByReferralCode,
   incrementReferralCount,
   joinGroupCode,
+  linkPendingGroupCode,
 } from "./sportsday.db";
 import { storagePut } from "./storage";
 import { COOKIE_NAME } from "@shared/const";
@@ -131,7 +132,15 @@ const sportsDayRouter = router({
       let finalGroupCode = input.groupCode;
       if (input.comingType === "with_friends") {
         if (input.groupRole === "creator") {
-          finalGroupCode = await createGroupCode(id);
+          // Check if there's a pending code created early with this name
+          const linkedCode = await linkPendingGroupCode(id, input.fullName.split(' ')[0]);
+          if (linkedCode) {
+            // Use the existing pending code
+            finalGroupCode = linkedCode;
+          } else {
+            // Create a new code
+            finalGroupCode = await createGroupCode(id);
+          }
         } else if (input.groupRole === "joiner" && input.groupCode) {
           const joined = await joinGroupCode(input.groupCode.trim().toUpperCase());
           if (!joined) {

@@ -1,4 +1,4 @@
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, count, eq, like, sql } from "drizzle-orm";
 import { groupCodes, sportsDayRegistrations } from "../drizzle/schema";
 import { getDb } from "./db";
 
@@ -99,6 +99,46 @@ export async function createGroupCodeEarly(creatorFirstName?: string): Promise<s
     creatorName: creatorFirstName ?? null,
     memberCount: 0,
   });
+  return code;
+}
+
+// Link a pending group code (created early) to a real registration ID
+// This is called when a user who created a code early completes their registration
+export async function linkPendingGroupCode(registrationId: string, creatorFirstName?: string): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  if (!creatorFirstName) return null;
+  
+  console.log('[linkPendingGroupCode] Looking for pending code with name:', creatorFirstName);
+  
+  // Look for a pending code with this creator name
+  const pending = await db
+    .select()
+    .from(groupCodes)
+    .where(
+      and(
+        eq(groupCodes.creatorName, creatorFirstName),
+        like(groupCodes.createdBy, 'pending-%')
+      )
+    )
+    .limit(1);
+  
+  console.log('[linkPendingGroupCode] Found pending codes:', pending.length);
+  if (pending.length > 0) {
+    console.log('[linkPendingGroupCode] Pending code:', pending[0].code);
+  }
+  
+  if (pending.length === 0) return null;
+  
+  // Update the pending code to link it to the real registration ID
+  const code = pending[0].code;
+  console.log('[linkPendingGroupCode] Linking code', code, 'to registration', registrationId);
+  await db
+    .update(groupCodes)
+    .set({ createdBy: registrationId })
+    .where(eq(groupCodes.code, code));
+  
+  console.log('[linkPendingGroupCode] Successfully linked');
   return code;
 }
 
