@@ -29,7 +29,7 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
   // Context
   attendedBefore: boolean("attendedBefore"),
   comingType: mysqlEnum("comingType", ["solo", "with_friends"]),
-  groupCode: varchar("groupCode", { length: 10 }),
+  groupCode: varchar("groupCode", { length: 15 }),
   groupRole: mysqlEnum("groupRole", ["creator", "joiner"]),
 
   // Date preferences
