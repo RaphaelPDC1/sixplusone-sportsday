@@ -78,7 +78,7 @@ export async function createGroupCode(createdBy: string): Promise<string> {
 // Pre-create a group code in the DB before registration is complete.
 // Uses a temporary placeholder createdBy ("pending-" + random) that gets
 // updated to the real registration ID when the user finishes registering.
-export async function createGroupCodeEarly(): Promise<string> {
+export async function createGroupCodeEarly(creatorFirstName?: string): Promise<string> {
   const db = await getDb();
   // Generate a unique code (retry up to 5 times on collision)
   let code = generateGroupCode();
@@ -93,7 +93,12 @@ export async function createGroupCodeEarly(): Promise<string> {
     code = generateGroupCode();
   }
   const tempId = `pending-${crypto.randomUUID()}`;
-  await db.insert(groupCodes).values({ code, createdBy: tempId, memberCount: 0 });
+  await db.insert(groupCodes).values({
+    code,
+    createdBy: tempId,
+    creatorName: creatorFirstName ?? null,
+    memberCount: 0,
+  });
   return code;
 }
 

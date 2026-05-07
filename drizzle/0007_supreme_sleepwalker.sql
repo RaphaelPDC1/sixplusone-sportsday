@@ -1,0 +1,1 @@
+ALTER TABLE `group_codes` ADD `creatorName` varchar(100);

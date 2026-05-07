@@ -268,3 +268,7 @@
 - [x] FIX: Add in-memory rate limiter to register mutation (max 5 req/min per IP)
 - [x] FIX: Increase group code entropy to 5 chars (32^5 = ~33M combos)
 - [x] FIX: Add max member cap (20) to group code join
+
+## Group Code Creator Confirmation (requested 7 May)
+- [x] verifyGroupCode returns creator's first name from sports_day_registrations
+- [x] Enter page shows "You're joining [Name]'s group" confirmation when code is valid

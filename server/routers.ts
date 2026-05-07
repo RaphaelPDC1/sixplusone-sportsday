@@ -319,12 +319,23 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
         .where(eq(groupCodes.code, normalised))
         .limit(1);
       if (rows.length > 0) {
-        return { valid: true, memberCount: rows[0].memberCount ?? 0, full: (rows[0].memberCount ?? 0) >= 20 };
+        // First try the stored creatorName on the group_codes row (set when code was pre-created)
+        let creatorName: string | undefined = rows[0].creatorName ?? undefined;
+        // Fallback: look up creator's first name from their registration record
+        if (!creatorName && rows[0].createdBy && !rows[0].createdBy.startsWith('pending-')) {
+          const creator = await db
+            .select({ fullName: sportsDayRegistrations.fullName })
+            .from(sportsDayRegistrations)
+            .where(eq(sportsDayRegistrations.id, rows[0].createdBy))
+            .limit(1);
+          creatorName = creator[0]?.fullName?.split(' ')[0] ?? undefined;
+        }
+        return { valid: true, memberCount: rows[0].memberCount ?? 0, full: (rows[0].memberCount ?? 0) >= 20, creatorName };
       }
       // Fallback: check if any registration was created with this code as creator
       // (handles legacy codes created before the pre-save fix)
       const fallback = await db
-        .select({ id: sportsDayRegistrations.id })
+        .select({ id: sportsDayRegistrations.id, fullName: sportsDayRegistrations.fullName })
         .from(sportsDayRegistrations)
         .where(eq(sportsDayRegistrations.groupCode, normalised))
         .limit(1);
@@ -333,21 +344,23 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
         try {
           await db.insert(groupCodes).values({ code: normalised, createdBy: fallback[0].id, memberCount: 1 });
         } catch { /* already inserted by concurrent request, ignore */ }
-        return { valid: true, memberCount: 1, full: false };
+        const creatorName = fallback[0].fullName?.split(' ')[0] ?? undefined;
+        return { valid: true, memberCount: 1, full: false, creatorName };
       }
-      return { valid: false, memberCount: 0, full: false };
+      return { valid: false, memberCount: 0, full: false, creatorName: undefined };
     }),
 
   // Pre-create a group code in the DB immediately when the user clicks
   // "Create a group code" — so friends can join before registration completes.
   createGroupCodeEarly: publicProcedure
-    .mutation(async ({ ctx }) => {
+    .input(z.object({ firstName: z.string().max(50).optional() }))
+    .mutation(async ({ input, ctx }) => {
       // Rate limit: 3 code creations per minute per IP (prevent spam)
       const ip = ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown";
       if (!checkRateLimit(`create-code:${ip}`, 3, 60_000)) {
         throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Too many code creations. Try again in a minute." });
       }
-      const code = await createGroupCodeEarly();
+      const code = await createGroupCodeEarly(input.firstName);
       return { code };
     }),
 

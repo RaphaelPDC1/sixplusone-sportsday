@@ -378,7 +378,9 @@ export default function Enter() {
                   <button
                     onClick={() => {
                       if (!generatedGroupCode && !createGroupCodeEarlyMutation.isPending) {
-                        createGroupCodeEarlyMutation.mutate();
+                        // Pass the user's first name so joiners see "You're joining [Name]'s group"
+                        const firstName = form.fullName?.split(' ')[0] ?? undefined;
+                        createGroupCodeEarlyMutation.mutate({ firstName });
                       }
                     }}
                     disabled={createGroupCodeEarlyMutation.isPending}
@@ -418,16 +420,23 @@ export default function Enter() {
                       className="w-full bg-transparent border border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-lg p-4 placeholder:text-white/20 tracking-widest transition-colors"
                     />
                     {verifyGroupCodeQuery.data?.valid && !groupCodeVerified && (
-                      <button
-                        onClick={() => {
-                          set("groupCode", groupCodeInput);
-                          set("groupRole", "joiner");
-                          setGroupCodeVerified(true);
-                        }}
-                        className="w-full bg-[#FF5500] text-black font-display text-xl tracking-widest py-4"
-                      >
-                        JOIN GROUP →
-                      </button>
+                      <div className="flex flex-col gap-2">
+                        {verifyGroupCodeQuery.data?.creatorName && (
+                          <p className="font-mono text-[#FF5500] text-xs tracking-wider text-center">
+                            ✓ YOU'RE JOINING {verifyGroupCodeQuery.data.creatorName.toUpperCase()}'S GROUP
+                          </p>
+                        )}
+                        <button
+                          onClick={() => {
+                            set("groupCode", groupCodeInput);
+                            set("groupRole", "joiner");
+                            setGroupCodeVerified(true);
+                          }}
+                          className="w-full bg-[#FF5500] text-black font-display text-xl tracking-widest py-4"
+                        >
+                          JOIN GROUP →
+                        </button>
+                      </div>
                     )}
                     {groupCodeInput.length >= 9 && verifyGroupCodeQuery.data?.valid === false && (
                       <p className="font-mono text-[#FF5500] text-xs tracking-wider">Code not found. Check it with whoever created it.</p>
