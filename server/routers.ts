@@ -318,7 +318,24 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
         .from(groupCodes)
         .where(eq(groupCodes.code, normalised))
         .limit(1);
-      return { valid: rows.length > 0, memberCount: rows[0]?.memberCount ?? 0, full: (rows[0]?.memberCount ?? 0) >= 20 };
+      if (rows.length > 0) {
+        return { valid: true, memberCount: rows[0].memberCount ?? 0, full: (rows[0].memberCount ?? 0) >= 20 };
+      }
+      // Fallback: check if any registration was created with this code as creator
+      // (handles legacy codes created before the pre-save fix)
+      const fallback = await db
+        .select({ id: sportsDayRegistrations.id })
+        .from(sportsDayRegistrations)
+        .where(eq(sportsDayRegistrations.groupCode, normalised))
+        .limit(1);
+      if (fallback.length > 0) {
+        // Auto-heal: insert the missing group_codes row so future lookups work
+        try {
+          await db.insert(groupCodes).values({ code: normalised, createdBy: fallback[0].id, memberCount: 1 });
+        } catch { /* already inserted by concurrent request, ignore */ }
+        return { valid: true, memberCount: 1, full: false };
+      }
+      return { valid: false, memberCount: 0, full: false };
     }),
 
   // Pre-create a group code in the DB immediately when the user clicks
