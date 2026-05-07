@@ -109,8 +109,8 @@ export type InsertSportsDayRegistration = typeof sportsDayRegistrations.$inferIn
 // ─── Group Codes ──────────────────────────────────────────────────────────────
 
 export const groupCodes = mysqlTable("group_codes", {
-  code: varchar("code", { length: 10 }).primaryKey(),
-  createdBy: varchar("createdBy", { length: 36 }), // references sportsDayRegistrations.id
+  code: varchar("code", { length: 15 }).primaryKey(),
+  createdBy: varchar("createdBy", { length: 50 }), // references sportsDayRegistrations.id (or pending-UUID)
   creatorName: varchar("creatorName", { length: 100 }), // first name of creator for display
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   memberCount: int("memberCount").default(1),
