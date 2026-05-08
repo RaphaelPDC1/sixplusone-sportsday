@@ -12,6 +12,7 @@ import {
   generateProfile,
   generateUniqueReferralCode,
   getAdminStats,
+  getUnlockStats,
   getAllRegistrations,
   getRegistrationByEmail,
   getRegistrationById,
@@ -411,6 +412,19 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
   // Admin procedures
   adminStats: adminProcedure.query(async () => {
     return getAdminStats();
+  }),
+  unlockStats: publicProcedure.query(async () => {
+    const stats = await getUnlockStats();
+    // Add 34 as baseline offset
+    return {
+      total: stats.total + 34,
+      teams: {
+        red: stats.teams.red + Math.ceil(34 * 0.25),
+        blue: stats.teams.blue + Math.ceil(34 * 0.25),
+        pink: stats.teams.pink + Math.ceil(34 * 0.25),
+        orange: stats.teams.orange + Math.floor(34 * 0.25),
+      }
+    };
   }),
 
   adminUsers: adminProcedure

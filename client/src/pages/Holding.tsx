@@ -39,6 +39,35 @@ function AnimatedNumber({ value }: { value: number }) {
   return <>{display}</>;
 }
 
+// ─── Unlock counter ───────────────────────────────────────────────────────────
+function UnlockCounter({ visible }: { visible: boolean }) {
+  const { data: stats } = trpc.sportsday.unlockStats.useQuery(undefined, {
+    refetchInterval: 5000,
+  });
+  
+  if (!stats) return null;
+  
+  return (
+    <div
+      className="mt-3 pt-3 border-t border-white/8"
+      style={{
+        transition: "opacity 0.5s ease 1.4s",
+        opacity: visible ? 1 : 0,
+      }}
+    >
+      <p className="font-mono text-[#F2F0EB] text-xs tracking-[0.2em] mb-2">
+        <AnimatedNumber value={stats.total} /> HAVE UNLOCKED THEIR TEAM
+      </p>
+      <div className="flex gap-2 text-xs font-mono tracking-[0.15em]">
+        <span className="text-[#FF4444]">RED: <AnimatedNumber value={stats.teams.red} /></span>
+        <span className="text-[#4488FF]">BLUE: <AnimatedNumber value={stats.teams.blue} /></span>
+        <span className="text-[#FF88CC]">PINK: <AnimatedNumber value={stats.teams.pink} /></span>
+        <span className="text-[#FF8800]">ORANGE: <AnimatedNumber value={stats.teams.orange} /></span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Status block ─────────────────────────────────────────────────────────────
 function StatusBlock({ visible }: { visible: boolean }) {
   return (
@@ -86,6 +115,7 @@ function StatusBlock({ visible }: { visible: boolean }) {
             ))}
           </div>
         </div>
+        <UnlockCounter visible={visible} />
       </div>
     </div>
   );

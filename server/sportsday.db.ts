@@ -344,3 +344,31 @@ export async function getAdminStats() {
 
   return { total, paid, free: total - paid, teams, totalReferrals };
 }
+
+
+export async function getUnlockStats() {
+  const db = await getDb();
+  if (!db) return { total: 0, teams: { red: 0, blue: 0, pink: 0, orange: 0 } };
+  
+  // Get count of unlocked registrations
+  const [unlockedRows, teamRows] = await Promise.all([
+    db
+      .select({ count: count() })
+      .from(sportsDayRegistrations)
+      .where(eq(sportsDayRegistrations.revealStatus, "unlocked")),
+    db
+      .select({ team: sportsDayRegistrations.team, count: count() })
+      .from(sportsDayRegistrations)
+      .where(eq(sportsDayRegistrations.revealStatus, "unlocked"))
+      .groupBy(sportsDayRegistrations.team),
+  ]);
+  
+  const total = unlockedRows[0]?.count ?? 0;
+  const teams: Record<string, number> = { red: 0, blue: 0, pink: 0, orange: 0 };
+  for (const row of teamRows) {
+    if (row.team) teams[row.team] = row.count;
+  }
+  
+  return { total, teams };
+}
+

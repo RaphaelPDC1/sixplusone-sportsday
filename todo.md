@@ -272,3 +272,10 @@
 ## Group Code Creator Confirmation (requested 7 May)
 - [x] verifyGroupCode returns creator's first name from sports_day_registrations
 - [x] Enter page shows "You're joining [Name]'s group" confirmation when code is valid
+
+## Holding Page Enhancements (requested 8 May)
+- [ ] Add counter on holding page showing total unlocked + breakdown by team
+- [ ] Counter format: "47 have unlocked their team — Red: 12 | Blue: 10 | Pink: 14 | Orange: 11"
+- [ ] Display counter under "YOUR TEAM IS WAITING" section
+- [ ] Counter updates in real-time as people pay/unlock (polls backend or uses WebSocket)
+- [ ] Add tRPC procedure to get unlock stats (total + by team)
