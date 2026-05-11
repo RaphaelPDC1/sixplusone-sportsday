@@ -64,16 +64,12 @@ async function startServer() {
     serveStatic(app);
   }
 
-  // SECURITY: Validate ADMIN_PASSWORD is set in production
+  // Warn if optional secrets are missing (non-fatal)
   if (process.env.NODE_ENV === "production" && !process.env.ADMIN_PASSWORD) {
-    console.error("ERROR: ADMIN_PASSWORD environment variable is not set. This is required for production.");
-    process.exit(1);
+    console.warn("WARNING: ADMIN_PASSWORD is not set. Admin login will be disabled.");
   }
-
-  // SECURITY: Validate SHOPIFY_WEBHOOK_SECRET is set in production
   if (process.env.NODE_ENV === "production" && !process.env.SHOPIFY_WEBHOOK_SECRET) {
-    console.error("ERROR: SHOPIFY_WEBHOOK_SECRET environment variable is not set. This is required for production.");
-    process.exit(1);
+    console.warn("WARNING: SHOPIFY_WEBHOOK_SECRET is not set. Webhook HMAC verification will reject all requests.");
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
