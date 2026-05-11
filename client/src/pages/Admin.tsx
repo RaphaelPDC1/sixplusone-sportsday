@@ -172,8 +172,7 @@ export default function Admin() {
         const q = filters.search.toLowerCase();
         return (
           u.fullName.toLowerCase().includes(q) ||
-          u.email.toLowerCase().includes(q) ||
-          (u.instagramHandle?.toLowerCase().includes(q) ?? false)
+          u.id.toLowerCase().includes(q)
         );
       }
       return true;
@@ -192,18 +191,18 @@ export default function Admin() {
     ];
 
     const rows = filteredUsers.map((u) => [
-      u.id, u.fullName, u.email, u.instagramHandle ?? "",
-      u.attendedBefore != null ? (u.attendedBefore ? "Yes" : "No") : "",
-      u.comingType ?? "", u.groupCode ?? "", u.groupRole ?? "",
-      u.date4July ? "Yes" : "No", u.date11July ? "Yes" : "No",
-      u.date18July ? "Yes" : "No", u.dateAny ? "Yes" : "No",
-      u.competitiveness ?? "", u.teammateType ?? "", u.strongestEvent ?? "", u.fear ?? "",
-      u.eventMotivation ?? "", u.captainVoteInterest ?? "",
-      u.sportsDayProfile ?? "", u.profileTagline ?? "",
-      u.team ?? "", u.paymentStatus ?? "", u.accessType ?? "",
-      u.shirtSize ?? "", u.shirtFit ?? "", u.contentConsent ?? "",
-      u.referralCode ?? "", u.referredBy ?? "", u.referralCount ?? 0,
-      u.referralRewardUnlocked ? "Yes" : "No",
+      u.id, u.fullName, "", "",
+      "",
+      "", "", "",
+      "", "",
+      "", "",
+      "", "", "", "",
+      "", "",
+      "", "",
+      u.team ?? "", u.paymentStatus ?? "", "",
+      u.shirtSize ?? "", "", u.contentConsent ?? "",
+      "", "", 0,
+      "No",
       u.createdAt ? new Date(u.createdAt).toISOString() : "",
     ]);
 
@@ -420,32 +419,27 @@ export default function Admin() {
                   {filteredUsers.map((u) => (
                     <tr key={u.id} className="border-b border-[#0D0D0D] hover:bg-[#0D0D0D] transition-colors">
                       <td className="font-mono text-[#F2F0EB] text-xs py-3 pr-4 whitespace-nowrap">{u.fullName}</td>
-                      <td className="font-mono text-[#555] text-xs py-3 pr-4 whitespace-nowrap">{u.email}</td>
+                      <td className="font-mono text-[#555] text-xs py-3 pr-4 whitespace-nowrap">—</td>
                       <td className="font-mono text-[#555] text-xs py-3 pr-4">
-                        {u.instagramHandle ? `@${u.instagramHandle}` : "—"}
+                        —
                       </td>
                       <td className="font-mono text-xs py-3 pr-4">
-                        {u.attendedBefore == null ? "—" : u.attendedBefore ? "Yes" : "No"}
+                        —
                       </td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">{u.comingType?.replace("_", " ") ?? "—"}</td>
-                      <td className="font-mono text-[#FF5500] text-xs py-3 pr-4">{u.groupCode ?? "—"}</td>
+                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
+                      <td className="font-mono text-[#FF5500] text-xs py-3 pr-4">—</td>
                       <td className="font-mono text-xs py-3 pr-4 whitespace-nowrap">
-                        {[
-                          u.date4July && "4 Jul",
-                          u.date11July && "11 Jul",
-                          u.date18July && "18 Jul",
-                          u.dateAny && "Any",
-                        ].filter(Boolean).join(", ") || "—"}
+                        —
                       </td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">{u.competitiveness ?? "—"}</td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">{u.teammateType?.replace("_", " ") ?? "—"}</td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">{u.strongestEvent ?? "—"}</td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">{u.fear?.replace("_", " ") ?? "—"}</td>
+                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
+                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
+                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
+                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
                       <td className="font-mono text-[#FF5500] text-xs py-3 pr-4 whitespace-nowrap">
-                        {u.sportsDayProfile ?? "—"}
+                        —
                       </td>
-                      <td className="font-mono text-[#555] text-xs py-3 pr-4 max-w-[160px] truncate" title={u.profileTagline ?? ""}>
-                        {u.profileTagline ?? "—"}
+                      <td className="font-mono text-[#555] text-xs py-3 pr-4 max-w-[160px] truncate" title="">
+                        —
                       </td>
                       <td className="py-3 pr-4">
                         {u.team ? (
@@ -472,14 +466,13 @@ export default function Admin() {
                           {u.paymentStatus ?? "unpaid"}
                         </span>
                       </td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">{u.accessType ?? "free"}</td>
+                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
                       <td className="font-mono text-xs py-3 pr-4">
-                        {u.shirtSize ?? "—"} {u.shirtFit ? `(${u.shirtFit})` : ""}
+                        {u.shirtSize ?? "—"}
                       </td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">{u.contentConsent ?? "—"}</td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">{u.captainVoteInterest ?? "—"}</td>
+                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
                       <td className="font-mono text-xs py-3 pr-4">
-                        {u.referralCount ?? 0}{u.referralRewardUnlocked ? " 🎉" : ""}
+                        —
                       </td>
                       <td className="font-mono text-[#444] text-xs py-3 pr-4 whitespace-nowrap">
                         {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}

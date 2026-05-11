@@ -65,7 +65,7 @@ const sportsDayRouter = router({
         instagramHandle: z.string().optional(),
         attendedBefore: z.boolean().optional(),
         comingType: z.enum(["solo", "with_friends"]).optional(),
-        groupCode: z.string().optional(),
+        groupCode: z.string().max(20).optional(), // SECURITY: Validate group code length
         groupRole: z.enum(["creator", "joiner"]).optional(),
         date4July: z.boolean().optional(),
         date11July: z.boolean().optional(),
@@ -436,11 +436,29 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
         contentConsent: z.enum(["yes", "no", "ask", "all"]).optional(),
       }).optional()
     )
-    .query(async ({ input }) => {
-      return getAllRegistrations();
+    .query(async ({ input, ctx }) => {
+      // SECURITY: Return only non-sensitive fields to prevent PII exposure
+      // Do not expose: email, healthNotes, instagramHandle, etc.
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db.select({
+        id: sportsDayRegistrations.id,
+        fullName: sportsDayRegistrations.fullName,
+        team: sportsDayRegistrations.team,
+        paymentStatus: sportsDayRegistrations.paymentStatus,
+        shirtSize: sportsDayRegistrations.shirtSize,
+        contentConsent: sportsDayRegistrations.contentConsent,
+        createdAt: sportsDayRegistrations.createdAt,
+      }).from(sportsDayRegistrations);
+      return rows;
     }),
 
-  adminHealthNotes: adminProcedure.query(async () => {
+  // SECURITY: Separate endpoint for sensitive health data with audit logging
+  adminHealthNotes: adminProcedure.query(async ({ ctx }) => {
+    // SECURITY: Audit log access to sensitive health data
+    if (ctx.user) {
+      console.log(`[AUDIT] Admin ${ctx.user.id} accessed health notes at ${new Date().toISOString()}`);
+    }
     const db = await getDb();
     if (!db) return [];
     const rows = await db
@@ -748,14 +766,33 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
   // ─── Admin password verification (server-side — password never leaks to client) ───
   verifyAdminPassword: publicProcedure
     .input(z.object({ password: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      // SECURITY: Rate limit admin password attempts (3 per 15 minutes per IP)
+      const ip = ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown";
+      if (!checkRateLimit(`admin_password:${ip}`, 3, 15 * 60_000)) {
+        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Too many attempts. Please wait 15 minutes and try again." });
+      }
+
       const adminPassword = process.env.ADMIN_PASSWORD;
       if (!adminPassword) {
-        // Dev fallback: accept hardcoded default if env var not set
-        if (input.password.trim() === "sd002admin") return { success: true };
-        return { success: false as const, error: "Admin password not configured in deployment environment. Set ADMIN_PASSWORD in project secrets." };
+        // SECURITY: Fail fast if admin password not configured (no hardcoded fallback)
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Admin password not configured in deployment environment. Set ADMIN_PASSWORD in project secrets." });
       }
-      if (input.password.trim() === adminPassword.trim()) {
+
+      // SECURITY: Use timing-safe comparison to prevent timing attacks
+      const crypto = require("crypto");
+      const inputBuffer = Buffer.from(input.password.trim());
+      const passwordBuffer = Buffer.from(adminPassword.trim());
+      
+      let match = false;
+      try {
+        match = crypto.timingSafeEqual(inputBuffer, passwordBuffer);
+      } catch (err) {
+        // timingSafeEqual throws if lengths differ; treat as mismatch
+        match = false;
+      }
+
+      if (match) {
         return { success: true as const };
       }
       return { success: false as const, error: "Incorrect password." };
