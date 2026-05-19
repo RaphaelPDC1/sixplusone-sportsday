@@ -10,8 +10,7 @@ import { toPng } from "html-to-image";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
-const SHOPIFY_STORE_URL = import.meta.env.VITE_SHOPIFY_STORE_URL || "https://your-store.myshopify.com";
-const SHOPIFY_VARIANT_ID = import.meta.env.VITE_SHOPIFY_VARIANT_ID || "12345678901234";
+// Stripe checkout is now used instead of Shopify
 
 // ─── Particle text background ──────────────────────────────────────────────────
 function HoldingBackground() {
@@ -596,11 +595,20 @@ export default function Holding() {
     }
   };
 
-  const handleUnlock = () => {
+  const createCheckout = trpc.sportsday.createStripeCheckout.useMutation();
+
+  const handleUnlock = async () => {
     if (!user) return;
-    const returnUrl = `${appUrl}/unlock/success?uid=${user.id}`;
-    const checkoutUrl = `${SHOPIFY_STORE_URL}/cart/${SHOPIFY_VARIANT_ID}:1?checkout[email]=${encodeURIComponent(user.email)}&return_to=${encodeURIComponent(returnUrl)}`;
-    window.location.href = checkoutUrl;
+    try {
+      const result = await createCheckout.mutateAsync({ uid: user.id });
+      if (result.checkoutUrl) {
+        window.open(result.checkoutUrl, '_blank');
+        toast.success('Redirecting to checkout...');
+      }
+    } catch (error) {
+      toast.error('Failed to create checkout session');
+      console.error(error);
+    }
   };
 
   // ── No userId in localStorage — show Welcome Back login screen ──

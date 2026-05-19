@@ -42,6 +42,10 @@
 - [x] /unlock/success route (verify payment, trigger reveal)
 - [x] Shopify webhook handler
 - [x] Update user record on payment confirmation (paymentStatus, revealStatus, accessType)
+- [x] Replace Shopify with Stripe checkout (createStripeCheckout procedure)
+- [x] Stripe webhook handler for payment confirmation
+- [ ] Test Stripe checkout end-to-end
+- [ ] Update founder's Stripe keys in Settings → Secrets
 
 ## Phase 7: Team Reveal Animations
 - [x] Red team: roulette wheel spin animation (canvas)

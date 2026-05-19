@@ -374,6 +374,52 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
       return { code };
     }),
 
+  createStripeCheckout: publicProcedure
+    .input(z.object({ uid: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const reg = await getRegistrationById(input.uid);
+      if (!reg) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (reg.paymentStatus === "paid") {
+        throw new TRPCError({ code: "CONFLICT", message: "Already paid" });
+      }
+
+      // Create Stripe checkout session
+      const stripe = require("stripe")(ENV.stripeSecretKey);
+      const origin = ctx.req.headers.origin || "https://sportsday002-6swzojco.manus.space";
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "gbp",
+              product_data: {
+                name: "Priority Player Unlock",
+                description: "Unlock your team reveal, custom top, and early access",
+              },
+              unit_amount: 1000, // £10 in pence
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${origin}/unlock/success?session_id={CHECKOUT_SESSION_ID}&uid=${input.uid}`,
+        cancel_url: `${origin}/holding?uid=${input.uid}`,
+        customer_email: reg.email,
+        metadata: {
+          user_id: input.uid,
+          email: reg.email,
+          name: reg.fullName,
+        },
+      });
+
+      return { checkoutUrl: session.url };
+    }),
+
   confirmPayment: publicProcedure
     .input(z.object({ uid: z.string(), orderId: z.string().optional() }))
     .mutation(async ({ input }) => {
