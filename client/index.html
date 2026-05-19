@@ -17,6 +17,10 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
 
+    <!-- Stripe.js — pre-loaded to avoid CSP/sandbox script-injection issues.
+         Version "dahlia" matches @stripe/stripe-js@9.x -->
+    <script src="https://js.stripe.com/dahlia/stripe.js" async></script>
+
     <!-- Meta Pixel -->
     <script>
       !function(f,b,e,v,n,t,s)

@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, fullName, revealStatus, paymentStatus FROM sports_day_registrations WHERE revealStatus = 'locked' LIMIT 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT id, fullName, revealStatus, paymentStatus FROM sports_day_registrations WHERE revealStatus = 'locked' LIMIT 2;",
+  "rows": [
+    {
+      "id": "050e6aa9-29b3-4ae0-9e98-a21a2b411e8e",
+      "fullName": "Jada",
+      "revealStatus": "locked",
+      "paymentStatus": "unpaid"
+    },
+    {
+      "id": "06213384-3f82-433a-8bb5-fa217a114dfa",
+      "fullName": "Naphtali",
+      "revealStatus": "locked",
+      "paymentStatus": "unpaid"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfullName\trevealStatus\tpaymentStatus\n050e6aa9-29b3-4ae0-9e98-a21a2b411e8e\tJada\tlocked\tunpaid\n06213384-3f82-433a-8bb5-fa217a114dfa\tNaphtali\tlocked\tunpaid\n",
+  "stderr": "",
+  "execution_time_ms": 303
+}

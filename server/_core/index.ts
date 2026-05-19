@@ -40,7 +40,26 @@ async function startServer() {
     res.setHeader("X-Frame-Options", "DENY");
     res.setHeader("X-XSS-Protection", "1; mode=block");
     res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-    res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'");
+    res.setHeader(
+      "Content-Security-Policy",
+      [
+        "default-src 'self'",
+        // Scripts: self + inline + Stripe (all versions) + Facebook Pixel + analytics
+        "script-src 'self' 'unsafe-inline' https://js.stripe.com https://connect.facebook.net https://manus-analytics.com",
+        // Stripe iframes (Payment Element renders inside iframes)
+        "frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com",
+        // Styles: self + inline + Google Fonts
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        // Fonts: self + Google Fonts CDN
+        "font-src 'self' https://fonts.gstatic.com",
+        // Images: self + data URIs + blob + any https/http (CDN storage, Facebook pixel)
+        "img-src 'self' data: blob: https: http:",
+        // XHR/fetch: self + Stripe API + analytics
+        "connect-src 'self' https://api.stripe.com https://manus-analytics.com wss: ws:",
+        // Workers (Stripe uses service workers)
+        "worker-src blob:",
+      ].join("; ")
+    );
     next();
   });
   

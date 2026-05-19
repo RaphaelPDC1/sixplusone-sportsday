@@ -18,8 +18,16 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Loader2, ShieldCheck, Lock } from "lucide-react";
 
-// Initialise Stripe once — outside component to avoid re-creating on render
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "");
+// Initialise Stripe once — outside component to avoid re-creating on render.
+// If the Stripe.js script was pre-loaded in index.html (window.Stripe exists),
+// use it directly to avoid the "Failed to load Stripe.js" error in sandboxed
+// environments where dynamic script injection is blocked.
+const PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? "";
+
+const stripePromise: Promise<import("@stripe/stripe-js").Stripe | null> =
+  typeof window !== "undefined" && (window as any).Stripe
+    ? Promise.resolve((window as any).Stripe(PUBLISHABLE_KEY))
+    : loadStripe(PUBLISHABLE_KEY);
 
 // ─── Inner form (must be inside <Elements>) ──────────────────────────────────
 
