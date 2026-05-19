@@ -1,0 +1,8 @@
+{
+  "query": "-- First, add the column as nullable (if not already added)\nALTER TABLE `sports_day_registrations` MODIFY COLUMN `unlockToken` varchar(36);\n\n-- Generate UUIDs for all existing registrations that don't have one\nUPDATE `sports_day_registrations` \nSET `unlockToken` = UUID() \nWHERE `unlockToken` IS NULL OR `unlockToken` = '';\n\n-- Now add the NOT NULL constraint and UNIQUE constraint\nALTER TABLE `sports_day_registrations` MODIFY COLUMN `unlockToken` varchar(36) NOT NULL UNIQUE;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute -- First, add the column as nullable (if not already added)\nALTER TABLE `sports_day_registrations` MODIFY COLUMN `unlockToken` varchar(36);\n\n-- Generate UUIDs for all existing registrations that don't have one\nUPDATE `sports_day_registrations` \nSET `unlockToken` = UUID() \nWHERE `unlockToken` IS NULL OR `unlockToken` = '';\n\n-- Now add the NOT NULL constraint and UNIQUE constraint\nALTER TABLE `sports_day_registrations` MODIFY COLUMN `unlockToken` varchar(36) NOT NULL UNIQUE;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 8200 (HY000) at line 10: can't change column constraint (UNIQUE KEY)"
+  ]
+}

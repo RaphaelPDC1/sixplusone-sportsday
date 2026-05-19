@@ -1,0 +1,9 @@
+{
+  "query": "-- Insert default settings for Sports Day 002\nINSERT INTO `sports_day_settings` (\n  `eventId`,\n  `earlyPrice`,\n  `futurePrice`,\n  `priceIncreaseAt`,\n  `isPriceIncreaseActive`,\n  `publicTeamRevealAt`,\n  `topProductionCutoffAt`\n) VALUES (\n  'sports_day_002',\n  2500,  -- £25.00 in pence\n  3500,  -- £35.00 in pence\n  DATE_ADD(NOW(), INTERVAL 8 DAY),  -- 8 days from now\n  false,\n  '2026-07-11 08:00:00',  -- July 11, 2026 at 08:00 UTC\n  '2026-06-27 23:59:00'   -- June 27, 2026 at 23:59 UTC (10 days before Sports Day)\n) ON DUPLICATE KEY UPDATE `updatedAt` = NOW();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute -- Insert default settings for Sports Day 002\nINSERT INTO `sports_day_settings` (\n  `eventId`,\n  `earlyPrice`,\n  `futurePrice`,\n  `priceIncreaseAt`,\n  `isPriceIncreaseActive`,\n  `publicTeamRevealAt`,\n  `topProductionCutoffAt`\n) VALUES (\n  'sports_day_002',\n  2500,  -- £25.00 in pence\n  3500,  -- £35.00 in pence\n  DATE_ADD(NOW(), INTERVAL 8 DAY),  -- 8 days from now\n  false,\n  '2026-07-11 08:00:00',  -- July 11, 2026 at 08:00 UTC\n  '2026-06-27 23:59:00'   -- June 27, 2026 at 23:59 UTC (10 days before Sports Day)\n) ON DUPLICATE KEY UPDATE `updatedAt` = NOW();",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 283
+}

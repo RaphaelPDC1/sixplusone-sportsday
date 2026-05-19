@@ -7,11 +7,13 @@ import {
   assignTeam,
   buildKlaviyoTags,
   buildPaymentKlaviyoTags,
+  buildSportsDayDashboard,
   createGroupCode,
   createGroupCodeEarly,
   generateProfile,
   generateUniqueReferralCode,
   getAdminStats,
+  getSportsDaySettings,
   getUnlockStats,
   getAllRegistrations,
   getRegistrationByEmail,
@@ -111,6 +113,7 @@ const sportsDayRouter = router({
 
       // Generate IDs
       const id = crypto.randomUUID();
+      const unlockToken = crypto.randomUUID(); // Non-guessable token for Stripe payment matching
       const referralCode = await generateUniqueReferralCode();
 
       // Generate profile
@@ -181,6 +184,9 @@ const sportsDayRouter = router({
         revealStatus: "locked",
         accessType: "free",
         paymentStatus: "unpaid",
+        unlockToken,  // Non-guessable token for payment matching
+        paymentMatchStatus: "none",  // Default: no payment yet
+        manualUnlock: false,  // Default: not manually unlocked
         referralCode,
         referredBy: input.referredBy ?? null,
         referralCount: 0,
@@ -195,7 +201,7 @@ const sportsDayRouter = router({
         await incrementReferralCount(input.referredBy);
       }
 
-      return { id, referralCode, team, profile, tagline };
+      return { id, unlockToken, referralCode, team, profile, tagline }; // Return unlockToken for frontend use
     }),
 
   getUserStatus: publicProcedure
@@ -375,6 +381,38 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
       return { code };
     }),
 
+  // ─── Backend-led dashboard state (security-first) ──────────────────────────
+  getSportsDayDashboard: publicProcedure
+    .input(z.object({ registrationId: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      // Build profile photo map for teammate cards
+      const photos = await db.select().from(profilePhotos);
+      const photoMap = new Map(photos.map((p) => [p.registrationId, p.url]));
+
+      const dashboard = await buildSportsDayDashboard(input.registrationId, photoMap);
+      if (!dashboard) throw new TRPCError({ code: "NOT_FOUND", message: "Registration not found" });
+
+      return dashboard;
+    }),
+
+  // ─── Get Sports Day settings (public, for countdown/price display) ─────────
+  getSportsDaySettings: publicProcedure.query(async () => {
+    const settings = await getSportsDaySettings();
+    if (!settings) return null;
+    // Return only the fields safe for frontend consumption
+    return {
+      earlyPrice: settings.earlyPrice,
+      futurePrice: settings.futurePrice,
+      priceIncreaseAt: settings.priceIncreaseAt,
+      isPriceIncreaseActive: settings.isPriceIncreaseActive,
+      publicTeamRevealAt: settings.publicTeamRevealAt,
+      topProductionCutoffAt: settings.topProductionCutoffAt,
+    };
+  }),
+
   createStripeCheckout: publicProcedure
     .input(z.object({ uid: z.string() }))
     .mutation(async ({ input, ctx }) => {
@@ -384,11 +422,32 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
       const reg = await getRegistrationById(input.uid);
       if (!reg) throw new TRPCError({ code: "NOT_FOUND" });
 
-      if (reg.paymentStatus === "paid") {
-        throw new TRPCError({ code: "CONFLICT", message: "Already paid" });
+      // SAFEGUARD: Prevent duplicate payments — if already unlocked, redirect to dashboard
+      if (
+        reg.revealStatus === "unlocked" ||
+        reg.accessType === "priority" ||
+        reg.paidAt != null ||
+        reg.manualUnlock === true
+      ) {
+        console.log(`[Stripe] Duplicate checkout attempt blocked for ${input.uid} — already unlocked`);
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "ALREADY_UNLOCKED",
+        });
       }
 
-      // Create Stripe checkout session
+      // Get settings to determine current price
+      const settings = await getSportsDaySettings();
+      const now = new Date();
+      const isPriceIncreaseActive = settings?.isPriceIncreaseActive ?? false;
+      const priceIncreaseAt = settings?.priceIncreaseAt ?? null;
+      const priceIncreaseTriggered =
+        isPriceIncreaseActive || (priceIncreaseAt != null && now >= priceIncreaseAt);
+      const currentPricePence = priceIncreaseTriggered
+        ? (settings?.futurePrice ?? 3500)
+        : (settings?.earlyPrice ?? 2500);
+
+      // Create Stripe checkout session with unlock_token in metadata
       const stripe = new Stripe(ENV.stripeSecretKey);
       const origin = ctx.req.headers.origin || "https://sportsday002-6swzojco.manus.space";
 
@@ -399,24 +458,48 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
             price_data: {
               currency: "gbp",
               product_data: {
-                name: "Priority Player Unlock",
-                description: "Unlock your team reveal, custom top, and early access",
+                name: "Priority Player Pack — Sports Day 002",
+                description: "Unlock your team reveal, one-of-one top, and early teammate preview",
               },
-              unit_amount: 1000, // £10 in pence
+              unit_amount: currentPricePence,
             },
             quantity: 1,
           },
         ],
         mode: "payment",
-        success_url: `${origin}/unlock/success?session_id={CHECKOUT_SESSION_ID}&uid=${input.uid}`,
-        cancel_url: `${origin}/holding?uid=${input.uid}`,
+        allow_promotion_codes: true,
+        // Pre-fill with registered email as a hint, but token is source of truth
         customer_email: reg.email,
+        success_url: `${origin}/unlock/success?session_id={CHECKOUT_SESSION_ID}&uid=${input.uid}`,
+        cancel_url: `${origin}/holding?uid=${input.uid}&cancelled=true`,
+        // CRITICAL: Pass unlock_token in metadata so webhook can match by token
+        // regardless of which email the user pays with (Apple Pay, Google Pay, etc.)
         metadata: {
-          user_id: input.uid,
-          email: reg.email,
-          name: reg.fullName,
+          registration_id: input.uid,
+          unlock_token: reg.unlockToken,
+          registered_email: reg.email,
+          player_name: reg.fullName,
+          product_type: "sports_day_priority_player_pack",
+          event_id: "sports_day_002",
+        },
+        payment_intent_data: {
+          metadata: {
+            registration_id: input.uid,
+            unlock_token: reg.unlockToken,
+            registered_email: reg.email,
+            product_type: "sports_day_priority_player_pack",
+            event_id: "sports_day_002",
+          },
         },
       });
+
+      // Store the checkout session ID on the registration for tracking
+      await db
+        .update(sportsDayRegistrations)
+        .set({ stripeCheckoutSessionId: session.id })
+        .where(eq(sportsDayRegistrations.id, input.uid));
+
+      console.log(`[Stripe] Checkout session created: ${session.id} for registration ${input.uid} (token: ${reg.unlockToken})`);
 
       return { checkoutUrl: session.url };
     }),

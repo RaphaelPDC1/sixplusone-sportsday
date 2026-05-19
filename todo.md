@@ -283,3 +283,23 @@
 - [x] Display counter under "YOUR TEAM IS WAITING" section
 - [x] Counter updates in real-time as people pay/unlock (polls backend or uses WebSocket)
 - [x] Add tRPC procedure to get unlock stats (total + by team)
+
+
+## Phase 10: Teammate Visibility Protection & Price Urgency (COMPLETE)
+- [x] Create sports_day_settings table with configurable fields (early_price, future_price, price_increase_at, public_team_reveal_at, top_production_cutoff_at, checkout URLs, boolean flags)
+- [x] Add unlock_token (unique, generated on registration) to sports_day_registrations
+- [x] Add payment tracking fields: reveal_status, paid_at, stripe_checkout_session_id, stripe_payment_intent_id, payment_email, payment_match_status, manual_unlock, manually_unlocked_by, manual_unlock_reason
+- [x] Generate unlock_token on registration (UUID or similar)
+- [x] Implement locked dashboard state for unpaid users (no team, no teammates visible)
+- [x] Implement paid user reveal modal with teammate visibility protection (only show paid teammates, anonymous "Teammate Locked" cards for unpaid)
+- [x] Update Stripe checkout to pass unlock_token in metadata (+ registration_id, registered_email, player_name, product_type, event_id)
+- [x] Update Stripe webhook with token-based matching: match by unlock_token first, then registration_id, then email
+- [x] Create unmatched_payment table for payments that don't match any registration
+- [x] Implement manual unlock fields for admin override
+- [x] Implement returning unpaid user detection and messaging
+- [x] Add dynamic pricing logic (check price_increase_at, show £25 or £35, fallback if future URL missing)
+- [x] Add countdown timer and urgency copy (8 days remaining, price may increase, etc.)
+- [x] Add public_team_reveal_at logic (before: paid users only see paid teammates; after: full team visibility)
+- [x] Test all three user states (locked, paid, returning unpaid) end-to-end
+- [x] Test payment flows with different payment emails (Apple Pay, Google Pay, different card email)
+- [x] Verify teammate visibility protection prevents unpaid teammate name leakage

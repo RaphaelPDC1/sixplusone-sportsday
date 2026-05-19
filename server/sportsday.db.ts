@@ -372,3 +372,286 @@ export async function getUnlockStats() {
   return { total, teams };
 }
 
+
+// ─── Sports Day Settings ──────────────────────────────────────────────────────
+
+import { sportsDaySettings } from "../drizzle/schema";
+
+export async function getSportsDaySettings(eventId = "sports_day_002") {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db
+    .select()
+    .from(sportsDaySettings)
+    .where(eq(sportsDaySettings.eventId, eventId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+// ─── Dashboard State Types ────────────────────────────────────────────────────
+
+export type TeammateCard =
+  | {
+      status: "visible";
+      id: string;
+      displayName: string;
+      sportsDayProfile: string | null;
+      profileTagline: string | null;
+      photoUrl: string | null;
+    }
+  | {
+      status: "locked";
+      displayName: "Teammate Locked";
+      message: "This player has not unlocked their Priority Player Pack yet.";
+    };
+
+export type PriceState = {
+  currentPrice: number; // in pence
+  displayPrice: string; // e.g. "£25"
+  isEarlyPrice: boolean;
+  priceIncreaseAt: Date | null;
+  countdownMs: number | null; // ms until price increase
+  urgencyMessage: string;
+  topProductionCutoffPassed: boolean;
+};
+
+export type DashboardState =
+  | "LOCKED_UNPAID"
+  | "RETURNING_UNPAID"
+  | "UNLOCKED_PRIORITY"
+  | "PUBLIC_REVEAL";
+
+export type SportsDayDashboard = {
+  state: DashboardState;
+  // Always present
+  registrationId: string;
+  fullName: string;
+  sportsDayProfile: string | null;
+  profileTagline: string | null;
+  referralCode: string | null;
+  referralCount: number;
+  groupCode: string | null;
+  priceState: PriceState;
+  // Only present when unlocked
+  team: string | null;
+  teamColour: string | null;
+  aiTeamIdentity: string | null;
+  shirtSize: string | null;
+  shirtFit: string | null;
+  revealSeen: boolean;
+  teammates: TeammateCard[];
+  // Copy / CTA
+  headline: string;
+  body: string;
+  ctaLabel: string;
+  ctaNote: string | null;
+};
+
+// ─── Effective unlock check ───────────────────────────────────────────────────
+
+function isEffectivelyUnlocked(reg: { revealStatus: string | null; manualUnlock: boolean | null }): boolean {
+  return reg.revealStatus === "unlocked" || reg.manualUnlock === true;
+}
+
+// ─── Build Dashboard ──────────────────────────────────────────────────────────
+
+export async function buildSportsDayDashboard(
+  registrationId: string,
+  profilePhotosMap: Map<string, string>
+): Promise<SportsDayDashboard | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const reg = await getRegistrationById(registrationId);
+  if (!reg) return null;
+
+  const settings = await getSportsDaySettings();
+  const now = new Date();
+
+  // ── Price state ────────────────────────────────────────────────────────────
+  const earlyPricePence = settings?.earlyPrice ?? 2500;
+  const futurePricePence = settings?.futurePrice ?? 3500;
+  const priceIncreaseAt = settings?.priceIncreaseAt ?? null;
+  const isPriceIncreaseActive = settings?.isPriceIncreaseActive ?? false;
+  const topProductionCutoffAt = settings?.topProductionCutoffAt ?? null;
+
+  const priceIncreaseTriggered =
+    isPriceIncreaseActive || (priceIncreaseAt != null && now >= priceIncreaseAt);
+
+  const currentPricePence = priceIncreaseTriggered ? futurePricePence : earlyPricePence;
+  const displayPrice = `£${(currentPricePence / 100).toFixed(0)}`;
+  const isEarlyPrice = !priceIncreaseTriggered;
+  const countdownMs =
+    !priceIncreaseTriggered && priceIncreaseAt != null
+      ? Math.max(0, priceIncreaseAt.getTime() - now.getTime())
+      : null;
+  const topProductionCutoffPassed =
+    topProductionCutoffAt != null && now >= topProductionCutoffAt;
+
+  let urgencyMessage: string;
+  if (topProductionCutoffPassed) {
+    urgencyMessage = "Late unlocks may not guarantee full top customisation.";
+  } else if (priceIncreaseTriggered) {
+    urgencyMessage = `Priority Player Pack — ${displayPrice}`;
+  } else if (countdownMs != null) {
+    const daysLeft = Math.ceil(countdownMs / (1000 * 60 * 60 * 24));
+    urgencyMessage =
+      daysLeft > 1
+        ? `Early unlock price ends in ${daysLeft} days. Price may increase once tops move closer to production.`
+        : "Early unlock price ends today. Price may increase once tops move closer to production.";
+  } else {
+    urgencyMessage = "Early unlock price. Price may increase once tops move closer to production.";
+  }
+
+  const priceState: PriceState = {
+    currentPrice: currentPricePence,
+    displayPrice,
+    isEarlyPrice,
+    priceIncreaseAt,
+    countdownMs,
+    urgencyMessage,
+    topProductionCutoffPassed,
+  };
+
+  // ── Public reveal check ────────────────────────────────────────────────────
+  const publicRevealAt = settings?.publicTeamRevealAt ?? null;
+  const isPublicRevealActiveOverride = settings?.isPublicRevealActive ?? false;
+  const isPublicReveal =
+    isPublicRevealActiveOverride || (publicRevealAt != null && now >= publicRevealAt);
+
+  // ── Unlock state ───────────────────────────────────────────────────────────
+  const unlocked = isEffectivelyUnlocked(reg);
+
+  // ── Determine state ────────────────────────────────────────────────────────
+  let state: DashboardState;
+  if (isPublicReveal) {
+    state = "PUBLIC_REVEAL";
+  } else if (unlocked) {
+    state = "UNLOCKED_PRIORITY";
+  } else {
+    // Distinguish first-time vs returning unpaid
+    // "Returning" = registered more than 30 minutes ago and still unpaid
+    const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+    const isReturning = reg.createdAt < thirtyMinutesAgo;
+    state = isReturning ? "RETURNING_UNPAID" : "LOCKED_UNPAID";
+  }
+
+  // ── Copy per state ─────────────────────────────────────────────────────────
+  let headline: string;
+  let body: string;
+  let ctaLabel: string;
+  let ctaNote: string | null;
+
+  if (state === "LOCKED_UNPAID") {
+    headline = "Your team has already been picked.";
+    body =
+      "Sports Day 002 is different. The system has assigned your team, but your Priority Player Pack is still locked.";
+    ctaLabel = `Unlock My Player Pack — ${displayPrice}`;
+    ctaNote = isEarlyPrice
+      ? `Early unlock price: ${displayPrice}. Price may increase after ${countdownMs != null ? Math.ceil(countdownMs / (1000 * 60 * 60 * 24)) : 8} days once tops move closer to production.`
+      : null;
+  } else if (state === "RETURNING_UNPAID") {
+    headline = "Your team is still waiting.";
+    body =
+      "You registered, but your Priority Player Pack is still locked. Your team reveal, one-of-one top and early teammate preview are ready when you are.";
+    ctaLabel = priceIncreaseTriggered
+      ? `Unlock My Player Pack — ${displayPrice}`
+      : `Unlock Before Price Changes — ${displayPrice}`;
+    ctaNote = isEarlyPrice ? urgencyMessage : null;
+  } else if (state === "UNLOCKED_PRIORITY") {
+    headline = "You're in. Your team is live.";
+    body =
+      "You've unlocked early access. You can now see your team identity and any teammates who have also unlocked.";
+    ctaLabel = "View My Team";
+    ctaNote = "Your team board reveals as more players unlock.";
+  } else {
+    // PUBLIC_REVEAL
+    headline = "Full team list now live.";
+    body = "Sports Day 002 is here. Your full team is now visible.";
+    ctaLabel = "View My Team";
+    ctaNote = null;
+  }
+
+  // ── Teammates (only for unlocked or public reveal) ─────────────────────────
+  let teammates: TeammateCard[] = [];
+  let team: string | null = null;
+  let teamColour: string | null = null;
+  let aiTeamIdentity: string | null = null;
+  let shirtSize: string | null = null;
+  let shirtFit: string | null = null;
+
+  const TEAM_COLOURS: Record<string, string> = {
+    red: "#FF3B30",
+    blue: "#007AFF",
+    pink: "#FF2D78",
+    orange: "#FF9500",
+  };
+
+  if (state === "UNLOCKED_PRIORITY" || state === "PUBLIC_REVEAL") {
+    team = reg.team;
+    teamColour = reg.team ? (TEAM_COLOURS[reg.team] ?? null) : null;
+    aiTeamIdentity = reg.aiTeamIdentity;
+    shirtSize = reg.shirtSize;
+    shirtFit = reg.shirtFit;
+
+    if (reg.team) {
+      // Fetch all teammates on the same team
+      const allTeammates = await db
+        .select({
+          id: sportsDayRegistrations.id,
+          fullName: sportsDayRegistrations.fullName,
+          sportsDayProfile: sportsDayRegistrations.sportsDayProfile,
+          profileTagline: sportsDayRegistrations.profileTagline,
+          revealStatus: sportsDayRegistrations.revealStatus,
+          manualUnlock: sportsDayRegistrations.manualUnlock,
+        })
+        .from(sportsDayRegistrations)
+        .where(eq(sportsDayRegistrations.team, reg.team as "red" | "blue" | "pink" | "orange"));
+
+      teammates = allTeammates
+        .filter((m) => m.id !== registrationId) // exclude self
+        .map((m): TeammateCard => {
+          const teammateUnlocked = state === "PUBLIC_REVEAL" || isEffectivelyUnlocked(m);
+          if (teammateUnlocked) {
+            return {
+              status: "visible",
+              id: m.id,
+              displayName: m.fullName,
+              sportsDayProfile: m.sportsDayProfile,
+              profileTagline: m.profileTagline,
+              photoUrl: profilePhotosMap.get(m.id) ?? null,
+            };
+          } else {
+            return {
+              status: "locked",
+              displayName: "Teammate Locked",
+              message: "This player has not unlocked their Priority Player Pack yet.",
+            };
+          }
+        });
+    }
+  }
+
+  return {
+    state,
+    registrationId: reg.id,
+    fullName: reg.fullName,
+    sportsDayProfile: reg.sportsDayProfile,
+    profileTagline: reg.profileTagline,
+    referralCode: reg.referralCode,
+    referralCount: reg.referralCount ?? 0,
+    groupCode: reg.groupCode,
+    priceState,
+    team,
+    teamColour,
+    aiTeamIdentity,
+    shirtSize,
+    shirtFit,
+    revealSeen: reg.revealSeen ?? false,
+    teammates,
+    headline,
+    body,
+    ctaLabel,
+    ctaNote,
+  };
+}

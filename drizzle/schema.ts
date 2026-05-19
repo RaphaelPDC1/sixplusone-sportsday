@@ -86,6 +86,25 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
   shopifyOrderId: varchar("shopifyOrderId", { length: 100 }),
   paidAt: timestamp("paidAt"),
 
+  // Stripe Payment Tracking
+  unlockToken: varchar("unlockToken", { length: 36 }).notNull().unique(), // UUID, non-guessable
+  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 100 }),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 100 }),
+  paymentEmail: varchar("paymentEmail", { length: 255 }), // email used to pay (may differ from registered email)
+  paymentMatchStatus: mysqlEnum("paymentMatchStatus", [
+    "matched_by_token",
+    "matched_by_id",
+    "matched_by_email",
+    "unmatched",
+    "none",
+  ]).default("none"), // tracking how payment was matched
+
+  // Manual Unlock (Admin Override)
+  manualUnlock: boolean("manualUnlock").default(false),
+  manuallyUnlockedBy: varchar("manuallyUnlockedBy", { length: 64 }), // admin openId
+  manualUnlockReason: text("manualUnlockReason"),
+  manuallyUnlockedAt: timestamp("manuallyUnlockedAt"),
+
   // Referral
   referralCode: varchar("referralCode", { length: 10 }).unique(),
   referredBy: varchar("referredBy", { length: 10 }),
@@ -201,3 +220,50 @@ export const eventSchedule = mysqlTable("event_schedule", {
 });
 export type EventScheduleEntry = typeof eventSchedule.$inferSelect;
 export type InsertEventScheduleEntry = typeof eventSchedule.$inferInsert;
+
+// ─── Sports Day Settings (Configurable Admin Settings) ────────────────────────
+export const sportsDaySettings = mysqlTable("sports_day_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: varchar("eventId", { length: 50 }).notNull().unique(), // e.g. "sports_day_002"
+
+  // Pricing
+  earlyPrice: int("earlyPrice").default(2500), // in pence (£25.00)
+  futurePrice: int("futurePrice").default(3500), // in pence (£35.00)
+  priceIncreaseAt: timestamp("priceIncreaseAt"), // when price increases
+  isPriceIncreaseActive: boolean("isPriceIncreaseActive").default(false), // manual override
+
+  // Checkout URLs
+  currentProductCheckoutUrl: text("currentProductCheckoutUrl"), // Stripe checkout URL for current price
+  futureProductCheckoutUrl: text("futureProductCheckoutUrl"), // Stripe checkout URL for future price
+
+  // Team Reveal
+  publicTeamRevealAt: timestamp("publicTeamRevealAt"), // when full team becomes visible to all
+  isPublicRevealActive: boolean("isPublicRevealActive").default(false), // manual override to force public reveal
+  topProductionCutoffAt: timestamp("topProductionCutoffAt"), // when one-of-one tops may no longer be guaranteed
+
+  // Metadata
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SportsDaySettings = typeof sportsDaySettings.$inferSelect;
+export type InsertSportsDaySettings = typeof sportsDaySettings.$inferInsert;
+
+// ─── Unmatched Payments (Payment Debugging) ───────────────────────────────────
+export const unmatchedPayments = mysqlTable("unmatched_payments", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: varchar("eventId", { length: 50 }).notNull(), // e.g. "sports_day_002"
+  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 100 }).notNull().unique(),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 100 }),
+  paymentEmail: varchar("paymentEmail", { length: 255 }).notNull(),
+  amountPaid: int("amountPaid").notNull(), // in pence
+  currency: varchar("currency", { length: 3 }).default("GBP"),
+  metadata: json("metadata").$type<Record<string, unknown>>(), // raw Stripe metadata for debugging
+  resolvedAt: timestamp("resolvedAt"), // when manually matched/unlocked
+  resolvedBy: varchar("resolvedBy", { length: 64 }), // admin openId
+  resolvedRegistrationId: varchar("resolvedRegistrationId", { length: 36 }), // which registration it was linked to
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UnmatchedPayment = typeof unmatchedPayments.$inferSelect;
+export type InsertUnmatchedPayment = typeof unmatchedPayments.$inferInsert;

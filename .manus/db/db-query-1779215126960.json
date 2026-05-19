@@ -1,0 +1,9 @@
+{
+  "query": "-- Modify column to NOT NULL\nALTER TABLE `sports_day_registrations` MODIFY COLUMN `unlockToken` varchar(36) NOT NULL;\n\n-- Add UNIQUE constraint\nALTER TABLE `sports_day_registrations` ADD UNIQUE KEY `sports_day_registrations_unlockToken_unique` (`unlockToken`);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute -- Modify column to NOT NULL\nALTER TABLE `sports_day_registrations` MODIFY COLUMN `unlockToken` varchar(36) NOT NULL;\n\n-- Add UNIQUE constraint\nALTER TABLE `sports_day_registrations` ADD UNIQUE KEY `sports_day_registrations_unlockToken_unique` (`unlockToken`);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 638
+}
