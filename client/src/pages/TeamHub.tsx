@@ -8,7 +8,7 @@ import { EntrySplash } from "@/components/ui/entry-splash";
 import { HeroWave } from "@/components/ui/hero-wave";
 import { TeamLiveFeatures } from "@/components/ui/team-live-features";
 
-const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
+const LOGO_URL = "/manus-storage/logo-61_bea00c75.webp";
 
 const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; glow: string; hex: string }> = {
   red:    { bg: "bg-[#B80000]",   text: "text-[#B80000]",   border: "border-[#B80000]",   glow: "rgba(184,0,0,0.4)",    hex: "#B80000" },

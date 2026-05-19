@@ -7,7 +7,7 @@ import StepParticles from "@/components/ui/step-particles";
 import { EntrySplash } from "@/components/ui/entry-splash";
 import { ScratchCardGrid } from "@/components/ui/scratch-card";
 
-const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
+const LOGO_URL = "/manus-storage/logo-61_bea00c75.webp";
 
 type FormData = {
   fullName: string;

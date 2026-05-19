@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
-const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
+const LOGO_URL = "/manus-storage/logo-61_bea00c75.webp";
 
 // 9 tiles: positions 0,4,8 are the "winning" date — others are decoys
 // Match 3 identical = WIN

@@ -3,7 +3,7 @@ import { useLocation, useSearch } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { BackNav } from "@/components/ui/back-nav";
 
-const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
+const LOGO_URL = "/manus-storage/logo-61_bea00c75.webp";
 
 export default function UnlockSuccess() {
   const [, navigate] = useLocation();

@@ -8,7 +8,7 @@ import { ParticleTextBg } from "@/components/ui/particle-text-bg";
 import { ScratchCardGrid } from "@/components/ui/scratch-card";
 import { toPng } from "html-to-image";
 
-const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
+const LOGO_URL = "/manus-storage/logo-61_bea00c75.webp";
 
 // Stripe checkout is now used instead of Shopify
 
