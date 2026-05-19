@@ -39,8 +39,8 @@ export async function handleStripeWebhook(req: Request, res: Response) {
         break;
 
       case "payment_intent.succeeded":
-        // Log for audit; primary unlock happens via checkout.session.completed
-        console.log(`[Stripe Webhook] payment_intent.succeeded: ${event.data.object.id}`);
+        // Primary unlock path for embedded Payment Element (no checkout session)
+        await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
         break;
 
       default:
@@ -213,6 +213,158 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   console.log(
     `[Stripe Webhook] ✅ Unlocked registration ${reg.id} | ` +
     `match: ${matchMethod} | session: ${sessionId} | ` +
+    `paymentEmail: ${paymentEmail} | registeredEmail: ${reg.email}`
+  );
+}
+
+// ── Handle payment_intent.succeeded (embedded Payment Element flow) ───────────
+// This is the primary unlock path when using the embedded Stripe Payment Element.
+// Unlike checkout.session.completed, there is no session object — we match by
+// unlock_token in the PaymentIntent metadata.
+async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+  const db = await getDb();
+  if (!db) {
+    console.error("[Stripe Webhook] Database connection failed");
+    return;
+  }
+
+  const paymentIntentId = paymentIntent.id;
+  const amountPaid = paymentIntent.amount;
+  const currency = (paymentIntent.currency ?? "gbp").toUpperCase();
+  const paymentEmail = paymentIntent.receipt_email ?? null;
+
+  // Extract metadata
+  const unlockToken = paymentIntent.metadata?.unlock_token ?? null;
+  const registrationId = paymentIntent.metadata?.registration_id ?? null;
+  const registeredEmail = paymentIntent.metadata?.registered_email ?? null;
+
+  console.log(
+    `[Stripe Webhook] payment_intent.succeeded | intent: ${paymentIntentId} | ` +
+    `paymentEmail: ${paymentEmail} | unlockToken: ${unlockToken ?? "none"} | ` +
+    `registrationId: ${registrationId ?? "none"}`
+  );
+
+  // ── Idempotency: skip if already processed by this payment intent ─────────
+  const alreadyProcessed = await db
+    .select({ id: sportsDayRegistrations.id })
+    .from(sportsDayRegistrations)
+    .where(eq(sportsDayRegistrations.stripePaymentIntentId, paymentIntentId))
+    .limit(1);
+
+  if (alreadyProcessed.length > 0) {
+    const existing = alreadyProcessed[0];
+    const existingReg = await db
+      .select({ revealStatus: sportsDayRegistrations.revealStatus })
+      .from(sportsDayRegistrations)
+      .where(eq(sportsDayRegistrations.id, existing.id))
+      .limit(1);
+    if (existingReg[0]?.revealStatus === "unlocked") {
+      console.log(`[Stripe Webhook] PaymentIntent ${paymentIntentId} already processed — skipping`);
+      return;
+    }
+  }
+
+  // ── Match registration: token → registration_id → email ──────────────────
+  let reg: typeof sportsDayRegistrations.$inferSelect | null = null;
+  let matchMethod: "matched_by_token" | "matched_by_id" | "matched_by_email" | "unmatched" = "unmatched";
+
+  // 1. Match by unlock_token (primary — survives Apple Pay / Google Pay email mismatch)
+  if (unlockToken) {
+    const rows = await db
+      .select()
+      .from(sportsDayRegistrations)
+      .where(eq(sportsDayRegistrations.unlockToken, unlockToken))
+      .limit(1);
+    if (rows.length > 0) {
+      reg = rows[0];
+      matchMethod = "matched_by_token";
+      console.log(`[Stripe Webhook] Matched by unlock_token: ${unlockToken}`);
+    }
+  }
+
+  // 2. Fallback: match by registration_id
+  if (!reg && registrationId) {
+    const rows = await db
+      .select()
+      .from(sportsDayRegistrations)
+      .where(eq(sportsDayRegistrations.id, registrationId))
+      .limit(1);
+    if (rows.length > 0) {
+      reg = rows[0];
+      matchMethod = "matched_by_id";
+      console.log(`[Stripe Webhook] Matched by registration_id: ${registrationId}`);
+    }
+  }
+
+  // 3. Fallback: match by registered email
+  if (!reg && registeredEmail) {
+    const rows = await db
+      .select()
+      .from(sportsDayRegistrations)
+      .where(eq(sportsDayRegistrations.email, registeredEmail))
+      .limit(1);
+    if (rows.length > 0) {
+      reg = rows[0];
+      matchMethod = "matched_by_email";
+      console.log(`[Stripe Webhook] Matched by registered_email: ${registeredEmail}`);
+    }
+  }
+
+  // 4. No match — store as unmatched payment for admin review
+  if (!reg) {
+    console.warn(`[Stripe Webhook] ⚠️ No registration match for PaymentIntent ${paymentIntentId}`);
+    await db.insert(unmatchedPayments).values({
+      eventId: "sports_day_002",
+      // Use a prefixed intent ID so it doesn't collide with real checkout session IDs
+      stripeCheckoutSessionId: `pi_${paymentIntentId}`,
+      stripePaymentIntentId: paymentIntentId,
+      paymentEmail: paymentEmail ?? "unknown",
+      amountPaid,
+      currency,
+      metadata: {
+        ...(paymentIntent.metadata as Record<string, unknown>),
+        source: "payment_intent.succeeded",
+        unlockToken: unlockToken ?? null,
+        registrationId: registrationId ?? null,
+        registeredEmail: registeredEmail ?? null,
+      },
+    });
+    return;
+  }
+
+  // ── Idempotency: skip if already unlocked ─────────────────────────────────
+  if (
+    reg.revealStatus === "unlocked" ||
+    reg.accessType === "priority" ||
+    reg.paidAt != null
+  ) {
+    console.log(`[Stripe Webhook] Registration ${reg.id} already unlocked — skipping`);
+    return;
+  }
+
+  // ── Unlock the registration ────────────────────────────────────────────────
+  const updatedTags = buildPaymentKlaviyoTags(
+    (reg.klaviyoTags as string[]) ?? [],
+    reg.team as "red" | "blue" | "pink" | "orange"
+  );
+
+  await db
+    .update(sportsDayRegistrations)
+    .set({
+      paymentStatus: "paid",
+      accessType: "priority",
+      revealStatus: "unlocked",
+      paidAt: new Date(),
+      stripePaymentIntentId: paymentIntentId,
+      paymentEmail: paymentEmail,
+      paymentMatchStatus: matchMethod,
+      klaviyoTags: updatedTags,
+    })
+    .where(eq(sportsDayRegistrations.id, reg.id));
+
+  console.log(
+    `[Stripe Webhook] ✅ Unlocked registration ${reg.id} via payment_intent.succeeded | ` +
+    `match: ${matchMethod} | intent: ${paymentIntentId} | ` +
     `paymentEmail: ${paymentEmail} | registeredEmail: ${reg.email}`
   );
 }

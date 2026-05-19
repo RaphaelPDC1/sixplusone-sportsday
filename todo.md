@@ -303,3 +303,14 @@
 - [x] Test all three user states (locked, paid, returning unpaid) end-to-end
 - [x] Test payment flows with different payment emails (Apple Pay, Google Pay, different card email)
 - [x] Verify teammate visibility protection prevents unpaid teammate name leakage
+
+## Phase 11: Embedded Stripe Payment Element (no popup/redirect) (COMPLETE)
+- [x] Install @stripe/stripe-js and @stripe/react-stripe-js
+- [x] Create createPaymentIntent backend procedure (returns clientSecret)
+- [x] Build PaymentForm component with Stripe Payment Element (card, Apple Pay, Google Pay)
+- [x] Wire PaymentForm into Holding page (replaces unlock button)
+- [x] Handle payment success in-app (no redirect needed)
+- [x] Handle payment error states with user-friendly messages
+- [x] Update Stripe webhook to handle payment_intent.succeeded (in addition to checkout.session.completed)
+- [x] Keep createStripeCheckout as fallback (not removed)
+- [x] Test embedded payment flow end-to-end

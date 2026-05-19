@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { BackNav } from "@/components/ui/back-nav";
+import { PaymentForm } from "@/components/PaymentForm";
 import { EntrySplash } from "@/components/ui/entry-splash";
 import { ParticleTextBg } from "@/components/ui/particle-text-bg";
 import { ScratchCardGrid } from "@/components/ui/scratch-card";
@@ -700,28 +701,22 @@ export default function Holding() {
     }
   };
 
-  const createCheckout = trpc.sportsday.createStripeCheckout.useMutation();
+  // Embedded payment form state
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
 
-  const handleUnlock = async () => {
-    if (!dashboard || !userId) return;
-    try {
-      const result = await createCheckout.mutateAsync({ uid: userId });
-      if (result.checkoutUrl) {
-        // Start polling for webhook confirmation immediately
-        setAwaitingWebhook(true);
-        window.open(result.checkoutUrl, "_blank");
-        toast.success("Redirecting to checkout...");
-      }
-    } catch (err: any) {
-      // SAFEGUARD: If already unlocked, redirect to dashboard
-      if (err?.data?.code === "CONFLICT" || err?.message?.includes("ALREADY_UNLOCKED")) {
-        toast.success("You're already unlocked! Redirecting...");
-        refetch();
-        return;
-      }
-      toast.error("Failed to create checkout session. Please try again.");
-      console.error(err);
-    }
+  const handleUnlock = () => {
+    setShowPaymentForm(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentForm(false);
+    setAwaitingWebhook(true);
+    toast.success("Payment received. Confirming your unlock now…");
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPaymentForm(false);
+    toast("No worries — your registration is still saved. Your Player Pack is still locked.");
   };
 
   // ── No userId in localStorage — show Welcome Back login screen ──
@@ -936,18 +931,27 @@ export default function Holding() {
                   ))}
                 </ul>
 
-                {/* CTA Button */}
-                <button
-                  onClick={handleUnlock}
-                  disabled={createCheckout.isPending || awaitingWebhook}
-                  className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest py-5 hover:bg-[#F2F0EB] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {createCheckout.isPending
-                    ? "OPENING CHECKOUT..."
-                    : awaitingWebhook
-                    ? "CONFIRMING PAYMENT..."
-                    : dashboard.ctaLabel.toUpperCase()}
-                </button>
+                {/* CTA — embedded payment form or button */}
+                {showPaymentForm ? (
+                  <div className="mt-2">
+                    <PaymentForm
+                      uid={userId!}
+                      onSuccess={handlePaymentSuccess}
+                      onCancel={handlePaymentCancel}
+                    />
+                  </div>
+                ) : awaitingWebhook ? (
+                  <div className="w-full bg-[#FF5500]/20 border border-[#FF5500]/40 text-[#FF5500] font-mono text-sm tracking-widest py-5 text-center">
+                    CONFIRMING YOUR UNLOCK…
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleUnlock}
+                    className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest py-5 hover:bg-[#F2F0EB] transition-all active:scale-[0.98]"
+                  >
+                    {dashboard.ctaLabel.toUpperCase()}
+                  </button>
+                )}
 
                 {/* Price note */}
                 {dashboard.ctaNote && (

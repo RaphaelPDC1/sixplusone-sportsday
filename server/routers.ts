@@ -504,6 +504,73 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
       return { checkoutUrl: session.url };
     }),
 
+  // ─── Create Payment Intent (for embedded Stripe Payment Element) ───────────
+  createPaymentIntent: publicProcedure
+    .input(z.object({ uid: z.string() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const reg = await getRegistrationById(input.uid);
+      if (!reg) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // SAFEGUARD: Prevent duplicate payments
+      if (
+        reg.revealStatus === "unlocked" ||
+        reg.accessType === "priority" ||
+        reg.paidAt != null ||
+        reg.manualUnlock === true
+      ) {
+        console.log(`[Stripe] Duplicate PaymentIntent attempt blocked for ${input.uid} — already unlocked`);
+        throw new TRPCError({ code: "CONFLICT", message: "ALREADY_UNLOCKED" });
+      }
+
+      // Determine current price from settings
+      const settings = await getSportsDaySettings();
+      const now = new Date();
+      const isPriceIncreaseActive = settings?.isPriceIncreaseActive ?? false;
+      const priceIncreaseAt = settings?.priceIncreaseAt ?? null;
+      const priceIncreaseTriggered =
+        isPriceIncreaseActive || (priceIncreaseAt != null && now >= priceIncreaseAt);
+      const currentPricePence = priceIncreaseTriggered
+        ? (settings?.futurePrice ?? 3500)
+        : (settings?.earlyPrice ?? 2500);
+
+      const stripe = new Stripe(ENV.stripeSecretKey);
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: currentPricePence,
+        currency: "gbp",
+        // Allow card, Apple Pay, Google Pay automatically
+        automatic_payment_methods: { enabled: true },
+        // CRITICAL: unlock_token in metadata so webhook matches regardless of payment email
+        metadata: {
+          registration_id: input.uid,
+          unlock_token: reg.unlockToken ?? "",
+          registered_email: reg.email,
+          player_name: reg.fullName,
+          product_type: "sports_day_priority_player_pack",
+          event_id: "sports_day_002",
+        },
+        description: "Priority Player Pack — Sports Day 002",
+        receipt_email: reg.email,
+      });
+
+      // Store payment intent ID for tracking
+      await db
+        .update(sportsDayRegistrations)
+        .set({ stripePaymentIntentId: paymentIntent.id })
+        .where(eq(sportsDayRegistrations.id, input.uid));
+
+      console.log(`[Stripe] PaymentIntent created: ${paymentIntent.id} for registration ${input.uid} (token: ${reg.unlockToken})`);
+
+      return {
+        clientSecret: paymentIntent.client_secret!,
+        amount: currentPricePence,
+        displayPrice: `£${(currentPricePence / 100).toFixed(0)}`,
+      };
+    }),
+
   confirmPayment: publicProcedure
     .input(z.object({ uid: z.string(), orderId: z.string().optional() }))
     .mutation(async ({ input }) => {
