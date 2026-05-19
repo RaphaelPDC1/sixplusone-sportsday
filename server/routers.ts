@@ -29,6 +29,7 @@ import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { ENV } from "./_core/env";
 import { invokeLLM } from "./_core/llm";
 import { TRPCError } from "@trpc/server";
+import Stripe from "stripe";
 
 // ─── In-memory rate limiter ───────────────────────────────────────────────────
 // Simple sliding-window rate limiter — no external dependency needed.
@@ -388,7 +389,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
       }
 
       // Create Stripe checkout session
-      const stripe = require("stripe")(ENV.stripeSecretKey);
+      const stripe = new Stripe(ENV.stripeSecretKey);
       const origin = ctx.req.headers.origin || "https://sportsday002-6swzojco.manus.space";
 
       const session = await stripe.checkout.sessions.create({

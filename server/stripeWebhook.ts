@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import { eq } from "drizzle-orm";
+import Stripe from "stripe";
 import { sportsDayRegistrations } from "../drizzle/schema";
 import { getDb } from "./db";
 import { buildPaymentKlaviyoTags } from "./sportsday.db";
 import { ENV } from "./_core/env";
 
-const stripe = require("stripe")(ENV.stripeSecretKey);
+const stripe = new Stripe(ENV.stripeSecretKey);
 
 export async function handleStripeWebhook(req: Request, res: Response) {
   const sig = req.headers["stripe-signature"] as string;
