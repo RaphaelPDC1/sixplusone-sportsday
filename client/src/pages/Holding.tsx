@@ -725,24 +725,37 @@ export default function Holding() {
             }}
           >
             <p className="font-mono text-[#444] text-xs tracking-[0.35em] mb-3">YOU'RE REGISTERED</p>
-            <h1
-              className="font-display text-[#F2F0EB] leading-[0.88] mb-5"
-              style={{ fontSize: "clamp(3.2rem, 14vw, 6.5rem)" }}
-            >
-              WELCOME<br />
-              <span
-                className="text-[#FF5500]"
+            
+            {/* Dashboard-driven headline */}
+            {dashboard?.headline && (
+              <h1
+                className="font-display text-[#F2F0EB] leading-[0.88] mb-2"
+                style={{ fontSize: "clamp(2.8rem, 12vw, 5.5rem)" }}
+              >
+                {dashboard.headline}
+                {dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID" ? (
+                  <br />
+                ) : null}
+                {(dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID") && (
+                  <span className="text-[#FF5500]">{firstName}.</span>
+                )}
+              </h1>
+            )}
+            
+            {/* Dashboard-driven subheadline */}
+            {dashboard?.subheadline && (
+              <p
+                className="font-mono text-[#F2F0EB]/55 text-sm tracking-wider leading-relaxed max-w-sm mb-5"
                 style={{
-                  display: "inline-block",
-                  transition: "opacity 0.7s ease 0.5s, transform 0.7s ease 0.5s",
+                  transition: "opacity 0.7s ease 0.8s",
                   opacity: heroVisible ? 1 : 0,
-                  transform: heroVisible ? "translateX(0)" : "translateX(-12px)",
                 }}
               >
-                {firstName}.
-              </span>
-            </h1>
-            {user?.profileTagline && (
+                {dashboard.subheadline}
+              </p>
+            )}
+            
+            {user?.profileTagline && (dashboard.state === "UNLOCKED_PRIORITY" || dashboard.state === "PUBLIC_REVEAL") && (
               <p
                 className="font-mono text-[#F2F0EB]/55 text-sm tracking-wider leading-relaxed max-w-sm"
                 style={{
