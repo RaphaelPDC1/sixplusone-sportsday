@@ -599,7 +599,9 @@ export default function Holding() {
       return;
     }
     if (dashboard.state === "UNLOCKED_PRIORITY" || dashboard.state === "PUBLIC_REVEAL") {
-      navigateRef.current("/team-hub");
+      // Returning paid users skip the reveal — go straight to team hub
+      const hasSeenReveal = localStorage.getItem("hasSeenUnlockReveal") === "true";
+      navigateRef.current(hasSeenReveal ? "/team-hub" : "/unlock-reveal");
     }
   }, [dashboard?.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -617,8 +619,10 @@ export default function Holding() {
   useEffect(() => {
     if (unlockStep === "confirming" && (dashboard?.state === "UNLOCKED_PRIORITY" || dashboard?.state === "PUBLIC_REVEAL")) {
       setUnlockStep("idle");
-      console.log("[Holding] Unlock confirmed — redirecting to /team-hub");
-      toast.success("Your Player Pack is unlocked!");
+      console.log("[Holding] Unlock confirmed — redirecting to /unlock-reveal");
+      // Always go to reveal screen after a fresh payment confirmation
+      // (UnlockReveal itself will skip to /team-hub if hasSeenUnlockReveal is already set)
+      navigateRef.current("/unlock-reveal");
     }
   }, [dashboard?.state, unlockStep]);
 

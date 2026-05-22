@@ -309,3 +309,11 @@
 - [x] Admin: add admin-only manual recovery route (search by email/registrationId/unlockToken/stripePaymentIntentId, mark as paid/unlocked)
 - [x] Logging: add explicit logs for webhook event received, match method, DB update success/failure, frontend polling, redirect triggered
 - [x] Idempotency: if webhook receives same event twice or user already paid/unlocked, return success safely
+
+## Post-Payment Reveal Animation Screen
+
+- [x] Build /unlock-reveal page with team colour flash, blurred card reveal, player name/top name, priority access copy
+- [x] Wire Holding.tsx confirming state to redirect to /unlock-reveal (not /team-hub) after webhook confirms
+- [x] Add /unlock-reveal route in App.tsx
+- [x] Add hasSeenUnlockReveal localStorage flag — returning paid users skip reveal and go straight to /team-hub
+- [x] UnlockReveal page: on CTA click or animation complete, set hasSeenUnlockReveal=true then navigate to /team-hub
