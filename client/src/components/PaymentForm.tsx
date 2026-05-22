@@ -81,6 +81,7 @@ function InnerPaymentForm({ amount, currency, onPaymentSuccess, onCancel }: Inne
           options={{
             layout: "tabs",
             wallets: { applePay: "auto", googlePay: "auto" },
+            paymentMethodOrder: ["apple_pay", "google_pay", "card"],
           }}
         />
       </div>
