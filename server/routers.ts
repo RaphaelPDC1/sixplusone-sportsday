@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { and, eq, like, or } from "drizzle-orm";
 import { z } from "zod";
-import { awardsVotes, eventSchedule, groupCodes, leaderboard, profilePhotos, sportsDayRegistrations, wildcardVotes } from "../drizzle/schema";
+import { awardsVotes, eventSchedule, groupCodes, leaderboard, profilePhotos, sportsDayRegistrations, unmatchedPayments, wildcardVotes } from "../drizzle/schema";
 import { getDb } from "./db";
 import {
   assignTeam,
@@ -765,6 +765,89 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
       await db.delete(eventSchedule).where(eq(eventSchedule.id, input.id));
       return { success: true };
     }),
+
+  // ─── Admin: Manual payment recovery ─────────────────────────────────────────
+  // SECURITY: admin-only — can unlock paid access. Never expose publicly.
+  adminSearchRegistration: adminProcedure
+    .input(z.object({
+      query: z.string().min(1).max(200),
+      searchBy: z.enum(["email", "registrationId", "unlockToken", "stripePaymentIntentId"]),
+    }))
+    .query(async ({ input, ctx }) => {
+      console.log(`[AUDIT] Admin ${ctx.user.id} searched registrations by ${input.searchBy} at ${new Date().toISOString()}`);
+      const db = await getDb();
+      if (!db) return null;
+
+      let rows: typeof sportsDayRegistrations.$inferSelect[] = [];
+      switch (input.searchBy) {
+        case "email":
+          rows = await db.select().from(sportsDayRegistrations)
+            .where(eq(sportsDayRegistrations.email, input.query)).limit(5);
+          break;
+        case "registrationId":
+          rows = await db.select().from(sportsDayRegistrations)
+            .where(eq(sportsDayRegistrations.id, input.query)).limit(1);
+          break;
+        case "unlockToken":
+          rows = await db.select().from(sportsDayRegistrations)
+            .where(eq(sportsDayRegistrations.unlockToken, input.query)).limit(1);
+          break;
+        case "stripePaymentIntentId":
+          rows = await db.select().from(sportsDayRegistrations)
+            .where(eq(sportsDayRegistrations.stripePaymentIntentId, input.query)).limit(1);
+          break;
+      }
+      return rows;
+    }),
+
+  adminManualUnlock: adminProcedure
+    .input(z.object({
+      registrationId: z.string().min(1),
+      stripePaymentIntentId: z.string().optional(),
+      reason: z.string().min(1).max(500),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      // SECURITY: Audit log every manual unlock — admin ID, target, reason, timestamp
+      const adminId = String(ctx.user.id);
+      const now = new Date();
+      console.log(`[AUDIT] Admin ${adminId} manually unlocking registration ${input.registrationId} — reason: ${input.reason} — at ${now.toISOString()}`);
+
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const [reg] = await db.select().from(sportsDayRegistrations)
+        .where(eq(sportsDayRegistrations.id, input.registrationId)).limit(1);
+
+      if (!reg) throw new TRPCError({ code: "NOT_FOUND", message: "Registration not found" });
+
+      if (reg.revealStatus === "unlocked" && reg.paymentStatus === "paid") {
+        return { success: true, alreadyUnlocked: true, message: "User was already unlocked" };
+      }
+
+      await db.update(sportsDayRegistrations).set({
+        revealStatus: "unlocked",
+        paymentStatus: "paid",
+        accessType: "priority",
+        manualUnlock: true,
+        manuallyUnlockedBy: adminId,
+        manualUnlockReason: input.reason,
+        manuallyUnlockedAt: now,
+        paidAt: reg.paidAt ?? now,
+        paymentMatchStatus: "manual_verified",
+        ...(input.stripePaymentIntentId ? { stripePaymentIntentId: input.stripePaymentIntentId } : {}),
+      }).where(eq(sportsDayRegistrations.id, input.registrationId));
+
+      console.log(`[AUDIT] Manual unlock COMPLETE for registration ${input.registrationId} by admin ${adminId}`);
+      return { success: true, alreadyUnlocked: false, message: "User unlocked successfully" };
+    }),
+
+  // Search unmatched payments for admin recovery
+  adminGetUnmatchedPayments: adminProcedure.query(async ({ ctx }) => {
+    console.log(`[AUDIT] Admin ${ctx.user.id} viewed unmatched payments at ${new Date().toISOString()}`);
+    const db = await getDb();
+    if (!db) return [];
+    return db.select().from(unmatchedPayments).orderBy(unmatchedPayments.createdAt).limit(50);
+  }),
 
   // ─── Admin password verification (server-side — password never leaks to client) ───
   verifyAdminPassword: publicProcedure

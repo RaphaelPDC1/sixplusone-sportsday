@@ -301,3 +301,11 @@
 - [ ] Add "Edit" button to go back and change any field
 - [ ] Position submit button properly and ensure it's visible and clickable
 - [ ] Test review flow end-to-end
+
+## Critical: Stripe → Webhook → DB → Frontend Unlock Loop Fix
+
+- [x] Webhook: update all payment fields on success (revealStatus=unlocked, paymentStatus=paid, accessType=priority, paidAt, stripePaymentIntentId, paymentMatchStatus)
+- [x] Frontend: add 30s confirming timeout with support message showing registration_id
+- [x] Admin: add admin-only manual recovery route (search by email/registrationId/unlockToken/stripePaymentIntentId, mark as paid/unlocked)
+- [x] Logging: add explicit logs for webhook event received, match method, DB update success/failure, frontend polling, redirect triggered
+- [x] Idempotency: if webhook receives same event twice or user already paid/unlocked, return success safely

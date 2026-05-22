@@ -35,21 +35,27 @@ async function unlockRegistration(
   topName: string | null,
 ) {
   if (!db) return;
+  const updatePayload = {
+    // Access/unlock fields — both must be set for consistent truth
+    revealStatus: "unlocked" as const,
+    paymentStatus: "paid" as const,
+    accessType: "priority" as const,
+    // Payment audit fields
+    paidAt: new Date(),
+    stripePaymentIntentId: paymentIntentId,
+    stripeCheckoutSessionId: checkoutSessionId ?? undefined,
+    paymentEmail: paymentEmail ?? undefined,
+    paymentMatchStatus: matchStatus,
+    // Top name — only overwrite if provided in metadata
+    ...(topName ? { topName, topNameLastEditedAt: new Date() } : {}),
+  };
+
   await db
     .update(sportsDayRegistrations)
-    .set({
-      revealStatus: "unlocked",
-      accessType: "priority",
-      paidAt: new Date(),
-      stripePaymentIntentId: paymentIntentId,
-      stripeCheckoutSessionId: checkoutSessionId ?? undefined,
-      paymentEmail: paymentEmail ?? undefined,
-      paymentMatchStatus: matchStatus,
-      ...(topName ? { topName, topNameLastEditedAt: new Date() } : {}),
-    })
+    .set(updatePayload)
     .where(eq(sportsDayRegistrations.id, registrationId));
 
-  log("UNLOCKED", { registrationId, paymentIntentId, matchStatus, topName });
+  log("UNLOCKED", { registrationId, paymentIntentId, matchStatus, topName, fields: Object.keys(updatePayload) });
 }
 
 async function createUnmatchedPayment(
@@ -98,11 +104,28 @@ async function handlePaymentSucceeded(
 
   log("PAYMENT_RECEIVED", {
     paymentIntentId, checkoutSessionId, paymentEmail,
-    unlockToken, registrationId, registeredEmail, topName,
+    unlockToken: unlockToken ? `${unlockToken.substring(0, 8)}...` : null,
+    registrationId: registrationId ? `${registrationId.substring(0, 8)}...` : null,
+    registeredEmail,
+    topName,
+    metadataKeys: Object.keys(metadata),
   });
 
-  // 1. Match by unlock_token (primary)
+  // Idempotency: check if this PaymentIntent was already processed
+  const [alreadyProcessed] = await db
+    .select({ id: sportsDayRegistrations.id, revealStatus: sportsDayRegistrations.revealStatus })
+    .from(sportsDayRegistrations)
+    .where(eq(sportsDayRegistrations.stripePaymentIntentId, paymentIntentId))
+    .limit(1);
+
+  if (alreadyProcessed) {
+    log("IDEMPOTENT_SKIP", { paymentIntentId, registrationId: alreadyProcessed.id, revealStatus: alreadyProcessed.revealStatus });
+    return;
+  }
+
+  // 1. Match by unlock_token (primary — survives Apple Pay / Google Pay email mismatch)
   if (unlockToken) {
+    log("MATCHING_BY_TOKEN", { unlockToken: `${unlockToken.substring(0, 8)}...` });
     const [reg] = await db
       .select()
       .from(sportsDayRegistrations)
@@ -110,18 +133,20 @@ async function handlePaymentSucceeded(
       .limit(1);
 
     if (reg) {
-      if (reg.revealStatus === "unlocked") {
+      if (reg.revealStatus === "unlocked" || reg.paymentStatus === "paid") {
         log("ALREADY_UNLOCKED", { registrationId: reg.id, paymentIntentId });
         return;
       }
       await unlockRegistration(db, reg.id, paymentIntentId, checkoutSessionId, paymentEmail, "matched_by_token", topName);
+      log("DB_UPDATE_SUCCESS", { registrationId: reg.id, method: "matched_by_token" });
       return;
     }
-    log("TOKEN_NO_MATCH", { unlockToken });
+    log("TOKEN_NO_MATCH", { unlockToken: `${unlockToken.substring(0, 8)}...` });
   }
 
   // 2. Match by registration_id (fallback)
   if (registrationId) {
+    log("MATCHING_BY_ID", { registrationId: `${registrationId.substring(0, 8)}...` });
     const [reg] = await db
       .select()
       .from(sportsDayRegistrations)
@@ -129,19 +154,21 @@ async function handlePaymentSucceeded(
       .limit(1);
 
     if (reg) {
-      if (reg.revealStatus === "unlocked") {
+      if (reg.revealStatus === "unlocked" || reg.paymentStatus === "paid") {
         log("ALREADY_UNLOCKED", { registrationId: reg.id, paymentIntentId });
         return;
       }
       await unlockRegistration(db, reg.id, paymentIntentId, checkoutSessionId, paymentEmail, "matched_by_id", topName);
+      log("DB_UPDATE_SUCCESS", { registrationId: reg.id, method: "matched_by_id" });
       return;
     }
-    log("ID_NO_MATCH", { registrationId });
+    log("ID_NO_MATCH", { registrationId: `${registrationId.substring(0, 8)}...` });
   }
 
   // 3. Match by email (last resort)
   const emailToMatch = registeredEmail ?? paymentEmail;
   if (emailToMatch) {
+    log("MATCHING_BY_EMAIL", { emailToMatch });
     const [reg] = await db
       .select()
       .from(sportsDayRegistrations)
@@ -149,11 +176,12 @@ async function handlePaymentSucceeded(
       .limit(1);
 
     if (reg) {
-      if (reg.revealStatus === "unlocked") {
+      if (reg.revealStatus === "unlocked" || reg.paymentStatus === "paid") {
         log("ALREADY_UNLOCKED", { registrationId: reg.id, paymentIntentId });
         return;
       }
       await unlockRegistration(db, reg.id, paymentIntentId, checkoutSessionId, paymentEmail, "matched_by_email", topName);
+      log("DB_UPDATE_SUCCESS", { registrationId: reg.id, method: "matched_by_email" });
       return;
     }
     log("EMAIL_NO_MATCH", { emailToMatch });
@@ -195,9 +223,13 @@ export async function stripeWebhookHandler(req: Request, res: Response) {
     return res.json({ verified: true });
   }
 
-  log("EVENT_RECEIVED", { eventId: event.id, type: event.type });
+  log("EVENT_RECEIVED", { eventId: event.id, type: event.type, livemode: event.livemode });
 
   const db = await getDb();
+  if (!db) {
+    console.error("[Stripe Webhook] Database connection failed — cannot process event", event.id);
+    return res.status(500).json({ error: "Database unavailable" });
+  }
 
   try {
     switch (event.type) {
@@ -207,10 +239,19 @@ export async function stripeWebhookHandler(req: Request, res: Response) {
         const metadata = (pi.metadata ?? {}) as Record<string, string>;
         const paymentEmail = pi.receipt_email ?? metadata.registered_email ?? null;
 
+        log("PROCESSING_PAYMENT_INTENT", {
+          paymentIntentId: pi.id,
+          amount: pi.amount,
+          currency: pi.currency,
+          hasMetadata: Object.keys(metadata).length > 0,
+          metadataKeys: Object.keys(metadata),
+        });
+
         await handlePaymentSucceeded(
           db, pi.id, metadata.checkout_session_id ?? null,
           paymentEmail, metadata, pi.amount, pi.currency,
         );
+        log("PAYMENT_INTENT_PROCESSED", { paymentIntentId: pi.id });
         break;
       }
 

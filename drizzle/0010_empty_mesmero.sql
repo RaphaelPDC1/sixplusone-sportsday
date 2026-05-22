@@ -1,0 +1,1 @@
+ALTER TABLE `sports_day_registrations` MODIFY COLUMN `paymentMatchStatus` enum('none','matched_by_token','matched_by_id','matched_by_email','unmatched','manual_verified') DEFAULT 'none';

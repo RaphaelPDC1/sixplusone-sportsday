@@ -125,6 +125,7 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
     "matched_by_id",
     "matched_by_email",
     "unmatched",
+    "manual_verified",
   ]).default("none"),
 
   // Manual unlock (admin override)

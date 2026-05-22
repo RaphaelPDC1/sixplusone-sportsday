@@ -547,6 +547,8 @@ export default function Holding() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number>(2500);
   const [confirmedTopName, setConfirmedTopName] = useState<string | null>(null);
+  const [confirmingStartedAt, setConfirmingStartedAt] = useState<number | null>(null);
+  const [confirmingTimedOut, setConfirmingTimedOut] = useState(false);
 
   // ── Dashboard query (replaces getUserStatus) ──
   const { data: dashboard, isLoading, error, refetch: refetchDashboard } = trpc.sportsday.getSportsDayDashboard.useQuery(
@@ -605,6 +607,9 @@ export default function Holding() {
   useEffect(() => {
     if (paymentConfirmed && unlockStep === "idle") {
       setUnlockStep("confirming");
+      setConfirmingStartedAt(Date.now());
+      setConfirmingTimedOut(false);
+      console.log("[Holding] Confirming state started — polling every 3s");
     }
   }, [paymentConfirmed]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -612,9 +617,23 @@ export default function Holding() {
   useEffect(() => {
     if (unlockStep === "confirming" && (dashboard?.state === "UNLOCKED_PRIORITY" || dashboard?.state === "PUBLIC_REVEAL")) {
       setUnlockStep("idle");
+      console.log("[Holding] Unlock confirmed — redirecting to /team-hub");
       toast.success("Your Player Pack is unlocked!");
     }
   }, [dashboard?.state, unlockStep]);
+
+  // ── Confirming timeout (30s) ──
+  useEffect(() => {
+    if (unlockStep !== "confirming" || confirmingTimedOut) return;
+    const timer = setTimeout(() => {
+      // Only time out if still not unlocked
+      if (dashboard?.state !== "UNLOCKED_PRIORITY" && dashboard?.state !== "PUBLIC_REVEAL") {
+        console.log("[Holding] Confirming timeout reached after 30s");
+        setConfirmingTimedOut(true);
+      }
+    }, 30000);
+    return () => clearTimeout(timer);
+  }, [unlockStep, confirmingTimedOut, dashboard?.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const appUrl = typeof window !== "undefined" ? window.location.origin : "";
   const referralLink = user?.referralCode ? `${appUrl}/r/${user.referralCode}` : "";
@@ -829,13 +848,36 @@ export default function Holding() {
           {/* ── Confirming state (webhook delay) ── */}
           {unlockStep === "confirming" && (
             <div className="border border-[#FF5500]/30 bg-black/20 backdrop-blur-sm p-6 text-center">
-              <div className="flex items-center justify-center gap-3 mb-3">
-                <div className="w-2 h-2 rounded-full bg-[#FF5500] animate-pulse" />
-                <p className="font-mono text-[#FF5500] text-sm tracking-[0.2em]">CONFIRMING YOUR UNLOCK...</p>
-              </div>
-              <p className="font-mono text-[#F2F0EB]/40 text-xs tracking-wider">
-                Payment received. We're confirming your unlock now.
-              </p>
+              {!confirmingTimedOut ? (
+                <>
+                  <div className="flex items-center justify-center gap-3 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-[#FF5500] animate-pulse" />
+                    <p className="font-mono text-[#FF5500] text-sm tracking-[0.2em]">CONFIRMING YOUR UNLOCK...</p>
+                  </div>
+                  <p className="font-mono text-[#F2F0EB]/40 text-xs tracking-wider">
+                    Payment received. We're confirming your unlock now.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-center gap-3 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                    <p className="font-mono text-yellow-400 text-sm tracking-[0.2em]">PAYMENT RECEIVED</p>
+                  </div>
+                  <p className="font-mono text-[#F2F0EB]/70 text-xs tracking-wider mb-3">
+                    Your payment was received but your unlock is still syncing. This can take a moment.
+                  </p>
+                  <p className="font-mono text-[#F2F0EB]/40 text-xs tracking-wider mb-2">
+                    Do not pay again. Contact support with this reference:
+                  </p>
+                  <p className="font-mono text-[#FF5500] text-xs tracking-[0.15em] break-all">
+                    {userId}
+                  </p>
+                  <p className="font-mono text-[#F2F0EB]/30 text-[10px] tracking-wider mt-3">
+                    Still checking... this page will update automatically.
+                  </p>
+                </>
+              )}
             </div>
           )}
 
