@@ -1,0 +1,40 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sports_day_registrations' ORDER BY ORDINAL_POSITION LIMIT 20 OFFSET 40;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sports_day_registrations' ORDER BY ORDINAL_POSITION LIMIT 20 OFFSET 40;",
+  "rows": [
+    {
+      "COLUMN_NAME": "revealSeen"
+    },
+    {
+      "COLUMN_NAME": "unlockToken"
+    },
+    {
+      "COLUMN_NAME": "stripeCheckoutSessionId"
+    },
+    {
+      "COLUMN_NAME": "stripePaymentIntentId"
+    },
+    {
+      "COLUMN_NAME": "paymentEmail"
+    },
+    {
+      "COLUMN_NAME": "paymentMatchStatus"
+    },
+    {
+      "COLUMN_NAME": "manualUnlock"
+    },
+    {
+      "COLUMN_NAME": "manuallyUnlockedBy"
+    },
+    {
+      "COLUMN_NAME": "manualUnlockReason"
+    },
+    {
+      "COLUMN_NAME": "manuallyUnlockedAt"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nrevealSeen\nunlockToken\nstripeCheckoutSessionId\nstripePaymentIntentId\npaymentEmail\npaymentMatchStatus\nmanualUnlock\nmanuallyUnlockedBy\nmanualUnlockReason\nmanuallyUnlockedAt\n",
+  "stderr": "",
+  "execution_time_ms": 274
+}

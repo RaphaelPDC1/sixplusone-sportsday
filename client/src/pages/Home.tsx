@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import AnimatedShaderHero from "@/components/ui/animated-shader-hero";
 import { ShootingStarCanvas } from "@/components/ui/shooting-star-canvas";
 
-const LOGO_URL = "/manus-storage/logo-61_bea00c75.webp";
+const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
 function InfoBlock({ number, title, body }: { number: string; title: string; body: string }) {
   return (

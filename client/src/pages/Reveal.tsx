@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
 
-const LOGO_URL = "/manus-storage/logo-61_bea00c75.webp";
+const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
 const TEAM_CONFIG = {
   red: { color: "#E8232A", name: "TEAM RED", confettiColors: ["#E8232A", "#FFFFFF", "#FF6666", "#CC0000"] },

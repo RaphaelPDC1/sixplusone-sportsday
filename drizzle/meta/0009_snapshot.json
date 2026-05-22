@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "0b189c4a-4f21-47fd-acbc-307217420c27",
-  "prevId": "69e23856-665b-4d2c-9ddc-b394a3772d38",
+  "id": "0f486ac0-7b7f-4b77-95c5-9469fd3b7763",
+  "prevId": "8116c6dc-f3fc-48f3-a3b9-743778f28763",
   "tables": {
     "awards_votes": {
       "name": "awards_votes",
@@ -616,71 +616,6 @@
           "notNull": false,
           "autoincrement": false
         },
-        "unlockToken": {
-          "name": "unlockToken",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "stripeCheckoutSessionId": {
-          "name": "stripeCheckoutSessionId",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "stripePaymentIntentId": {
-          "name": "stripePaymentIntentId",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "paymentEmail": {
-          "name": "paymentEmail",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "paymentMatchStatus": {
-          "name": "paymentMatchStatus",
-          "type": "enum('matched_by_token','matched_by_id','matched_by_email','unmatched','none')",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "'none'"
-        },
-        "manualUnlock": {
-          "name": "manualUnlock",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": false
-        },
-        "manuallyUnlockedBy": {
-          "name": "manuallyUnlockedBy",
-          "type": "varchar(64)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "manualUnlockReason": {
-          "name": "manualUnlockReason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "manuallyUnlockedAt": {
-          "name": "manuallyUnlockedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "referralCode": {
           "name": "referralCode",
           "type": "varchar(10)",
@@ -738,6 +673,99 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "topName": {
+          "name": "topName",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "topNameLastEditedAt": {
+          "name": "topNameLastEditedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "topNameLockedAt": {
+          "name": "topNameLockedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "shopifyOrderStatus": {
+          "name": "shopifyOrderStatus",
+          "type": "enum('pending_configuration','created','failed')",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "unlockToken": {
+          "name": "unlockToken",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "stripeCheckoutSessionId": {
+          "name": "stripeCheckoutSessionId",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "stripePaymentIntentId": {
+          "name": "stripePaymentIntentId",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paymentEmail": {
+          "name": "paymentEmail",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paymentMatchStatus": {
+          "name": "paymentMatchStatus",
+          "type": "enum('none','matched_by_token','matched_by_id','matched_by_email','unmatched')",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'none'"
+        },
+        "manualUnlock": {
+          "name": "manualUnlock",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": false
+        },
+        "manuallyUnlockedBy": {
+          "name": "manuallyUnlockedBy",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "manualUnlockReason": {
+          "name": "manualUnlockReason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "manuallyUnlockedAt": {
+          "name": "manuallyUnlockedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {},
@@ -757,16 +785,16 @@
             "email"
           ]
         },
-        "sports_day_registrations_unlockToken_unique": {
-          "name": "sports_day_registrations_unlockToken_unique",
-          "columns": [
-            "unlockToken"
-          ]
-        },
         "sports_day_registrations_referralCode_unique": {
           "name": "sports_day_registrations_referralCode_unique",
           "columns": [
             "referralCode"
+          ]
+        },
+        "sports_day_registrations_unlockToken_unique": {
+          "name": "sports_day_registrations_unlockToken_unique",
+          "columns": [
+            "unlockToken"
           ]
         }
       },
@@ -782,18 +810,11 @@
           "notNull": true,
           "autoincrement": true
         },
-        "eventId": {
-          "name": "eventId",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "earlyPrice": {
           "name": "earlyPrice",
           "type": "int",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
           "default": 2500
         },
@@ -801,12 +822,26 @@
           "name": "futurePrice",
           "type": "int",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
           "default": 3500
         },
         "priceIncreaseAt": {
           "name": "priceIncreaseAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "publicTeamRevealAt": {
+          "name": "publicTeamRevealAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "topProductionCutoffAt": {
+          "name": "topProductionCutoffAt",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
@@ -820,27 +855,6 @@
           "autoincrement": false,
           "default": false
         },
-        "currentProductCheckoutUrl": {
-          "name": "currentProductCheckoutUrl",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "futureProductCheckoutUrl": {
-          "name": "futureProductCheckoutUrl",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "publicTeamRevealAt": {
-          "name": "publicTeamRevealAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "isPublicRevealActive": {
           "name": "isPublicRevealActive",
           "type": "boolean",
@@ -848,21 +862,6 @@
           "notNull": false,
           "autoincrement": false,
           "default": false
-        },
-        "topProductionCutoffAt": {
-          "name": "topProductionCutoffAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(now())"
         },
         "updatedAt": {
           "name": "updatedAt",
@@ -884,14 +883,7 @@
           ]
         }
       },
-      "uniqueConstraints": {
-        "sports_day_settings_eventId_unique": {
-          "name": "sports_day_settings_eventId_unique",
-          "columns": [
-            "eventId"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "checkConstraint": {}
     },
     "unmatched_payments": {
@@ -904,19 +896,13 @@
           "notNull": true,
           "autoincrement": true
         },
-        "eventId": {
-          "name": "eventId",
-          "type": "varchar(50)",
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
-        },
-        "stripeCheckoutSessionId": {
-          "name": "stripeCheckoutSessionId",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": "(now())"
         },
         "stripePaymentIntentId": {
           "name": "stripePaymentIntentId",
@@ -925,31 +911,86 @@
           "notNull": false,
           "autoincrement": false
         },
-        "paymentEmail": {
-          "name": "paymentEmail",
-          "type": "varchar(255)",
+        "stripeCheckoutSessionId": {
+          "name": "stripeCheckoutSessionId",
+          "type": "varchar(100)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "stripeEventId": {
+          "name": "stripeEventId",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "stripeEventType": {
+          "name": "stripeEventType",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "amountPaid": {
           "name": "amountPaid",
           "type": "int",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "currency": {
           "name": "currency",
-          "type": "varchar(3)",
+          "type": "varchar(10)",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false,
-          "default": "'GBP'"
+          "autoincrement": false
         },
-        "metadata": {
-          "name": "metadata",
-          "type": "json",
+        "paymentEmail": {
+          "name": "paymentEmail",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paymentName": {
+          "name": "paymentName",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "metaUnlockToken": {
+          "name": "metaUnlockToken",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "metaRegistrationId": {
+          "name": "metaRegistrationId",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "metaRegisteredEmail": {
+          "name": "metaRegisteredEmail",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "metaPlayerName": {
+          "name": "metaPlayerName",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "metaTopName": {
+          "name": "metaTopName",
+          "type": "varchar(32)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -975,13 +1016,12 @@
           "notNull": false,
           "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp",
+        "resolutionNote": {
+          "name": "resolutionNote",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(now())"
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {},
@@ -994,14 +1034,7 @@
           ]
         }
       },
-      "uniqueConstraints": {
-        "unmatched_payments_stripeCheckoutSessionId_unique": {
-          "name": "unmatched_payments_stripeCheckoutSessionId_unique",
-          "columns": [
-            "stripeCheckoutSessionId"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "checkConstraint": {}
     },
     "users": {

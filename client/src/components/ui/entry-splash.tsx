@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const LOGO_URL = "/manus-storage/logo-61_bea00c75.webp";
+const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
 /**
  * EntrySplash

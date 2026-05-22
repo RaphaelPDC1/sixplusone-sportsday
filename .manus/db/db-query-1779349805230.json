@@ -1,0 +1,70 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sports_day_registrations' ORDER BY ORDINAL_POSITION LIMIT 20 OFFSET 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'sports_day_registrations' ORDER BY ORDINAL_POSITION LIMIT 20 OFFSET 20;",
+  "rows": [
+    {
+      "COLUMN_NAME": "profileTagline"
+    },
+    {
+      "COLUMN_NAME": "shirtSize"
+    },
+    {
+      "COLUMN_NAME": "shirtFit"
+    },
+    {
+      "COLUMN_NAME": "healthNotes"
+    },
+    {
+      "COLUMN_NAME": "contentConsent"
+    },
+    {
+      "COLUMN_NAME": "team"
+    },
+    {
+      "COLUMN_NAME": "revealStatus"
+    },
+    {
+      "COLUMN_NAME": "accessType"
+    },
+    {
+      "COLUMN_NAME": "paymentStatus"
+    },
+    {
+      "COLUMN_NAME": "shopifyOrderId"
+    },
+    {
+      "COLUMN_NAME": "paidAt"
+    },
+    {
+      "COLUMN_NAME": "referralCode"
+    },
+    {
+      "COLUMN_NAME": "referredBy"
+    },
+    {
+      "COLUMN_NAME": "referralCount"
+    },
+    {
+      "COLUMN_NAME": "referralRewardUnlocked"
+    },
+    {
+      "COLUMN_NAME": "klaviyoTags"
+    },
+    {
+      "COLUMN_NAME": "shopifyCustomerId"
+    },
+    {
+      "COLUMN_NAME": "ipAddress"
+    },
+    {
+      "COLUMN_NAME": "userAgent"
+    },
+    {
+      "COLUMN_NAME": "aiTeamIdentity"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nprofileTagline\nshirtSize\nshirtFit\nhealthNotes\ncontentConsent\nteam\nrevealStatus\naccessType\npaymentStatus\nshopifyOrderId\npaidAt\nreferralCode\nreferredBy\nreferralCount\nreferralRewardUnlocked\nklaviyoTags\nshopifyCustomerId\nipAddress\nuserAgent\naiTeamIdentity\n",
+  "stderr": "",
+  "execution_time_ms": 279
+}

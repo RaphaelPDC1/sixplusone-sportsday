@@ -1,1 +1,0 @@
-ALTER TABLE `sports_day_settings` ADD `isPublicRevealActive` boolean DEFAULT false;

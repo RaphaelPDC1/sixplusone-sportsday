@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO sports_day_settings (earlyPrice, futurePrice, priceIncreaseAt, publicTeamRevealAt, topProductionCutoffAt, isPriceIncreaseActive, isPublicRevealActive)\nSELECT 100, 3500, DATE_ADD(NOW(), INTERVAL 8 DAY), '2026-07-11 08:00:00', '2026-06-27 23:59:00', false, false\nWHERE NOT EXISTS (SELECT 1 FROM sports_day_settings);\n\nUPDATE sports_day_registrations SET unlockToken = UUID() WHERE unlockToken IS NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute INSERT INTO sports_day_settings (earlyPrice, futurePrice, priceIncreaseAt, publicTeamRevealAt, topProductionCutoffAt, isPriceIncreaseActive, isPublicRevealActive)\nSELECT 100, 3500, DATE_ADD(NOW(), INTERVAL 8 DAY), '2026-07-11 08:00:00', '2026-06-27 23:59:00', false, false\nWHERE NOT EXISTS (SELECT 1 FROM sports_day_settings);\n\nUPDATE sports_day_registrations SET unlockToken = UUID() WHERE unlockToken IS NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 284
+}

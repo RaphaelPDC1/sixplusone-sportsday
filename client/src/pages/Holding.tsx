@@ -3,15 +3,14 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { BackNav } from "@/components/ui/back-nav";
-import { PaymentForm } from "@/components/PaymentForm";
 import { EntrySplash } from "@/components/ui/entry-splash";
 import { ParticleTextBg } from "@/components/ui/particle-text-bg";
 import { ScratchCardGrid } from "@/components/ui/scratch-card";
 import { toPng } from "html-to-image";
+import { TopNameEditor } from "@/components/TopNameEditor";
+import { PaymentForm } from "@/components/PaymentForm";
 
-const LOGO_URL = "/manus-storage/logo-61_bea00c75.webp";
-
-// Stripe checkout is now used instead of Shopify
+const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
 // ─── Particle text background ──────────────────────────────────────────────────
 function HoldingBackground() {
@@ -504,99 +503,6 @@ function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
   );
 }
 
-// ─── Teammate Cards (for unlocked users) ─────────────────────────────────────
-function TeammateCards({ teammates }: { teammates: Array<{
-  status: string;
-  id?: string;
-  displayName: string;
-  sportsDayProfile?: string | null;
-  profileTagline?: string | null;
-  photoUrl?: string | null;
-  message?: string;
-}> }) {
-  if (teammates.length === 0) {
-    return (
-      <div className="border border-white/8 bg-black/15 p-5 text-center">
-        <p className="font-mono text-[#444] text-xs tracking-wider">Your teammates will appear here as they unlock.</p>
-      </div>
-    );
-  }
-  return (
-    <div className="space-y-3">
-      {teammates.map((tm, i) => (
-        <div
-          key={tm.status === "visible" ? tm.id : `locked-${i}`}
-          className="border border-white/8 bg-black/15 backdrop-blur-sm p-4"
-        >
-          {tm.status === "visible" ? (
-            <div className="flex items-start gap-4">
-              {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-[#FF5500]/20 border border-[#FF5500]/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                {tm.photoUrl ? (
-                  <img src={tm.photoUrl} alt={tm.displayName} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="font-display text-[#FF5500] text-sm">{tm.displayName.charAt(0)}</span>
-                )}
-              </div>
-              <div className="min-w-0">
-                <p className="font-mono text-[#F2F0EB] text-sm tracking-wider">{tm.displayName.toUpperCase()}</p>
-                {tm.sportsDayProfile && (
-                  <p className="font-mono text-[#FF5500] text-xs tracking-wider mt-0.5">{tm.sportsDayProfile.toUpperCase()}</p>
-                )}
-                {tm.profileTagline && (
-                  <p className="font-mono text-[#444] text-[10px] tracking-wider mt-1 leading-relaxed">{tm.profileTagline}</p>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-4">
-              {/* Locked avatar */}
-              <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
-                <svg width="14" height="17" viewBox="0 0 14 17" fill="none">
-                  <rect x="1" y="7" width="12" height="9" rx="1.5" stroke="#444" strokeWidth="1.2"/>
-                  <path d="M4 7V5C4 3.34 5.34 2 7 2C8.66 2 10 3.34 10 5V7" stroke="#444" strokeWidth="1.2" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <div>
-                <p className="font-mono text-[#333] text-sm tracking-wider">TEAMMATE LOCKED</p>
-                <p className="font-mono text-[#222] text-[10px] tracking-wider mt-0.5">
-                  This player has not unlocked their Priority Player Pack yet.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Countdown display ────────────────────────────────────────────────────────
-function CountdownBadge({ countdownMs }: { countdownMs: number }) {
-  const [remaining, setRemaining] = useState(countdownMs);
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRemaining((r) => Math.max(0, r - 1000));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-
-  if (remaining <= 0) return null;
-
-  return (
-    <div className="flex items-center gap-3 border border-[#FF5500]/20 bg-[#FF5500]/5 px-4 py-2">
-      <div className="w-1.5 h-1.5 rounded-full bg-[#FF5500] animate-pulse flex-shrink-0" />
-      <p className="font-mono text-[#FF5500] text-xs tracking-wider">
-        EARLY PRICE ENDS IN {days > 0 ? `${days}D ` : ""}{hours}H {mins}M
-      </p>
-    </div>
-  );
-}
-
 // ─── Main Holding Page ─────────────────────────────────────────────────────────────
 export default function Holding() {
   const [, navigate] = useLocation();
@@ -614,19 +520,6 @@ export default function Holding() {
       return hasSession && sessionStorage.getItem("holding_splash_seen") !== "true";
     }
   );
-  // Webhook delay polling: true when user returns from Stripe but webhook hasn't fired yet
-  const [awaitingWebhook, setAwaitingWebhook] = useState(() => {
-    if (typeof window === "undefined") return false;
-    const params = new URLSearchParams(window.location.search);
-    return params.has("session_id") && !params.has("cancelled");
-  });
-  // Cancelled checkout: show soft copy
-  const [showCancelledMessage, setShowCancelledMessage] = useState(() => {
-    if (typeof window === "undefined") return false;
-    const params = new URLSearchParams(window.location.search);
-    return params.get("cancelled") === "true";
-  });
-
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
 
@@ -644,18 +537,46 @@ export default function Holding() {
     return () => clearTimeout(t);
   }, [userId]);
 
-  // SECURITY: Use backend-led dashboard — never derive locked/unlocked from frontend state
-  const { data: dashboard, isLoading, error, refetch } = trpc.sportsday.getSportsDayDashboard.useQuery(
+  // ── URL params ──
+  const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const paymentConfirmed = searchParams.get("payment_confirmed") === "true";
+  const paymentCancelled = searchParams.get("cancelled") === "true";
+
+  // ── Payment UI state ──
+  const [unlockStep, setUnlockStep] = useState<"idle" | "topname" | "payment" | "confirming">("idle");
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<number>(2500);
+  const [confirmedTopName, setConfirmedTopName] = useState<string | null>(null);
+
+  // ── Dashboard query (replaces getUserStatus) ──
+  const { data: dashboard, isLoading, error, refetch: refetchDashboard } = trpc.sportsday.getSportsDayDashboard.useQuery(
     { registrationId: userId! },
     {
       enabled: !!userId,
-      // Poll every 15s normally; every 3s when awaiting webhook confirmation
-      refetchInterval: awaitingWebhook ? 3000 : 15000,
+      refetchInterval: unlockStep === "confirming" ? 3000 : 30000,
       retry: false,
       retryOnMount: false,
       throwOnError: false,
     }
   );
+
+  // Alias for backward compat with existing UI sections
+  const user = dashboard ? {
+    id: userId!,
+    fullName: dashboard.playerName ?? "",
+    email: dashboard.playerEmail ?? "",
+    profileTagline: dashboard.tagline ?? "",
+    sportsDayProfile: dashboard.profile ?? "",
+    paymentStatus: dashboard.state === "UNLOCKED_PRIORITY" || dashboard.state === "PUBLIC_REVEAL" ? "paid" : "unpaid",
+    revealStatus: dashboard.state === "UNLOCKED_PRIORITY" || dashboard.state === "PUBLIC_REVEAL" ? "unlocked" : "locked",
+    revealSeen: false,
+    referralCode: dashboard.referralCode ?? "",
+    referralCount: dashboard.referralCount ?? 0,
+    referralRewardUnlocked: false,
+    topName: dashboard.topName ?? "",
+  } : null;
+
+  const createPaymentIntent = trpc.sportsday.createPaymentIntent.useMutation();
 
   // If the stored ID no longer exists in the DB, clear it and show "find my spot"
   useEffect(() => {
@@ -667,7 +588,7 @@ export default function Holding() {
     }
   }, [error]);
 
-  // Redirect when dashboard state becomes UNLOCKED_PRIORITY or PUBLIC_REVEAL
+  // ── Redirect unlocked users ──
   useEffect(() => {
     if (!dashboard) return;
     const cameFromTeamHub = sessionStorage.getItem("came_from_teamhub") === "1";
@@ -676,18 +597,27 @@ export default function Holding() {
       return;
     }
     if (dashboard.state === "UNLOCKED_PRIORITY" || dashboard.state === "PUBLIC_REVEAL") {
-      // Stop webhook polling once unlocked
-      setAwaitingWebhook(false);
-      if (dashboard.revealSeen) {
-        navigateRef.current("/team-hub");
-      } else {
-        navigateRef.current("/reveal");
-      }
+      navigateRef.current("/team-hub");
     }
-  }, [dashboard?.state, dashboard?.revealSeen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [dashboard?.state]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Auto-start confirming state if returning from payment ──
+  useEffect(() => {
+    if (paymentConfirmed && unlockStep === "idle") {
+      setUnlockStep("confirming");
+    }
+  }, [paymentConfirmed]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Stop polling once confirmed ──
+  useEffect(() => {
+    if (unlockStep === "confirming" && (dashboard?.state === "UNLOCKED_PRIORITY" || dashboard?.state === "PUBLIC_REVEAL")) {
+      setUnlockStep("idle");
+      toast.success("Your Player Pack is unlocked!");
+    }
+  }, [dashboard?.state, unlockStep]);
 
   const appUrl = typeof window !== "undefined" ? window.location.origin : "";
-  const referralLink = dashboard?.referralCode ? `${appUrl}/r/${dashboard.referralCode}` : "";
+  const referralLink = user?.referralCode ? `${appUrl}/r/${user.referralCode}` : "";
 
   const copyReferralLink = async () => {
     if (!referralLink) return;
@@ -701,22 +631,38 @@ export default function Holding() {
     }
   };
 
-  // Embedded payment form state
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const handleStartUnlock = () => {
+    setUnlockStep("topname");
+  };
 
-  const handleUnlock = () => {
-    setShowPaymentForm(true);
+  const handleTopNameConfirmed = async (topName: string) => {
+    setConfirmedTopName(topName);
+    try {
+      // topName is already saved by TopNameEditor via saveTopName mutation
+      // createPaymentIntent only needs registrationId
+      const result = await createPaymentIntent.mutateAsync({
+        registrationId: userId!,
+      });
+      setClientSecret(result.clientSecret);
+      setPaymentAmount(result.amountPence);
+      setUnlockStep("payment");
+    } catch (err) {
+      toast.error("Could not start payment. Please try again.");
+      setUnlockStep("idle");
+    }
   };
 
   const handlePaymentSuccess = () => {
-    setShowPaymentForm(false);
-    setAwaitingWebhook(true);
-    toast.success("Payment received. Confirming your unlock now…");
+    setUnlockStep("confirming");
+    // Clean up URL params
+    if (typeof window !== "undefined") {
+      window.history.replaceState({}, "", "/holding");
+    }
   };
 
   const handlePaymentCancel = () => {
-    setShowPaymentForm(false);
-    toast("No worries — your registration is still saved. Your Player Pack is still locked.");
+    setUnlockStep("idle");
+    setClientSecret(null);
   };
 
   // ── No userId in localStorage — show Welcome Back login screen ──
@@ -732,10 +678,7 @@ export default function Holding() {
     );
   }
 
-  const firstName = dashboard.fullName.split(" ")[0].toUpperCase();
-  const isLocked = dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID";
-  const isReturning = dashboard.state === "RETURNING_UNPAID";
-  const { priceState } = dashboard;
+  const firstName = (user?.fullName ?? "").split(" ")[0].toUpperCase() || "PLAYER";
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden">
@@ -763,6 +706,7 @@ export default function Holding() {
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 pt-6 pb-4">
         <BackNav to="/" inline />
+        {/* Logo absolutely centred so it's not pushed by unequal side elements */}
         <div className="absolute inset-x-0 flex justify-center pointer-events-none">
           <img src={LOGO_URL} alt="6+1" className="h-12 w-auto pointer-events-auto" style={{ filter: "invert(1)" }} />
         </div>
@@ -770,36 +714,6 @@ export default function Holding() {
       </header>
 
       <div className="relative z-10 max-w-lg mx-auto px-5 pb-16 space-y-8">
-
-        {/* ── Webhook delay banner ── */}
-        {awaitingWebhook && (
-          <div className="border border-[#FF5500]/40 bg-[#FF5500]/10 px-5 py-4 flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-[#FF5500] animate-pulse flex-shrink-0" />
-            <div>
-              <p className="font-mono text-[#FF5500] text-xs tracking-wider">PAYMENT RECEIVED.</p>
-              <p className="font-mono text-[#F2F0EB]/50 text-[10px] tracking-wider mt-0.5">
-                We're confirming your unlock now — this usually takes a few seconds.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* ── Cancelled checkout soft message ── */}
-        {showCancelledMessage && (
-          <div className="border border-white/10 bg-white/[0.03] px-5 py-4 flex items-start gap-3">
-            <div className="w-2 h-2 rounded-full bg-white/20 mt-1 flex-shrink-0" />
-            <div>
-              <p className="font-mono text-[#F2F0EB]/70 text-xs tracking-wider">NO WORRIES.</p>
-              <p className="font-mono text-[#444] text-[10px] tracking-wider mt-0.5 leading-relaxed">
-                Your registration is still saved. Your Player Pack is still locked.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowCancelledMessage(false)}
-              className="ml-auto font-mono text-[#333] text-xs hover:text-[#F2F0EB] transition-colors flex-shrink-0"
-            >✕</button>
-          </div>
-        )}
 
         {/* ── Section 1: Hero Greeting ── */}
         <section className="pt-8">
@@ -810,39 +724,35 @@ export default function Holding() {
               transform: heroVisible ? "translateY(0)" : "translateY(24px)",
             }}
           >
-            <p className="font-mono text-[#444] text-xs tracking-[0.35em] mb-3">
-              {isReturning ? "WELCOME BACK" : "YOU'RE REGISTERED"}
-            </p>
+            <p className="font-mono text-[#444] text-xs tracking-[0.35em] mb-3">YOU'RE REGISTERED</p>
             <h1
               className="font-display text-[#F2F0EB] leading-[0.88] mb-5"
               style={{ fontSize: "clamp(3.2rem, 14vw, 6.5rem)" }}
             >
-              {isReturning ? (
-                <>{"YOUR TEAM"}<br /><span className="text-[#FF5500]">WAITS.</span></>
-              ) : (
-                <>WELCOME<br />
-                <span
-                  className="text-[#FF5500]"
-                  style={{
-                    display: "inline-block",
-                    transition: "opacity 0.7s ease 0.5s, transform 0.7s ease 0.5s",
-                    opacity: heroVisible ? 1 : 0,
-                    transform: heroVisible ? "translateX(0)" : "translateX(-12px)",
-                  }}
-                >
-                  {firstName}.
-                </span></>
-              )}
+              WELCOME<br />
+              <span
+                className="text-[#FF5500]"
+                style={{
+                  display: "inline-block",
+                  transition: "opacity 0.7s ease 0.5s, transform 0.7s ease 0.5s",
+                  opacity: heroVisible ? 1 : 0,
+                  transform: heroVisible ? "translateX(0)" : "translateX(-12px)",
+                }}
+              >
+                {firstName}.
+              </span>
             </h1>
-            <p
-              className="font-mono text-[#F2F0EB]/55 text-sm tracking-wider leading-relaxed max-w-sm"
-              style={{
-                transition: "opacity 0.7s ease 0.8s",
-                opacity: heroVisible ? 1 : 0,
-              }}
-            >
-              {dashboard.body}
-            </p>
+            {user?.profileTagline && (
+              <p
+                className="font-mono text-[#F2F0EB]/55 text-sm tracking-wider leading-relaxed max-w-sm"
+                style={{
+                  transition: "opacity 0.7s ease 0.8s",
+                  opacity: heroVisible ? 1 : 0,
+                }}
+              >
+                {user.profileTagline}
+              </p>
+            )}
           </div>
         </section>
 
@@ -857,15 +767,15 @@ export default function Holding() {
             <div className="flex items-start justify-between mb-4">
               <p className="font-mono text-[#444] text-xs tracking-[0.3em]">YOUR PROFILE</p>
               <span className="font-mono text-[#FF5500] text-xs tracking-wider">
-                {dashboard.sportsDayProfile?.replace(/_/g, " ").toUpperCase() ?? "COMPETITOR"}
+                {user?.sportsDayProfile?.replace(/_/g, " ").toUpperCase() ?? "COMPETITOR"}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { label: "NAME", value: dashboard.fullName.toUpperCase() },
+                { label: "NAME", value: (user?.fullName ?? "").toUpperCase() },
                 { label: "STATUS", value: "REGISTERED", color: "#FF5500" },
-                { label: "TEAM", value: isLocked ? "CLASSIFIED" : (dashboard.team?.toUpperCase() ?? "ASSIGNED"), color: isLocked ? "#444" : "#22c55e" },
-                { label: "ACCESS", value: isLocked ? "STANDARD" : "PRIORITY", color: isLocked ? "#444" : "#22c55e" },
+                { label: "TEAM", value: "CLASSIFIED", color: "#444" },
+                { label: "ACCESS", value: user?.paymentStatus === "paid" ? "PRIORITY" : "STANDARD", color: user?.paymentStatus === "paid" ? "#22c55e" : "#444" },
               ].map(({ label, value, color }) => (
                 <div key={label}>
                   <p className="font-mono text-[#333] text-[10px] tracking-[0.2em] mb-1">{label}</p>
@@ -887,42 +797,98 @@ export default function Holding() {
         {/* ── Particle breathing space ── */}
         <div aria-hidden="true" style={{ height: "40vh", pointerEvents: "none" }} />
 
-        {/* ── Section 5: Unlock CTA (locked states only) ── */}
-        {isLocked && (
-          <section
-            style={{
-              transition: "opacity 0.7s ease 0.9s",
-              opacity: heroVisible ? 1 : 0,
-            }}
-          >
+        {/* ── Section 5: Unlock CTA ── */}
+        <section
+          style={{
+            transition: "opacity 0.7s ease 0.9s",
+            opacity: heroVisible ? 1 : 0,
+          }}
+        >
+          {/* ── Cancelled checkout soft message ── */}
+          {paymentCancelled && unlockStep === "idle" && (
+            <div className="mb-4 border border-white/8 bg-black/20 px-5 py-4">
+              <p className="font-mono text-[#F2F0EB]/60 text-xs tracking-wider leading-relaxed">
+                No worries — your registration is still saved. Your Player Pack is still locked.
+              </p>
+            </div>
+          )}
+
+          {/* ── Confirming state (webhook delay) ── */}
+          {unlockStep === "confirming" && (
+            <div className="border border-[#FF5500]/30 bg-black/20 backdrop-blur-sm p-6 text-center">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <div className="w-2 h-2 rounded-full bg-[#FF5500] animate-pulse" />
+                <p className="font-mono text-[#FF5500] text-sm tracking-[0.2em]">CONFIRMING YOUR UNLOCK...</p>
+              </div>
+              <p className="font-mono text-[#F2F0EB]/40 text-xs tracking-wider">
+                Payment received. We're confirming your unlock now.
+              </p>
+            </div>
+          )}
+
+          {/* ── TopName editor step ── */}
+          {unlockStep === "topname" && userId && (
+            <TopNameEditor
+              registrationId={userId}
+              playerName={user?.fullName ?? ""}
+              initialTopName={user?.topName || undefined}
+              onConfirmed={handleTopNameConfirmed}
+              onCancel={() => setUnlockStep("idle")}
+            />
+          )}
+
+          {/* ── Embedded payment form step ── */}
+          {unlockStep === "payment" && clientSecret && (
+            <PaymentForm
+              clientSecret={clientSecret}
+              amount={paymentAmount}
+              currency="gbp"
+              onPaymentSuccess={handlePaymentSuccess}
+              onCancel={handlePaymentCancel}
+            />
+          )}
+
+          {/* ── Default locked CTA ── */}
+          {unlockStep === "idle" && (
             <div className="relative border border-[#FF5500]/20 bg-black/20 backdrop-blur-sm overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF5500]/50 to-transparent" />
               <div className="p-6">
                 <div className="flex items-center gap-3 mb-1">
                   <div className="w-2 h-2 rounded-full bg-[#FF5500] animate-pulse" />
-                  <p className="font-mono text-[#444] text-xs tracking-[0.3em]">PRIORITY PLAYER PACK</p>
+                  <p className="font-mono text-[#444] text-xs tracking-[0.3em]">LIMITED ACCESS</p>
                 </div>
-
-                {/* State-specific headline */}
-                <h2 className="font-display text-[#FF5500] text-2xl tracking-widest mb-2">
-                  {isReturning ? "YOUR TEAM IS STILL WAITING." : "YOUR TEAM HAS BEEN PICKED."}
+                <h2 className="font-display text-[#FF5500] text-2xl tracking-widest mb-1">
+                  PRIORITY PLAYER PASS
                 </h2>
 
-                {/* Price urgency */}
-                {priceState.countdownMs != null && priceState.countdownMs > 0 && (
-                  <div className="mb-4">
-                    <CountdownBadge countdownMs={priceState.countdownMs} />
+                {/* Price state */}
+                {dashboard?.priceState && (
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="font-display text-[#F2F0EB] text-3xl">
+                      £{(dashboard.priceState.currentPricePence / 100).toFixed(0)}
+                    </span>
+                    {dashboard.priceState.isEarlyPrice && dashboard.priceState.futurePricePence && (
+                      <span className="font-mono text-[#444] text-xs tracking-wider line-through">
+                        £{(dashboard.priceState.futurePricePence / 100).toFixed(0)} after
+                      </span>
+                    )}
+                    {dashboard.priceState.countdownMs !== null && dashboard.priceState.countdownMs > 0 && (
+                      <span className="font-mono text-[#FF5500] text-xs tracking-wider border border-[#FF5500]/30 px-2 py-0.5">
+                        {dashboard.priceState.currentPriceLabel}
+                      </span>
+                    )}
                   </div>
                 )}
 
                 <ul className="space-y-2.5 mb-6">
                   {[
                     "Instant team reveal",
-                    "One-of-one custom team-colour top",
-                    "Early teammate preview",
-                    "Priority event access",
+                    "One-of-one personalised team-colour top",
+                    "Early merch access",
                     "Sponsor drops",
+                    "Priority event access",
                     "First into the dashboard",
+                    "Early announcements",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2 font-mono text-[#F2F0EB]/65 text-xs tracking-wider">
                       <span className="text-[#FF5500] mt-0.5 shrink-0">→</span>
@@ -931,44 +897,26 @@ export default function Holding() {
                   ))}
                 </ul>
 
-                {/* CTA — embedded payment form or button */}
-                {showPaymentForm ? (
-                  <div className="mt-2">
-                    <PaymentForm
-                      uid={userId!}
-                      onSuccess={handlePaymentSuccess}
-                      onCancel={handlePaymentCancel}
-                    />
-                  </div>
-                ) : awaitingWebhook ? (
-                  <div className="w-full bg-[#FF5500]/20 border border-[#FF5500]/40 text-[#FF5500] font-mono text-sm tracking-widest py-5 text-center">
-                    CONFIRMING YOUR UNLOCK…
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleUnlock}
-                    className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest py-5 hover:bg-[#F2F0EB] transition-all active:scale-[0.98]"
-                  >
-                    {dashboard.ctaLabel.toUpperCase()}
-                  </button>
-                )}
+                {/* CTA button */}
+                <button
+                  onClick={handleStartUnlock}
+                  className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest py-5 hover:bg-[#F2F0EB] transition-all active:scale-[0.98]"
+                >
+                  {dashboard?.state === "RETURNING_UNPAID"
+                    ? `UNLOCK BEFORE PRICE CHANGES — £${dashboard.priceState ? (dashboard.priceState.currentPricePence / 100).toFixed(0) : "25"}`
+                    : `UNLOCK MY PLAYER PACK — £${dashboard?.priceState ? (dashboard.priceState.currentPricePence / 100).toFixed(0) : "25"}`
+                  }
+                </button>
 
-                {/* Price note */}
-                {dashboard.ctaNote && (
-                  <p className="font-mono text-[#444] text-[10px] text-center mt-3 tracking-wider leading-relaxed">
+                {dashboard?.ctaNote && (
+                  <p className="font-mono text-[#333] text-xs text-center mt-3 tracking-wider">
                     {dashboard.ctaNote}
-                  </p>
-                )}
-
-                {priceState.topProductionCutoffPassed && (
-                  <p className="font-mono text-[#FF5500]/60 text-[10px] text-center mt-2 tracking-wider">
-                    Late unlocks may not guarantee full top customisation.
                   </p>
                 )}
               </div>
             </div>
-          </section>
-        )}
+          )}
+        </section>
 
         {/* ── Section 6: Referral Block ── */}
         <section
@@ -1000,7 +948,7 @@ export default function Holding() {
             >
               {copied ? "✓ COPIED" : "COPY REFERRAL LINK"}
             </button>
-            {(dashboard.referralCount ?? 0) > 0 && (
+            {(user?.referralCount ?? 0) > 0 && (
               <div className="mt-4 flex items-center gap-3">
                 <div className="flex gap-1.5">
                   {[1, 2, 3].map((n) => (
@@ -1009,13 +957,14 @@ export default function Holding() {
                       className="h-1 transition-colors duration-500"
                       style={{
                         width: "2rem",
-                        background: n <= (dashboard.referralCount ?? 0) ? "#FF5500" : "rgba(255,255,255,0.08)",
+                        background: n <= (user?.referralCount ?? 0) ? "#FF5500" : "rgba(255,255,255,0.08)",
                       }}
                     />
                   ))}
                 </div>
                 <span className="font-mono text-[#444] text-xs tracking-wider">
-                  <AnimatedNumber value={dashboard.referralCount ?? 0} />/3
+                  <AnimatedNumber value={user?.referralCount ?? 0} />/3
+                  {user?.referralRewardUnlocked && " — REWARD UNLOCKED"}
                 </span>
               </div>
             )}

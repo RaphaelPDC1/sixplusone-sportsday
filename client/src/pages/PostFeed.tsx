@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { BackNav } from "@/components/ui/back-nav";
 
-const LOGO_URL = "/manus-storage/logo-61_bea00c75.webp";
+const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
 interface Post {
   id: string;

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
 
-const LOGO_URL = "/manus-storage/logo-61_bea00c75.webp";
+const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
 const TEAM_COLORS: Record<string, string> = {
   red: "#E8232A",

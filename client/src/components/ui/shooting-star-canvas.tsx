@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 
-const LOGO_URL = "/manus-storage/logo-61_bea00c75.webp";
+const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
 // Team colours for firework sparks
 const TEAM_COLORS = ["#E8232A", "#1A4FE8", "#F72B8C", "#FF6B00"];

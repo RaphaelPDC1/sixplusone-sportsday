@@ -6,7 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { registerShopifyWebhook } from "../shopifyWebhook";
-import { handleStripeWebhook } from "../stripeWebhook";
+import { stripeWebhookHandler } from "../stripeWebhook";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -40,38 +40,31 @@ async function startServer() {
     res.setHeader("X-Frame-Options", "DENY");
     res.setHeader("X-XSS-Protection", "1; mode=block");
     res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    // Allow Stripe.js, Google Fonts, and CDN images for the payment form
     res.setHeader(
       "Content-Security-Policy",
       [
         "default-src 'self'",
-        // Scripts: self + inline + Stripe (all versions) + Facebook Pixel + analytics
-        "script-src 'self' 'unsafe-inline' https://js.stripe.com https://connect.facebook.net https://manus-analytics.com",
-        // Stripe iframes (Payment Element renders inside iframes)
-        "frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com",
-        // Styles: self + inline + Google Fonts
+        "script-src 'self' 'unsafe-inline' https://js.stripe.com https://js.stripe.com/v3/ https://dahlia.js.stripe.com",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-        // Fonts: self + Google Fonts CDN
         "font-src 'self' https://fonts.gstatic.com",
-        // Images: self + data URIs + blob + any https/http (CDN storage, Facebook pixel)
-        "img-src 'self' data: blob: https: http:",
-        // XHR/fetch: self + Stripe API + analytics
-        "connect-src 'self' https://api.stripe.com https://manus-analytics.com wss: ws:",
-        // Workers (Stripe uses service workers)
-        "worker-src blob:",
+        "frame-src https://js.stripe.com https://hooks.stripe.com",
+        "connect-src 'self' https://api.stripe.com https://r.stripe.com",
+        "img-src 'self' data: https: blob:",
       ].join("; ")
     );
     next();
   });
   
+  // ⚠️ Stripe webhook MUST use raw body — register BEFORE express.json()
+  app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
+
   // SECURITY: Configure body parser with reasonable size limit (10MB instead of 50MB)
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ limit: "10mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   registerShopifyWebhook(app);
-  
-  // Stripe webhook — must use raw body for signature verification
-  app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), handleStripeWebhook);
   // tRPC API
   app.use(
     "/api/trpc",

@@ -86,25 +86,6 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
   shopifyOrderId: varchar("shopifyOrderId", { length: 100 }),
   paidAt: timestamp("paidAt"),
 
-  // Stripe Payment Tracking
-  unlockToken: varchar("unlockToken", { length: 36 }).notNull().unique(), // UUID, non-guessable
-  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 100 }),
-  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 100 }),
-  paymentEmail: varchar("paymentEmail", { length: 255 }), // email used to pay (may differ from registered email)
-  paymentMatchStatus: mysqlEnum("paymentMatchStatus", [
-    "matched_by_token",
-    "matched_by_id",
-    "matched_by_email",
-    "unmatched",
-    "none",
-  ]).default("none"), // tracking how payment was matched
-
-  // Manual Unlock (Admin Override)
-  manualUnlock: boolean("manualUnlock").default(false),
-  manuallyUnlockedBy: varchar("manuallyUnlockedBy", { length: 64 }), // admin openId
-  manualUnlockReason: text("manualUnlockReason"),
-  manuallyUnlockedAt: timestamp("manuallyUnlockedAt"),
-
   // Referral
   referralCode: varchar("referralCode", { length: 10 }).unique(),
   referredBy: varchar("referredBy", { length: 10 }),
@@ -120,6 +101,37 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
   // Metadata
   ipAddress: varchar("ipAddress", { length: 45 }),
   userAgent: text("userAgent"),
+
+  // Personalised top name
+  topName: varchar("topName", { length: 32 }),           // what appears on the printed top
+  topNameLastEditedAt: timestamp("topNameLastEditedAt"), // last time user edited it
+  topNameLockedAt: timestamp("topNameLockedAt"),         // set only when production lock happens (not on payment)
+
+  // Shopify audit mirror (not the source of unlock truth)
+  shopifyOrderStatus: mysqlEnum("shopifyOrderStatus", [
+    "pending_configuration",
+    "created",
+    "failed",
+  ]),
+
+  // Payment tracking (Phase 10+)
+  unlockToken: varchar("unlockToken", { length: 36 }).unique(), // UUID, non-guessable, primary match key
+  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 100 }),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 100 }),
+  paymentEmail: varchar("paymentEmail", { length: 255 }), // email used to pay (may differ from registered)
+  paymentMatchStatus: mysqlEnum("paymentMatchStatus", [
+    "none",
+    "matched_by_token",
+    "matched_by_id",
+    "matched_by_email",
+    "unmatched",
+  ]).default("none"),
+
+  // Manual unlock (admin override)
+  manualUnlock: boolean("manualUnlock").default(false),
+  manuallyUnlockedBy: varchar("manuallyUnlockedBy", { length: 64 }),
+  manualUnlockReason: text("manualUnlockReason"),
+  manuallyUnlockedAt: timestamp("manuallyUnlockedAt"),
 });
 
 export type SportsDayRegistration = typeof sportsDayRegistrations.$inferSelect;
@@ -203,6 +215,61 @@ export const leaderboard = mysqlTable("leaderboard", {
 export type LeaderboardEntry = typeof leaderboard.$inferSelect;
 export type InsertLeaderboardEntry = typeof leaderboard.$inferInsert;
 
+// ─── Sports Day Settings ─────────────────────────────────────────────────────
+// Single-row config table for pricing, dates, and manual overrides
+export const sportsDaySettings = mysqlTable("sports_day_settings", {
+  id: int("id").autoincrement().primaryKey(),
+
+  // Pricing (in pence)
+  earlyPrice: int("earlyPrice").default(2500).notNull(),   // £25.00
+  futurePrice: int("futurePrice").default(3500).notNull(), // £35.00
+
+  // Dates (UTC timestamps in ms)
+  priceIncreaseAt: timestamp("priceIncreaseAt"),       // when early price ends
+  publicTeamRevealAt: timestamp("publicTeamRevealAt"), // when all teams become public
+  topProductionCutoffAt: timestamp("topProductionCutoffAt"), // when top name locks
+
+  // Manual overrides (admin can flip these)
+  isPriceIncreaseActive: boolean("isPriceIncreaseActive").default(false),
+  isPublicRevealActive: boolean("isPublicRevealActive").default(false),
+
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SportsDaySettings = typeof sportsDaySettings.$inferSelect;
+
+// ─── Unmatched Payments ───────────────────────────────────────────────────────
+// Payments that couldn't be auto-matched to a registration — admin review queue
+export const unmatchedPayments = mysqlTable("unmatched_payments", {
+  id: int("id").autoincrement().primaryKey(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+
+  // Stripe identifiers
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 100 }),
+  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 100 }),
+  stripeEventId: varchar("stripeEventId", { length: 100 }),
+  stripeEventType: varchar("stripeEventType", { length: 100 }),
+
+  // Payment details
+  amountPaid: int("amountPaid"),         // in pence
+  currency: varchar("currency", { length: 10 }),
+  paymentEmail: varchar("paymentEmail", { length: 255 }),
+  paymentName: varchar("paymentName", { length: 255 }),
+
+  // Metadata from Stripe (what was passed in)
+  metaUnlockToken: varchar("metaUnlockToken", { length: 100 }),
+  metaRegistrationId: varchar("metaRegistrationId", { length: 36 }),
+  metaRegisteredEmail: varchar("metaRegisteredEmail", { length: 255 }),
+  metaPlayerName: varchar("metaPlayerName", { length: 255 }),
+  metaTopName: varchar("metaTopName", { length: 32 }),
+
+  // Admin resolution
+  resolvedAt: timestamp("resolvedAt"),
+  resolvedBy: varchar("resolvedBy", { length: 64 }),
+  resolvedRegistrationId: varchar("resolvedRegistrationId", { length: 36 }),
+  resolutionNote: text("resolutionNote"),
+});
+export type UnmatchedPayment = typeof unmatchedPayments.$inferSelect;
+
 // ─── Event Schedule & Live Status ─────────────────────────────────────────────
 // Admin controls which event is "now happening" and the event schedule
 export const eventSchedule = mysqlTable("event_schedule", {
@@ -220,50 +287,3 @@ export const eventSchedule = mysqlTable("event_schedule", {
 });
 export type EventScheduleEntry = typeof eventSchedule.$inferSelect;
 export type InsertEventScheduleEntry = typeof eventSchedule.$inferInsert;
-
-// ─── Sports Day Settings (Configurable Admin Settings) ────────────────────────
-export const sportsDaySettings = mysqlTable("sports_day_settings", {
-  id: int("id").autoincrement().primaryKey(),
-  eventId: varchar("eventId", { length: 50 }).notNull().unique(), // e.g. "sports_day_002"
-
-  // Pricing
-  earlyPrice: int("earlyPrice").default(2500), // in pence (£25.00)
-  futurePrice: int("futurePrice").default(3500), // in pence (£35.00)
-  priceIncreaseAt: timestamp("priceIncreaseAt"), // when price increases
-  isPriceIncreaseActive: boolean("isPriceIncreaseActive").default(false), // manual override
-
-  // Checkout URLs
-  currentProductCheckoutUrl: text("currentProductCheckoutUrl"), // Stripe checkout URL for current price
-  futureProductCheckoutUrl: text("futureProductCheckoutUrl"), // Stripe checkout URL for future price
-
-  // Team Reveal
-  publicTeamRevealAt: timestamp("publicTeamRevealAt"), // when full team becomes visible to all
-  isPublicRevealActive: boolean("isPublicRevealActive").default(false), // manual override to force public reveal
-  topProductionCutoffAt: timestamp("topProductionCutoffAt"), // when one-of-one tops may no longer be guaranteed
-
-  // Metadata
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
-export type SportsDaySettings = typeof sportsDaySettings.$inferSelect;
-export type InsertSportsDaySettings = typeof sportsDaySettings.$inferInsert;
-
-// ─── Unmatched Payments (Payment Debugging) ───────────────────────────────────
-export const unmatchedPayments = mysqlTable("unmatched_payments", {
-  id: int("id").autoincrement().primaryKey(),
-  eventId: varchar("eventId", { length: 50 }).notNull(), // e.g. "sports_day_002"
-  stripeCheckoutSessionId: varchar("stripeCheckoutSessionId", { length: 100 }).notNull().unique(),
-  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 100 }),
-  paymentEmail: varchar("paymentEmail", { length: 255 }).notNull(),
-  amountPaid: int("amountPaid").notNull(), // in pence
-  currency: varchar("currency", { length: 3 }).default("GBP"),
-  metadata: json("metadata").$type<Record<string, unknown>>(), // raw Stripe metadata for debugging
-  resolvedAt: timestamp("resolvedAt"), // when manually matched/unlocked
-  resolvedBy: varchar("resolvedBy", { length: 64 }), // admin openId
-  resolvedRegistrationId: varchar("resolvedRegistrationId", { length: 36 }), // which registration it was linked to
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
-
-export type UnmatchedPayment = typeof unmatchedPayments.$inferSelect;
-export type InsertUnmatchedPayment = typeof unmatchedPayments.$inferInsert;

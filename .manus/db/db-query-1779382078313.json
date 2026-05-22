@@ -1,0 +1,250 @@
+{
+  "query": "SHOW TABLES;\nSHOW COLUMNS FROM sports_day_registrations;\nSHOW COLUMNS FROM sports_day_settings;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SHOW TABLES;\nSHOW COLUMNS FROM sports_day_registrations;\nSHOW COLUMNS FROM sports_day_settings;",
+  "rows": [
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "awards_votes"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "event_schedule"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "group_codes"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "leaderboard"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "profile_photos"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "sports_day_registrations"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "sports_day_settings"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "unmatched_payments"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "users"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "wildcard_votes"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "Field\tType\tNull\tKey\tDefault\tExtra"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "id\tvarchar(36)\tNO\tPRI\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "createdAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "fullName\tvarchar(255)\tNO\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "email\tvarchar(255)\tNO\tUNI\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "instagramHandle\tvarchar(100)\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "attendedBefore\ttinyint(1)\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "comingType\tenum('solo','with_friends')\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "groupCode\tvarchar(15)\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "groupRole\tenum('creator','joiner')\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "date4July\ttinyint(1)\tYES\t\t0\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "date11July\ttinyint(1)\tYES\t\t0\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "date18July\ttinyint(1)\tYES\t\t0\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "dateAny\ttinyint(1)\tYES\t\t0\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "competitiveness\tenum('vibes','balanced','winner')\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "teammateType\tenum('motivator','strategist','wildcard','silent_assassin','energy_bringer')\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "strongestEvent\tenum('speed','strength','endurance','coordination','vibes')\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "fear\tenum('sprinting','team_events','letting_team_down','looking_unfit','nothing')\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "eventMotivation\ttext\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "captainVoteInterest\tenum('yes','no','maybe')\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "sportsDayProfile\tvarchar(50)\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "profileTagline\ttext\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "shirtSize\tenum('XS','S','M','L','XL','XXL')\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "shirtFit\tenum('regular','oversized')\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "healthNotes\ttext\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "contentConsent\tenum('yes','no','ask')\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "team\tenum('red','blue','pink','orange')\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "revealStatus\tenum('locked','unlocked')\tYES\t\tlocked\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "accessType\tenum('free','priority')\tYES\t\tfree\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "paymentStatus\tenum('unpaid','paid')\tYES\t\tunpaid\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "shopifyOrderId\tvarchar(100)\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "paidAt\ttimestamp\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "referralCode\tvarchar(10)\tYES\tUNI\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "referredBy\tvarchar(10)\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "referralCount\tint\tYES\t\t0\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "referralRewardUnlocked\ttinyint(1)\tYES\t\t0\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "klaviyoTags\tjson\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "shopifyCustomerId\tvarchar(100)\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "ipAddress\tvarchar(45)\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "userAgent\ttext\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "aiTeamIdentity\ttext\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "revealSeen\ttinyint(1)\tYES\t\t0\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "unlockToken\tvarchar(36)\tNO\tUNI\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "stripeCheckoutSessionId\tvarchar(100)\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "stripePaymentIntentId\tvarchar(100)\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "paymentEmail\tvarchar(255)\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "paymentMatchStatus\tenum('matched_by_token','matched_by_id','matched_by_email','unmatched','none')\tYES\t\tnone\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "manualUnlock\ttinyint(1)\tYES\t\t0\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "manuallyUnlockedBy\tvarchar(64)\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "manualUnlockReason\ttext\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "manuallyUnlockedAt\ttimestamp\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "topName\tvarchar(32)\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "topNameLastEditedAt\ttimestamp\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "topNameLockedAt\ttimestamp\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "shopifyOrderStatus\tenum('pending_configuration','created','failed')\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "Field\tType\tNull\tKey\tDefault\tExtra"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "id\tint\tNO\tPRI\tNULL\tauto_increment"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "eventId\tvarchar(50)\tNO\tUNI\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "earlyPrice\tint\tYES\t\t2500\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "futurePrice\tint\tYES\t\t3500\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "priceIncreaseAt\ttimestamp\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "isPriceIncreaseActive\ttinyint(1)\tYES\t\t0\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "currentProductCheckoutUrl\ttext\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "futureProductCheckoutUrl\ttext\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "publicTeamRevealAt\ttimestamp\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "topProductionCutoffAt\ttimestamp\tYES\t\tNULL\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "createdAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "updatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Tables_in_6SwZoJcoJNmN362a73ncsK": "isPublicRevealActive\ttinyint(1)\tYES\t\t0\t"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_6SwZoJcoJNmN362a73ncsK\n__drizzle_migrations\nawards_votes\nevent_schedule\ngroup_codes\nleaderboard\nprofile_photos\nsports_day_registrations\nsports_day_settings\nunmatched_payments\nusers\nwildcard_votes\nField\tType\tNull\tKey\tDefault\tExtra\nid\tvarchar(36)\tNO\tPRI\tNULL\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nfullName\tvarchar(255)\tNO\t\tNULL\t\nemail\tvarchar(255)\tNO\tUNI\tNULL\t\ninstagramHandle\tvarchar(100)\tYES\t\tNULL\t\nattendedBefore\ttinyint(1)\tYES\t\tNULL\t\ncomingType\tenum('solo','with_friends')\tYES\t\tNULL\t\ngroupCode\tvarchar(15)\tYES\t\tNULL\t\ngroupRole\tenum('creator','joiner')\tYES\t\tNULL\t\ndate4July\ttinyint(1)\tYES\t\t0\t\ndate11July\ttinyint(1)\tYES\t\t0\t\ndate18July\ttinyint(1)\tYES\t\t0\t\ndateAny\ttinyint(1)\tYES\t\t0\t\ncompetitiveness\tenum('vibes','balanced','winner')\tYES\t\tNULL\t\nteammateType\tenum('motivator','strategist','wildcard','silent_assassin','energy_bringer')\tYES\t\tNULL\t\nstrongestEvent\tenum('speed','strength','endurance','coordination','vibes')\tYES\t\tNULL\t\nfear\tenum('sprinting','team_events','letting_team_down','looking_unfit','nothing')\tYES\t\tNULL\t\neventMotivation\ttext\tYES\t\tNULL\t\ncaptainVoteInterest\tenum('yes','no','maybe')\tYES\t\tNULL\t\nsportsDayProfile\tvarchar(50)\tYES\t\tNULL\t\nprofileTagline\ttext\tYES\t\tNULL\t\nshirtSize\tenum('XS','S','M','L','XL','XXL')\tYES\t\tNULL\t\nshirtFit\tenum('regular','oversized')\tYES\t\tNULL\t\nhealthNotes\ttext\tYES\t\tNULL\t\ncontentConsent\tenum('yes','no','ask')\tYES\t\tNULL\t\nteam\tenum('red','blue','pink','orange')\tYES\t\tNULL\t\nrevealStatus\tenum('locked','unlocked')\tYES\t\tlocked\t\naccessType\tenum('free','priority')\tYES\t\tfree\t\npaymentStatus\tenum('unpaid','paid')\tYES\t\tunpaid\t\nshopifyOrderId\tvarchar(100)\tYES\t\tNULL\t\npaidAt\ttimestamp\tYES\t\tNULL\t\nreferralCode\tvarchar(10)\tYES\tUNI\tNULL\t\nreferredBy\tvarchar(10)\tYES\t\tNULL\t\nreferralCount\tint\tYES\t\t0\t\nreferralRewardUnlocked\ttinyint(1)\tYES\t\t0\t\nklaviyoTags\tjson\tYES\t\tNULL\t\nshopifyCustomerId\tvarchar(100)\tYES\t\tNULL\t\nipAddress\tvarchar(45)\tYES\t\tNULL\t\nuserAgent\ttext\tYES\t\tNULL\t\naiTeamIdentity\ttext\tYES\t\tNULL\t\nrevealSeen\ttinyint(1)\tYES\t\t0\t\nunlockToken\tvarchar(36)\tNO\tUNI\tNULL\t\nstripeCheckoutSessionId\tvarchar(100)\tYES\t\tNULL\t\nstripePaymentIntentId\tvarchar(100)\tYES\t\tNULL\t\npaymentEmail\tvarchar(255)\tYES\t\tNULL\t\npaymentMatchStatus\tenum('matched_by_token','matched_by_id','matched_by_email','unmatched','none')\tYES\t\tnone\t\nmanualUnlock\ttinyint(1)\tYES\t\t0\t\nmanuallyUnlockedBy\tvarchar(64)\tYES\t\tNULL\t\nmanualUnlockReason\ttext\tYES\t\tNULL\t\nmanuallyUnlockedAt\ttimestamp\tYES\t\tNULL\t\ntopName\tvarchar(32)\tYES\t\tNULL\t\ntopNameLastEditedAt\ttimestamp\tYES\t\tNULL\t\ntopNameLockedAt\ttimestamp\tYES\t\tNULL\t\nshopifyOrderStatus\tenum('pending_configuration','created','failed')\tYES\t\tNULL\t\nField\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\neventId\tvarchar(50)\tNO\tUNI\tNULL\t\nearlyPrice\tint\tYES\t\t2500\t\nfuturePrice\tint\tYES\t\t3500\t\npriceIncreaseAt\ttimestamp\tYES\t\tNULL\t\nisPriceIncreaseActive\ttinyint(1)\tYES\t\t0\t\ncurrentProductCheckoutUrl\ttext\tYES\t\tNULL\t\nfutureProductCheckoutUrl\ttext\tYES\t\tNULL\t\npublicTeamRevealAt\ttimestamp\tYES\t\tNULL\t\ntopProductionCutoffAt\ttimestamp\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\nisPublicRevealActive\ttinyint(1)\tYES\t\t0\t\n",
+  "stderr": "",
+  "execution_time_ms": 270
+}
