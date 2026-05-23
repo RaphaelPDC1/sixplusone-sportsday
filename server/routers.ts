@@ -491,7 +491,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
         throw new TRPCError({ code: "FORBIDDEN", message: "Team not unlocked" });
       }
       const team = reg.team;
-      // Team members
+      // Team members — ONLY show paid/unlocked teammates (revealStatus = "unlocked")
       const members = await db
         .select({
           id: sportsDayRegistrations.id,
@@ -504,7 +504,12 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
           captainVoteInterest: sportsDayRegistrations.captainVoteInterest,
         })
         .from(sportsDayRegistrations)
-        .where(eq(sportsDayRegistrations.team, team as "red" | "blue" | "pink" | "orange"));
+        .where(
+          and(
+            eq(sportsDayRegistrations.team, team as "red" | "blue" | "pink" | "orange"),
+            eq(sportsDayRegistrations.revealStatus, "unlocked") // Only paid/unlocked users
+          )
+        );
       // Profile photos
       const photos = await db.select().from(profilePhotos);
       const photoMap = new Map(photos.map((p) => [p.registrationId, p.url]));

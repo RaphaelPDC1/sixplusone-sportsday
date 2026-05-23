@@ -317,3 +317,10 @@
 - [x] Add /unlock-reveal route in App.tsx
 - [x] Add hasSeenUnlockReveal localStorage flag — returning paid users skip reveal and go straight to /team-hub
 - [x] UnlockReveal page: on CTA click or animation complete, set hasSeenUnlockReveal=true then navigate to /team-hub
+
+## Post-Payment Flow Improvements
+
+- [x] Wire /unlock-reveal to redirect to /reveal (not /team-hub) after animation completes
+- [x] Filter teammates on /reveal to show only paid/unlocked users (hide unpaid teammates)
+- [x] Build shirt size/fit confirmation screen before /team-hub entry
+- [x] Add route for shirt confirmation in App.tsx

@@ -77,8 +77,8 @@ export default function UnlockReveal() {
   }
 
   function handleEnterHub() {
-    localStorage.setItem(REVEAL_SEEN_KEY, "true");
-    navigate("/team-hub", { replace: true });
+    // Don't set hasSeenUnlockReveal yet — let /reveal handle the progression
+    navigate("/reveal", { replace: true });
   }
 
   const team = dashboard?.team ?? null;
@@ -266,14 +266,14 @@ export default function UnlockReveal() {
               boxShadow: tc ? `0 0 20px ${tc.glow}` : "0 0 20px rgba(255,85,0,0.3)",
             }}
           >
-            ENTER TEAM HUB →
+            ENTER TEAM REVEAL →
           </button>
         </div>
 
         {/* Skip link — always visible after phase 2 so user is never trapped */}
         {phase >= 2 && (
           <button
-            onClick={handleEnterHub}
+            onClick={() => navigate("/reveal", { replace: true })}
             className="font-mono text-[#F2F0EB]/20 text-[10px] tracking-[0.2em] hover:text-[#F2F0EB]/50 transition-colors mt-2"
           >
             SKIP

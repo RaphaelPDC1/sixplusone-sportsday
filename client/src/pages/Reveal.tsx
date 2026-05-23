@@ -801,9 +801,9 @@ export default function Reveal() {
               className="w-full border border-white/30 text-white/60 font-mono text-xs tracking-widest py-3 hover:border-white/60 hover:text-white/80 transition-colors active:scale-[0.98] disabled:opacity-40">
               ↓ DOWNLOAD STORY CARD
             </button>
-            <button onClick={() => navigate("/team-hub")}
+            <button onClick={() => navigate("/shirt-confirm")}
               className="w-full border-2 border-white text-white font-display text-xl tracking-widest py-5 hover:bg-white/10 transition-colors active:scale-[0.98]">
-              ENTER TEAM HUB →
+              CONTINUE →
             </button>
           </div>
           <p className="font-mono text-white/40 text-xs tracking-wider mt-3">
