@@ -89,8 +89,14 @@ export async function getSportsDaySettings() {
 function buildPriceState(settings: typeof sportsDaySettings.$inferSelect | null): PriceState {
   const now = Date.now();
 
-  const earlyPricePence = settings?.earlyPrice ?? 2500;
-  const futurePricePence = settings?.futurePrice ?? 3500;
+  const earlyPricePence = settings?.earlyPrice ?? 2500; // £25.00
+  const futurePricePence = settings?.futurePrice ?? 3500; // £35.00 (increases after 1 week)
+  
+  // If no priceIncreaseAt is set, default to 1 week from now
+  let priceIncreaseAtTime = settings?.priceIncreaseAt ? new Date(settings.priceIncreaseAt).getTime() : null;
+  if (!priceIncreaseAtTime) {
+    priceIncreaseAtTime = now + (7 * 24 * 60 * 60 * 1000); // 1 week from now
+  }
   const priceIncreaseAt = settings?.priceIncreaseAt ? new Date(settings.priceIncreaseAt) : null;
   const topProductionCutoffAt = settings?.topProductionCutoffAt
     ? new Date(settings.topProductionCutoffAt)
@@ -99,11 +105,11 @@ function buildPriceState(settings: typeof sportsDaySettings.$inferSelect | null)
   // Manual override takes precedence
   const isPriceIncreased =
     settings?.isPriceIncreaseActive === true ||
-    (priceIncreaseAt !== null && now >= priceIncreaseAt.getTime());
+    (priceIncreaseAtTime !== null && now >= priceIncreaseAtTime);
 
   const currentPricePence = isPriceIncreased ? futurePricePence : earlyPricePence;
   const countdownMs =
-    !isPriceIncreased && priceIncreaseAt ? Math.max(0, priceIncreaseAt.getTime() - now) : null;
+    !isPriceIncreased && priceIncreaseAtTime ? Math.max(0, priceIncreaseAtTime - now) : null;
 
   const topNameLocked =
     topProductionCutoffAt !== null && now >= topProductionCutoffAt.getTime();
@@ -114,7 +120,7 @@ function buildPriceState(settings: typeof sportsDaySettings.$inferSelect | null)
     isEarlyPrice: !isPriceIncreased,
     futurePricePence,
     futurePriceLabel: `£${(futurePricePence / 100).toFixed(2)}`,
-    priceIncreaseAt,
+    priceIncreaseAt: priceIncreaseAtTime ? new Date(priceIncreaseAtTime) : null,
     countdownMs,
     topProductionCutoffAt,
     topNameEditableUntil: topProductionCutoffAt,

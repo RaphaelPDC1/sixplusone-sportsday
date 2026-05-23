@@ -113,6 +113,7 @@ const sportsDayRouter = router({
 
       // Generate IDs
       const id = crypto.randomUUID();
+      const unlockToken = crypto.randomUUID(); // Non-guessable token for payment matching
       const referralCode = await generateUniqueReferralCode();
 
       // Generate profile
@@ -190,6 +191,7 @@ const sportsDayRouter = router({
         klaviyoTags,
         ipAddress: ctx.req.ip ?? null,
         userAgent: ctx.req.headers["user-agent"] ?? null,
+        unlockToken, // Generated UUID for payment matching
       });
 
       // Increment referrer's count
