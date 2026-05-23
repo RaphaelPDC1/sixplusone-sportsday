@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
+import { markTeamRevealSeen } from "@/lib/revealJourney";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -801,7 +802,11 @@ export default function Reveal() {
               className="w-full border border-white/30 text-white/60 font-mono text-xs tracking-widest py-3 hover:border-white/60 hover:text-white/80 transition-colors active:scale-[0.98] disabled:opacity-40">
               ↓ DOWNLOAD STORY CARD
             </button>
-            <button onClick={() => navigate("/shirt-confirm")}
+            <button onClick={() => {
+                const regId = localStorage.getItem("sd_user_id") ?? "";
+                markTeamRevealSeen(regId);
+                navigate("/shirt-confirm");
+              }}
               className="w-full border-2 border-white text-white font-display text-xl tracking-widest py-5 hover:bg-white/10 transition-colors active:scale-[0.98]">
               CONTINUE →
             </button>

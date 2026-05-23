@@ -7,6 +7,7 @@ import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
 import { HeroWave } from "@/components/ui/hero-wave";
 import { TeamLiveFeatures } from "@/components/ui/team-live-features";
+import { resetRevealJourneyForReplay } from "@/lib/revealJourney";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -242,11 +243,14 @@ export default function TeamHub() {
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center justify-between mb-5">
             <BackNav
-              to="/reveal"
+              to="/unlock-reveal"
               inline
               label="REPLAY REVEAL"
               onBeforeNavigate={() => {
-                // Clear reveal splash so it plays fresh on return
+                // Reset reveal journey flags so the full sequence replays from the start
+                const regId = localStorage.getItem("sd_user_id") ?? "";
+                resetRevealJourneyForReplay(regId);
+                // Clear reveal splash so it plays fresh
                 sessionStorage.removeItem("reveal_splash_seen");
               }}
             />

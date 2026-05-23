@@ -9,6 +9,10 @@ import { ScratchCardGrid } from "@/components/ui/scratch-card";
 import { toPng } from "html-to-image";
 import { TopNameEditor } from "@/components/TopNameEditor";
 import { PaymentForm } from "@/components/PaymentForm";
+import {
+  getNextRevealRoute,
+  hasCompletedFullRevealFlow,
+} from "@/lib/revealJourney";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -599,9 +603,15 @@ export default function Holding() {
       return;
     }
     if (dashboard.state === "UNLOCKED_PRIORITY" || dashboard.state === "PUBLIC_REVEAL") {
-      // Returning paid users skip the reveal — go straight to team hub
-      const hasSeenReveal = localStorage.getItem("hasSeenUnlockReveal") === "true";
-      navigateRef.current(hasSeenReveal ? "/team-hub" : "/unlock-reveal");
+      // Use central state manager to determine the correct next route
+      const registrationId = localStorage.getItem("sd_user_id") ?? "";
+      if (hasCompletedFullRevealFlow(registrationId)) {
+        // Returning paid user who has seen everything — go straight to dashboard
+        navigateRef.current("/team-hub");
+      } else {
+        // First-time paid user — start the reveal journey from where they left off
+        navigateRef.current(getNextRevealRoute(registrationId));
+      }
     }
   }, [dashboard?.state]); // eslint-disable-line react-hooks/exhaustive-deps
 

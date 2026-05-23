@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { markShirtConfirmSeen } from "@/lib/revealJourney";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -43,8 +44,9 @@ export default function ShirtConfirm() {
   }, [dashboard, isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleConfirm() {
-    // Set flag so this screen doesn't show again
-    localStorage.setItem("hasSeenShirtConfirm", "true");
+    const regId = userId ?? "";
+    // Mark shirt confirm as seen using central state manager
+    markShirtConfirmSeen(regId);
     navigate("/team-hub", { replace: true });
   }
 

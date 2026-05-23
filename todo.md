@@ -324,3 +324,12 @@
 - [x] Filter teammates on /reveal to show only paid/unlocked users (hide unpaid teammates)
 - [x] Build shirt size/fit confirmation screen before /team-hub entry
 - [x] Add route for shirt confirmation in App.tsx
+
+## Reveal Journey Routing Fix (23 May)
+- [ ] Create central reveal journey state manager (revealJourney.ts) with localStorage flags
+- [ ] Fix Holding.tsx: after confirming, always redirect to /unlock-reveal (never /team-hub)
+- [ ] Fix UnlockReveal.tsx: redirect to /reveal after animation; guard unpaid users back to /holding
+- [ ] Fix Reveal.tsx: redirect to /shirt-confirm after reveal; guard unpaid users back to /holding
+- [ ] Fix ShirtConfirm.tsx: redirect to /team-hub after confirmation; guard unpaid users back to /holding
+- [ ] Returning paid users with completed reveal flow go straight to /team-hub
+- [ ] Add REPLAY REVEAL button to TeamHub (top-left); resets animation flags only, not payment/shirt/unlock

@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import {
+  hasSeenUnlockReveal,
+  markUnlockRevealSeen,
+  getNextRevealRoute,
+} from "@/lib/revealJourney";
 
 // ── Team colour palette (mirrors TeamHub) ──────────────────────────────────
 const TEAM_COLORS: Record<string, { hex: string; name: string; glow: string; rgb: string }> = {
@@ -11,8 +16,6 @@ const TEAM_COLORS: Record<string, { hex: string; name: string; glow: string; rgb
 };
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
-const REVEAL_SEEN_KEY = "hasSeenUnlockReveal";
-
 // ── Animation phases ───────────────────────────────────────────────────────
 // 0: black screen
 // 1: team colour flash
@@ -41,10 +44,11 @@ export default function UnlockReveal() {
   useEffect(() => {
     if (isLoading) return;
     if (!dashboard) return;
+    const regId = userId ?? "";
 
-    // If already seen reveal, skip straight to team hub
-    if (localStorage.getItem(REVEAL_SEEN_KEY) === "true") {
-      navigate("/team-hub", { replace: true });
+    // If already seen unlock reveal, continue journey from where they left off
+    if (hasSeenUnlockReveal(regId)) {
+      navigate(getNextRevealRoute(regId), { replace: true });
       return;
     }
 
@@ -77,7 +81,9 @@ export default function UnlockReveal() {
   }
 
   function handleEnterHub() {
-    // Don't set hasSeenUnlockReveal yet — let /reveal handle the progression
+    const regId = userId ?? "";
+    // Mark unlock reveal as seen, then proceed to team reveal
+    markUnlockRevealSeen(regId);
     navigate("/reveal", { replace: true });
   }
 
