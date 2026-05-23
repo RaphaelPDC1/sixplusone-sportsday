@@ -8,4 +8,5 @@ export const ENV = {
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ?? "",
+  TEST_UNLOCK_PRICE_PENCE: process.env.TEST_UNLOCK_PRICE_PENCE ? parseInt(process.env.TEST_UNLOCK_PRICE_PENCE, 10) : null,
 };

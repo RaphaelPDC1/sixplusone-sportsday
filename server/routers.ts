@@ -959,9 +959,16 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
       const isPriceIncreased =
         settings?.isPriceIncreaseActive === true ||
         (priceIncreaseAt !== null && now >= priceIncreaseAt.getTime());
-      const amountPence = isPriceIncreased
-        ? (settings?.futurePrice ?? 3500)
-        : (settings?.earlyPrice ?? 2500);
+      
+      // Use test price if set, otherwise use database settings
+      let amountPence = ENV.TEST_UNLOCK_PRICE_PENCE;
+      if (!amountPence) {
+        amountPence = isPriceIncreased
+          ? (settings?.futurePrice ?? 3500)
+          : (settings?.earlyPrice ?? 2500);
+      }
+      
+      const isTestMode = ENV.TEST_UNLOCK_PRICE_PENCE !== null;
 
       const stripeKey = ENV.STRIPE_SECRET_KEY;
       if (!stripeKey) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Stripe not configured" });
@@ -980,6 +987,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
           top_name: reg.topName ?? reg.fullName.split(" ")[0].toUpperCase(),
           product_type: "sports_day_priority_player_pack",
           event_id: "sports_day_002",
+          test_mode: isTestMode ? "true" : "false",
         },
         receipt_email: reg.email,
       });

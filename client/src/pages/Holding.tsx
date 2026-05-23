@@ -920,8 +920,8 @@ export default function Holding() {
                   PRIORITY PLAYER PASS
                 </h2>
 
-                {/* Price state */}
-                {dashboard?.priceState && (
+                {/* Price state — only show for unpaid users considering unlock */}
+                {dashboard?.priceState && (dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID") && (
                   <div className="flex items-center gap-3 mb-4">
                     <span className="font-display text-[#F2F0EB] text-3xl">
                       £{(dashboard.priceState.currentPricePence / 100).toFixed(0)}
@@ -934,6 +934,11 @@ export default function Holding() {
                     {dashboard.priceState.countdownMs !== null && dashboard.priceState.countdownMs > 0 && (
                       <span className="font-mono text-[#FF5500] text-xs tracking-wider border border-[#FF5500]/30 px-2 py-0.5">
                         {dashboard.priceState.currentPriceLabel}
+                      </span>
+                    )}
+                    {import.meta.env.VITE_TEST_UNLOCK_PRICE_PENCE && (
+                      <span className="font-mono text-[#FF5500] text-xs tracking-wider border border-[#FF5500] px-2 py-0.5 bg-[#FF5500]/10">
+                        TEST PRICE
                       </span>
                     )}
                   </div>

@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { sportsDayRegistrations, sportsDaySettings } from "../drizzle/schema";
 import { getDb } from "./db";
+import { ENV } from "./_core/env";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -89,8 +90,9 @@ export async function getSportsDaySettings() {
 function buildPriceState(settings: typeof sportsDaySettings.$inferSelect | null): PriceState {
   const now = Date.now();
 
-  const earlyPricePence = settings?.earlyPrice ?? 2500; // £25.00
-  const futurePricePence = settings?.futurePrice ?? 3500; // £35.00 (increases after 1 week)
+  // Use test price if set, otherwise use database settings
+  const earlyPricePence = ENV.TEST_UNLOCK_PRICE_PENCE ?? (settings?.earlyPrice ?? 2500); // £25.00 or test override
+  const futurePricePence = ENV.TEST_UNLOCK_PRICE_PENCE ?? (settings?.futurePrice ?? 3500); // £35.00 or test override
   
   // If no priceIncreaseAt is set, default to 1 week from now
   let priceIncreaseAtTime = settings?.priceIncreaseAt ? new Date(settings.priceIncreaseAt).getTime() : null;
