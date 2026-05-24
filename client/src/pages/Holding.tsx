@@ -939,8 +939,9 @@ export default function Holding() {
         {/* ── Section 4: Golden Ticket (collapsible) ── */}
         <ScratchReplaySection visible={heroVisible} />
 
-        {/* ── Section 5: Unlock CTA ── */}
+        {/* ── Section 5: Funnel CTA ── */}
         <section
+          ref={paymentSectionRef}
           style={{
             transition: "opacity 0.7s ease 0.9s",
             opacity: heroVisible ? 1 : 0,
@@ -965,7 +966,7 @@ export default function Holding() {
                     <p className="font-mono text-[#FF5500] text-sm tracking-[0.2em]">CONFIRMING YOUR UNLOCK...</p>
                   </div>
                   <p className="font-mono text-[#F2F0EB]/40 text-xs tracking-wider">
-                    Payment received. We're confirming your unlock now.
+                    Payment received. We’re confirming your unlock now.
                   </p>
                 </>
               ) : (
@@ -1013,73 +1014,163 @@ export default function Holding() {
             />
           )}
 
-          {/* ── Default locked CTA ── */}
-          {unlockStep === "idle" && (
-            <div className="relative border border-[#FF5500]/20 bg-black/20 backdrop-blur-sm overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF5500]/50 to-transparent" />
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-[#FF5500] animate-pulse" />
-                  <p className="font-mono text-[#444] text-xs tracking-[0.3em]">LIMITED ACCESS</p>
-                </div>
-                <h2 className="font-display text-[#FF5500] text-2xl tracking-widest mb-1">
-                  PRIORITY PLAYER PASS
-                </h2>
+          {/* ── FUNNEL: Kit story + social proof + CTA ── */}
+          {unlockStep === "idle" && (dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID") && (
+            <div className="space-y-4">
 
-                {/* Price state — only show for unpaid users considering unlock */}
-                {dashboard?.priceState && (dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID") && (
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="font-display text-[#F2F0EB] text-3xl">
-                      £{(dashboard.priceState.currentPricePence / 100).toFixed(0)}
-                    </span>
-                    {dashboard.priceState.isEarlyPrice && dashboard.priceState.futurePricePence && (
-                      <span className="font-mono text-[#444] text-xs tracking-wider line-through">
-                        £{(dashboard.priceState.futurePricePence / 100).toFixed(0)} after
-                      </span>
-                    )}
-                    {dashboard.priceState.countdownMs !== null && dashboard.priceState.countdownMs > 0 && (
-                      <span className="font-mono text-[#FF5500] text-xs tracking-wider border border-[#FF5500]/30 px-2 py-0.5">
-                        {dashboard.priceState.currentPriceLabel}
-                      </span>
-                    )}
-
-                  </div>
-                )}
-
-                <ul className="space-y-2.5 mb-6">
-                  {[
-                    "Instant team reveal",
-                    "One-of-one personalised team-colour top",
-                    "Early merch access",
-                    "Sponsor drops",
-                    "Priority event access",
-                    "First into the dashboard",
-                    "Early announcements",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2 font-mono text-[#F2F0EB]/65 text-xs tracking-wider">
-                      <span className="text-[#FF5500] mt-0.5 shrink-0">→</span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-
-                {/* CTA button */}
-                <button
-                  onClick={handleStartUnlock}
-                  className="w-full bg-[#FF5500] text-[#0A0A0A] font-display text-xl tracking-widest py-5 hover:bg-[#F2F0EB] transition-all active:scale-[0.98]"
+              {/* ── RETURNING UNPAID: urgency banner ── */}
+              {dashboard.state === "RETURNING_UNPAID" && (
+                <div
+                  className="border border-[#FF5500]/40 bg-[#FF5500]/8 px-5 py-4 flex items-start gap-3"
+                  style={{ animation: "pulse 2.5s ease-in-out infinite" }}
                 >
-                  {dashboard?.state === "RETURNING_UNPAID"
-                    ? `UNLOCK BEFORE PRICE CHANGES — £${dashboard.priceState ? (dashboard.priceState.currentPricePence / 100).toFixed(0) : "25"}`
-                    : `UNLOCK MY PLAYER PACK — £${dashboard?.priceState ? (dashboard.priceState.currentPricePence / 100).toFixed(0) : "25"}`
-                  }
-                </button>
+                  <div className="w-2 h-2 rounded-full bg-[#FF5500] shrink-0 mt-1" style={{ animation: "pulse 1.4s ease-in-out infinite" }} />
+                  <div>
+                    <p className="font-mono text-[#FF5500] text-xs tracking-[0.25em] mb-0.5">YOU CAME BACK.</p>
+                    <p className="font-mono text-[#F2F0EB]/60 text-[10px] tracking-wider">
+                      Early access is still open — but the price won’t stay here.
+                    </p>
+                  </div>
+                </div>
+              )}
 
-                {dashboard?.ctaNote && (
-                  <p className="font-mono text-[#333] text-xs text-center mt-3 tracking-wider">
-                    {dashboard.ctaNote}
+              {/* ── KIT STORY BLOCK ── */}
+              <div className="relative overflow-hidden border border-white/10 bg-black/25 backdrop-blur-sm">
+                {/* Subtle orange glow top border */}
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF5500]/60 to-transparent" />
+
+                <div className="p-6">
+                  {/* Eyebrow */}
+                  <p className="font-mono text-[#FF5500] text-[10px] tracking-[0.4em] mb-3">THE KIT · ONE RUN ONLY</p>
+
+                  {/* Headline */}
+                  <h2
+                    className="font-display text-[#F2F0EB] leading-[0.9] mb-4"
+                    style={{ fontSize: "clamp(1.8rem, 8vw, 2.8rem)" }}
+                  >
+                    PEOPLE WILL<br />
+                    <span className="text-[#FF5500]">ASK WHERE</span><br />
+                    YOU GOT IT.
+                  </h2>
+
+                  {/* Body copy */}
+                  <p className="font-mono text-[#F2F0EB]/55 text-xs tracking-wider leading-relaxed mb-5">
+                    One colour. One event. One run. Your team-colour top is printed with your name,
+                    built for this day only. When Sports Day 002 is done — it’s done.
+                    No restock. No second run.
                   </p>
-                )}
+
+                  {/* Kit features */}
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    {[
+                      { icon: "⚡", label: "Instant team reveal" },
+                      { icon: "🏆", label: "Priority event access" },
+                      { icon: "👕", label: "Name on the top" },
+                      { icon: "🔒", label: "One-of-one, never remade" },
+                    ].map(({ icon, label }) => (
+                      <div key={label} className="flex items-center gap-2">
+                        <span className="text-sm">{icon}</span>
+                        <span className="font-mono text-[#F2F0EB]/60 text-[10px] tracking-wider">{label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Divider */}
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="flex-1 h-px bg-white/8" />
+                    <span className="font-mono text-[#333] text-[10px] tracking-[0.3em]">FREE TO ATTEND</span>
+                    <div className="flex-1 h-px bg-white/8" />
+                  </div>
+                  <p className="font-mono text-[#F2F0EB]/30 text-[10px] tracking-wider mb-5">
+                    The event is free. The kit is optional — but it’s the piece that makes the story yours.
+                  </p>
+
+                  {/* Price block */}
+                  {dashboard?.priceState && (
+                    <div className="flex items-end gap-3 mb-5">
+                      <span className="font-display text-[#F2F0EB]" style={{ fontSize: "clamp(2.2rem, 10vw, 3.2rem)" }}>
+                        £{(dashboard.priceState.currentPricePence / 100).toFixed(0)}
+                      </span>
+                      {dashboard.priceState.isEarlyPrice && dashboard.priceState.futurePricePence && (
+                        <div className="pb-1">
+                          <span className="font-mono text-[#444] text-xs tracking-wider line-through block">
+                            £{(dashboard.priceState.futurePricePence / 100).toFixed(0)}
+                          </span>
+                          <span className="font-mono text-[#FF5500] text-[10px] tracking-wider">
+                            EARLY PRICE
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Countdown urgency */}
+                  {dashboard?.priceState?.countdownMs !== null && (dashboard?.priceState?.countdownMs ?? 0) > 0 && (
+                    <div className="border border-[#FF5500]/25 bg-[#FF5500]/5 px-4 py-3 mb-5 flex items-center gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#FF5500]" style={{ animation: "pulse 1.4s ease-in-out infinite" }} />
+                      <p className="font-mono text-[#FF5500] text-[10px] tracking-[0.25em]">
+                        {dashboard.priceState?.currentPriceLabel}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Social proof */}
+                  <UnlockCounter visible={heroVisible} />
+
+                </div>
               </div>
+
+              {/* ── APPLE PAY / PAYMENT CTA ── */}
+              <div className="relative overflow-hidden">
+                {/* Glow border */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{ boxShadow: "0 0 40px rgba(255,85,0,0.15), inset 0 0 40px rgba(255,85,0,0.04)", border: "1px solid rgba(255,85,0,0.35)" }}
+                />
+                <div className="relative bg-black/30 backdrop-blur-sm p-6">
+
+                  {/* Apple Pay badge */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#F2F0EB]" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                    </svg>
+                    <span className="font-mono text-[#F2F0EB]/60 text-[10px] tracking-[0.3em]">APPLE PAY & CARD ACCEPTED</span>
+                  </div>
+
+                  {/* Main CTA */}
+                  <button
+                    onClick={handleStartUnlock}
+                    className="w-full bg-[#FF5500] text-[#0A0A0A] font-display tracking-widest py-5 hover:bg-[#F2F0EB] transition-all active:scale-[0.98] mb-3"
+                    style={{ fontSize: "clamp(1.1rem, 5vw, 1.4rem)" }}
+                  >
+                    {dashboard?.state === "RETURNING_UNPAID"
+                      ? `UNLOCK BEFORE PRICE CHANGES — £${dashboard.priceState ? (dashboard.priceState.currentPricePence / 100).toFixed(0) : "25"}`
+                      : `UNLOCK MY PLAYER PACK — £${dashboard?.priceState ? (dashboard.priceState.currentPricePence / 100).toFixed(0) : "25"}`
+                    }
+                  </button>
+
+                  {/* Trust signals */}
+                  <div className="flex items-center justify-center gap-4 flex-wrap">
+                    {[
+                      { icon: "🔒", text: "Secure checkout" },
+                      { icon: "⚡", text: "Instant unlock" },
+                      { icon: "🏆", text: "Free to attend" },
+                    ].map(({ icon, text }) => (
+                      <div key={text} className="flex items-center gap-1.5">
+                        <span className="text-xs">{icon}</span>
+                        <span className="font-mono text-[#444] text-[10px] tracking-wider">{text}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {dashboard?.ctaNote && (
+                    <p className="font-mono text-[#333] text-xs text-center mt-3 tracking-wider">
+                      {dashboard.ctaNote}
+                    </p>
+                  )}
+                </div>
+              </div>
+
             </div>
           )}
         </section>

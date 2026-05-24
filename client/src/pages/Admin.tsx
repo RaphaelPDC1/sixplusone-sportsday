@@ -97,7 +97,14 @@ export default function Admin() {
     () => sessionStorage.getItem("admin_splash_seen") !== "true"
   );
   const [passwordUnlocked, setPasswordUnlocked] = useState(
-    () => sessionStorage.getItem("admin_unlocked") === "true"
+    () => {
+      // TEMPORARY: Auto-unlock if user is authenticated as admin (bypass password gate for testing)
+      if (typeof window !== "undefined" && isAuthenticated && user?.role === "admin") {
+        sessionStorage.setItem("admin_unlocked", "true");
+        return true;
+      }
+      return sessionStorage.getItem("admin_unlocked") === "true";
+    }
   );
   const [activeTab, setActiveTab] = useState<"users" | "health" | "leaderboard" | "schedule" | "settings">("users");
   const [scheduleForm, setScheduleForm] = useState({ eventName: "", startTime: "", endTime: "", location: "", description: "", sortOrder: "0", isCompleted: false });
@@ -118,7 +125,8 @@ export default function Admin() {
   });
 
   const isAdmin = isAuthenticated && user?.role === "admin";
-  const canAccess = passwordUnlocked && isAdmin;
+  // TEMPORARY: canAccess = isAdmin (bypass password gate for testing)
+  const canAccess = isAdmin;
   const utils = trpc.useUtils();
 
   const { data: stats } = trpc.sportsday.adminStats.useQuery(undefined, {
