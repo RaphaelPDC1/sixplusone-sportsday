@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { sportsDayRegistrations, sportsDaySettings } from "../drizzle/schema";
 import { getDb } from "./db";
 import { ENV } from "./_core/env";
+import { SPORTS_DAY_PUBLIC_REVEAL_AT } from "../shared/const";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -41,6 +42,7 @@ export interface SportsDayDashboard {
   accessType: string | null;
   topName: string | null;
   topNameLocked: boolean;
+  publicRevealAt: Date; // When free users auto-unlock (July 11th 8pm BST)
 
   // Player identity
   playerName: string;
@@ -154,12 +156,13 @@ export async function buildSportsDayDashboard(
   const now = Date.now();
 
   // Determine if public reveal is active
+  // Uses DB setting if set, otherwise falls back to the hardcoded Sports Day date (July 11th 2026 8pm BST)
   const publicRevealAt = settings?.publicTeamRevealAt
     ? new Date(settings.publicTeamRevealAt)
-    : null;
+    : new Date(SPORTS_DAY_PUBLIC_REVEAL_AT);
   const isPublicReveal =
     settings?.isPublicRevealActive === true ||
-    (publicRevealAt !== null && now >= publicRevealAt.getTime());
+    now >= publicRevealAt.getTime();
 
   // Determine if user is unlocked (paid OR manual override)
   const isUnlocked =
@@ -282,6 +285,7 @@ export async function buildSportsDayDashboard(
     accessType: reg.accessType ?? null,
     topName: reg.topName ?? null,
     topNameLocked: priceState.topNameLocked,
+    publicRevealAt,
 
     playerName: reg.fullName ?? "",
     playerEmail: reg.email ?? "",

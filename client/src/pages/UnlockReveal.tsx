@@ -48,15 +48,25 @@ export default function UnlockReveal() {
     if (hasStarted.current) return;
     const regId = userId ?? "";
 
-    // If already seen unlock reveal, skip to shirt confirm
+    // PAID-ONLY PAGE: Free users (PUBLIC_REVEAL) should never see the player pack animation
+    // Redirect free users to team-hub directly
+    if (dashboard.state === "PUBLIC_REVEAL" || dashboard.accessType !== "priority") {
+      // Only allow if user is UNLOCKED_PRIORITY (paid)
+      if (dashboard.state !== "UNLOCKED_PRIORITY") {
+        navigate("/holding", { replace: true });
+        return;
+      }
+    }
+
+    // If already seen unlock reveal, skip to shirt confirm (paid users only)
     if (hasSeenUnlockReveal(regId)) {
       navigate("/shirt-confirm", { replace: true });
       return;
     }
 
-    // If not yet unlocked, send back to holding
-    if (dashboard.state !== "UNLOCKED_PRIORITY" && dashboard.state !== "PUBLIC_REVEAL") {
-      navigate("/holding", { replace: true });
+    // If not paid/priority, redirect to team-hub (free users who somehow landed here)
+    if (dashboard.accessType !== "priority") {
+      navigate("/team-hub", { replace: true });
       return;
     }
 

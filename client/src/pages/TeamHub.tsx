@@ -248,9 +248,10 @@ export default function TeamHub() {
               label="REPLAY REVEAL"
               onBeforeNavigate={() => {
                 // Reset reveal journey flags so the full sequence replays from the start
-                // Sequence: /reveal → /unlock-reveal → /shirt-confirm → /team-hub
+                // Paid: /reveal → /unlock-reveal → /shirt-confirm → /team-hub
+                // Free: /reveal → /team-hub
                 const regId = localStorage.getItem("sd_user_id") ?? "";
-                resetRevealJourneyForReplay(regId);
+                resetRevealJourneyForReplay(regId, hub?.accessType);
                 // Clear reveal splash so it plays fresh
                 sessionStorage.removeItem("reveal_splash_seen");
               }}

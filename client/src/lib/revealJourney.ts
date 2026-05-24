@@ -1,8 +1,15 @@
 /**
  * Reveal Journey State Manager
  *
- * Manages the one-time post-payment reveal flow:
- *   Payment → Confirming → /unlock-reveal → /reveal → /shirt-confirm → /team-hub
+ * Manages the post-payment/post-unlock reveal flow.
+ *
+ * TWO DISTINCT JOURNEYS:
+ *
+ * PAID (Priority) users — accessType === "priority":
+ *   /reveal → /unlock-reveal → /shirt-confirm → /team-hub
+ *
+ * FREE users — accessType === "free" (unlocked on July 11th 8pm):
+ *   /reveal → /team-hub  (NO player pack animation, NO shirt confirm)
  *
  * Flags are stored in localStorage keyed by registration ID so that
  * different users on the same device don't share state.
@@ -29,12 +36,24 @@ export function hasSeenShirtConfirm(registrationId: string): boolean {
   return localStorage.getItem(KEY_SHIRT_CONFIRM(registrationId)) === "true";
 }
 
-export function hasCompletedFullRevealFlow(registrationId: string): boolean {
-  return (
-    hasSeenUnlockReveal(registrationId) &&
-    hasSeenTeamReveal(registrationId) &&
-    hasSeenShirtConfirm(registrationId)
-  );
+/**
+ * Returns true if a PAID user has completed their full reveal flow.
+ * For free users, only team reveal + team-hub are required.
+ */
+export function hasCompletedFullRevealFlow(
+  registrationId: string,
+  accessType?: string | null
+): boolean {
+  const isPaid = accessType === "priority";
+  if (isPaid) {
+    return (
+      hasSeenTeamReveal(registrationId) &&
+      hasSeenUnlockReveal(registrationId) &&
+      hasSeenShirtConfirm(registrationId)
+    );
+  }
+  // Free users: only need to have seen the team reveal
+  return hasSeenTeamReveal(registrationId);
 }
 
 // ─── Setters ──────────────────────────────────────────────────────────────────
@@ -56,33 +75,51 @@ export function markShirtConfirmSeen(registrationId: string): void {
 /**
  * Reset the visual reveal flags so the user can replay the animations.
  * Does NOT reset payment, unlock status, shirt size, or any server state.
+ *
+ * For PAID users: resets team reveal + unlock reveal (shirt confirm stays)
+ * For FREE users: resets only team reveal
  */
-export function resetRevealJourneyForReplay(registrationId: string): void {
-  // Clear both reveal flags so the full sequence replays: /reveal → /unlock-reveal → /shirt-confirm
+export function resetRevealJourneyForReplay(
+  registrationId: string,
+  accessType?: string | null
+): void {
   localStorage.removeItem(KEY_TEAM_REVEAL(registrationId));
-  localStorage.removeItem(KEY_UNLOCK_REVEAL(registrationId));
-  // Keep shirt confirm — no need to re-confirm shirt size after replay
+  if (accessType === "priority") {
+    localStorage.removeItem(KEY_UNLOCK_REVEAL(registrationId));
+    // Keep shirt confirm — no need to re-confirm shirt size after replay
+  }
 }
 
 // ─── Next route helper ────────────────────────────────────────────────────────
 
 /**
- * Given the current registration ID and paid/unlocked status,
- * returns the correct next route for a paid user.
+ * Given the current registration ID and access type,
+ * returns the correct next route in the reveal journey.
  *
- * Correct sequence:
- *   Payment → Confirming → /reveal (team reveal, big moment) → /unlock-reveal (player pack celebration) → /shirt-confirm → /team-hub
+ * PAID journey (accessType === "priority"):
+ *   /reveal → /unlock-reveal → /shirt-confirm → /team-hub
  *
- * Logic:
- *   - Not paid → /holding (should not be here)
- *   - Paid, not seen team reveal → /reveal  (FIRST: team reveal with confetti)
- *   - Paid, seen team reveal, not seen unlock reveal → /unlock-reveal  (SECOND: player pack animation)
- *   - Paid, seen unlock reveal, not seen shirt confirm → /shirt-confirm
- *   - Paid, completed full flow → /team-hub
+ * FREE journey (accessType === "free" or null):
+ *   /reveal → /team-hub  (skip player pack and shirt confirm)
+ *
+ * @param registrationId - The user's registration ID (used for localStorage flags)
+ * @param accessType - "priority" for paid users, "free" or null for free users
  */
-export function getNextRevealRoute(registrationId: string): string {
+export function getNextRevealRoute(
+  registrationId: string,
+  accessType?: string | null
+): string {
+  const isPaid = accessType === "priority";
+
+  // Both paid and free users start with team reveal
   if (!hasSeenTeamReveal(registrationId)) return "/reveal";
-  if (!hasSeenUnlockReveal(registrationId)) return "/unlock-reveal";
-  if (!hasSeenShirtConfirm(registrationId)) return "/shirt-confirm";
+
+  if (isPaid) {
+    // Paid-only steps: player pack animation → shirt confirm
+    if (!hasSeenUnlockReveal(registrationId)) return "/unlock-reveal";
+    if (!hasSeenShirtConfirm(registrationId)) return "/shirt-confirm";
+  }
+
+  // Both end at team hub
   return "/team-hub";
 }

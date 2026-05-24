@@ -37,11 +37,17 @@ export default function ShirtConfirm() {
     if (dashboard?.shirtFit) setSelectedFit(dashboard.shirtFit as "regular" | "oversized");
   }, [dashboard?.shirtSize, dashboard?.shirtFit]);
 
-  // Guard: if not unlocked, redirect to holding
+  // Guard: PAID-ONLY PAGE — only UNLOCKED_PRIORITY (paid) users can confirm shirt
+  // Free users (PUBLIC_REVEAL) do not get a personalised top, redirect them to team-hub
   useEffect(() => {
     if (isLoading) return;
     if (!dashboard) return;
-    if (dashboard.state !== "UNLOCKED_PRIORITY" && dashboard.state !== "PUBLIC_REVEAL") {
+    if (dashboard.state === "PUBLIC_REVEAL" || dashboard.accessType !== "priority") {
+      // Free users on Sports Day — redirect to team-hub
+      navigate("/team-hub", { replace: true });
+      return;
+    }
+    if (dashboard.state !== "UNLOCKED_PRIORITY") {
       navigate("/holding", { replace: true });
       return;
     }

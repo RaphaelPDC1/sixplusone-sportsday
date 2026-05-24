@@ -553,12 +553,18 @@ export default function Reveal() {
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
 
-  // Guard: redirect to holding if not unlocked — MUST be in useEffect, not render
+  // Guard: redirect to holding if not unlocked
+  // Allow both paid (revealStatus=unlocked) and free users on Sports Day (PUBLIC_REVEAL)
+  // Free users on July 11th 8pm: their team is populated from getUserStatus even without payment
   useEffect(() => {
-    if (user && user.revealStatus !== "unlocked") {
+    if (!user) return;
+    // Paid users: revealStatus is set to "unlocked" by webhook
+    // Free users on Sports Day: team is populated (server returns it when PUBLIC_REVEAL is active)
+    const canReveal = user.revealStatus === "unlocked" || !!user.team;
+    if (!canReveal) {
       navigateRef.current("/holding");
     }
-  }, [user?.revealStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?.revealStatus, user?.team]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const markRevealSeenMutation = trpc.sportsday.markRevealSeen.useMutation();
   const generateIdentityMutation = trpc.sportsday.generateTeamIdentity.useMutation({
@@ -689,7 +695,8 @@ export default function Reveal() {
   }
 
   // Redirect handled in useEffect above — show a brief redirecting state
-  if (user.revealStatus !== "unlocked") {
+  const canReveal = user.revealStatus === "unlocked" || !!user.team;
+  if (!canReveal) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <div className="text-[#FF5500] font-display text-3xl tracking-widest animate-pulse">REDIRECTING...</div>
@@ -818,8 +825,11 @@ export default function Reveal() {
             <button onClick={() => {
                 const regId = localStorage.getItem("sd_user_id") ?? "";
                 markTeamRevealSeen(regId);
-                // Next step: /unlock-reveal (player pack celebration)
-                navigate("/unlock-reveal");
+                // Route based on access type:
+                // Paid (priority) → /unlock-reveal (player pack animation)
+                // Free → /team-hub (skip player pack and shirt confirm)
+                const isPaid = user.accessType === "priority";
+                navigate(isPaid ? "/unlock-reveal" : "/team-hub");
               }}
               className="w-full border-2 border-white text-white font-display text-xl tracking-widest py-5 hover:bg-white/10 transition-colors active:scale-[0.98]">
               CONTINUE →

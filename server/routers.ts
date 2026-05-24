@@ -489,29 +489,52 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       const reg = await getRegistrationById(input.registrationId);
-      if (!reg || reg.revealStatus !== "unlocked") {
+      if (!reg) throw new TRPCError({ code: "NOT_FOUND", message: "Registration not found" });
+      
+      // Check if public reveal is active (July 11th 8pm BST)
+      const { buildSportsDayDashboard } = await import("./sportsday.dashboard");
+      const dashboard = await buildSportsDayDashboard(input.registrationId);
+      const isPublicReveal = dashboard?.state === "PUBLIC_REVEAL";
+      
+      // Allow access if: paid/unlocked OR public reveal is active
+      if (reg.revealStatus !== "unlocked" && !isPublicReveal) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Team not unlocked" });
       }
       const team = reg.team;
-      // Team members — ONLY show paid/unlocked teammates (revealStatus = "unlocked")
-      const members = await db
-        .select({
-          id: sportsDayRegistrations.id,
-          fullName: sportsDayRegistrations.fullName,
-          instagramHandle: sportsDayRegistrations.instagramHandle,
-          sportsDayProfile: sportsDayRegistrations.sportsDayProfile,
-          profileTagline: sportsDayRegistrations.profileTagline,
-          teammateType: sportsDayRegistrations.teammateType,
-          strongestEvent: sportsDayRegistrations.strongestEvent,
-          captainVoteInterest: sportsDayRegistrations.captainVoteInterest,
-        })
-        .from(sportsDayRegistrations)
-        .where(
-          and(
-            eq(sportsDayRegistrations.team, team as "red" | "blue" | "pink" | "orange"),
-            eq(sportsDayRegistrations.revealStatus, "unlocked") // Only paid/unlocked users
-          )
-        );
+      // Team members:
+      // - Before public reveal: only show paid/unlocked teammates
+      // - After public reveal (July 11th 8pm): show all teammates
+      const memberQuery = isPublicReveal
+        ? db.select({
+            id: sportsDayRegistrations.id,
+            fullName: sportsDayRegistrations.fullName,
+            instagramHandle: sportsDayRegistrations.instagramHandle,
+            sportsDayProfile: sportsDayRegistrations.sportsDayProfile,
+            profileTagline: sportsDayRegistrations.profileTagline,
+            teammateType: sportsDayRegistrations.teammateType,
+            strongestEvent: sportsDayRegistrations.strongestEvent,
+            captainVoteInterest: sportsDayRegistrations.captainVoteInterest,
+          })
+          .from(sportsDayRegistrations)
+          .where(eq(sportsDayRegistrations.team, team as "red" | "blue" | "pink" | "orange"))
+        : db.select({
+            id: sportsDayRegistrations.id,
+            fullName: sportsDayRegistrations.fullName,
+            instagramHandle: sportsDayRegistrations.instagramHandle,
+            sportsDayProfile: sportsDayRegistrations.sportsDayProfile,
+            profileTagline: sportsDayRegistrations.profileTagline,
+            teammateType: sportsDayRegistrations.teammateType,
+            strongestEvent: sportsDayRegistrations.strongestEvent,
+            captainVoteInterest: sportsDayRegistrations.captainVoteInterest,
+          })
+          .from(sportsDayRegistrations)
+          .where(
+            and(
+              eq(sportsDayRegistrations.team, team as "red" | "blue" | "pink" | "orange"),
+              eq(sportsDayRegistrations.revealStatus, "unlocked") // Only paid/unlocked users before Sports Day
+            )
+          );
+      const members = await memberQuery;
       // Profile photos
       const photos = await db.select().from(profilePhotos);
       const photoMap = new Map(photos.map((p) => [p.registrationId, p.url]));
@@ -530,6 +553,8 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
       const myWildcardVotes = wv.filter((v) => v.voterId === input.registrationId).map((v) => v.wildcardId);
       return {
         team,
+        accessType: reg.accessType ?? "free",
+        isPublicReveal,
         members: members.map((m) => ({
           ...m,
           photoUrl: photoMap.get(m.id) ?? null,
@@ -959,6 +984,147 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
         .where(eq(sportsDayRegistrations.id, input.registrationId));
       return { success: true };
     }),
+
+  // ─── Get popup settings (for holding page) ────────────────────────────────
+  getPopupSettings: publicProcedure
+    .input(z.object({ registrationId: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { enabled: false, firstVisit: null, returnVisit: null };
+
+      // Check global toggle
+      const settings = await getSportsDaySettings();
+      if (!settings?.popupsEnabled) return { enabled: false, firstVisit: null, returnVisit: null };
+
+      const reg = await getRegistrationById(input.registrationId);
+      if (!reg) return { enabled: false, firstVisit: null, returnVisit: null };
+
+      // Return cached copy if available
+      if (reg.popupCopyFirstVisit && reg.popupCopyReturnVisit) {
+        return {
+          enabled: true,
+          firstVisit: JSON.parse(reg.popupCopyFirstVisit) as { headline: string; body: string; cta: string },
+          returnVisit: JSON.parse(reg.popupCopyReturnVisit) as { headline: string; body: string; cta: string },
+        };
+      }
+
+      // Generate AI copy personalised to this user
+      const profile = reg.sportsDayProfile?.replace(/_/g, " ") ?? "competitor";
+      const sport = reg.strongestEvent ?? "all-round";
+      const type = reg.teammateType?.replace(/_/g, " ") ?? "team player";
+      const firstName = reg.fullName.split(" ")[0];
+      const tagline = reg.profileTagline ?? "";
+
+      const prompt = `You are writing ultra-short, punchy marketing copy for a one-day sports event called "6+1 Sports Day 002" on 11 July 2026. The event is free to attend. There is an optional premium kit (a personalised team-colour top, one-of-a-kind, never re-made after the event). The copy must feel personal, urgent, and premium — not generic.
+
+Player profile:
+- First name: ${firstName}
+- Sports profile: ${profile}
+- Teammate type: ${type}
+- Strongest event: ${sport}
+- Tagline: ${tagline}
+
+Write two pop-up variants in JSON format:
+1. "firstVisit" — for someone landing for the first time. Angle: this kit has a story, it can never be replicated, people will ask where you got it. CTA should be about claiming the kit.
+2. "returnVisit" — for someone who came back. Angle: they showed interest, early access is still open but won't be for long. CTA should be urgency-based.
+
+Each variant must have:
+- headline: max 6 words, ALL CAPS, punchy
+- body: max 30 words, conversational, uses their profile naturally (don't force it)
+- cta: max 5 words, action-oriented
+
+Return ONLY valid JSON with this exact shape:
+{ "firstVisit": { "headline": "...", "body": "...", "cta": "..." }, "returnVisit": { "headline": "...", "body": "...", "cta": "..." } }`;
+
+      let firstVisit = { headline: "THIS KIT HAS A STORY.", body: "One colour. One event. One run. When Sports Day is done, this top is done. People will ask where you got it.", cta: "CLAIM YOUR KIT →" };
+      let returnVisit = { headline: "EARLY ACCESS STILL OPEN.", body: "You came back. The early price is still live — but not for much longer. Your spot is held.", cta: "UNLOCK BEFORE PRICE CHANGES →" };
+
+      try {
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: "You are a concise sports marketing copywriter. Output only valid JSON, no markdown." },
+            { role: "user", content: prompt },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "popup_copy",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  firstVisit: {
+                    type: "object",
+                    properties: {
+                      headline: { type: "string" },
+                      body: { type: "string" },
+                      cta: { type: "string" },
+                    },
+                    required: ["headline", "body", "cta"],
+                    additionalProperties: false,
+                  },
+                  returnVisit: {
+                    type: "object",
+                    properties: {
+                      headline: { type: "string" },
+                      body: { type: "string" },
+                      cta: { type: "string" },
+                    },
+                    required: ["headline", "body", "cta"],
+                    additionalProperties: false,
+                  },
+                },
+                required: ["firstVisit", "returnVisit"],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+        const rawContent = response?.choices?.[0]?.message?.content;
+        const raw = typeof rawContent === "string" ? rawContent : null;
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          firstVisit = parsed.firstVisit;
+          returnVisit = parsed.returnVisit;
+        }
+      } catch (err) {
+        console.error("[PopupCopy] LLM generation failed, using fallback copy", err);
+      }
+
+      // Cache in DB
+      await db
+        .update(sportsDayRegistrations)
+        .set({
+          popupCopyFirstVisit: JSON.stringify(firstVisit),
+          popupCopyReturnVisit: JSON.stringify(returnVisit),
+          popupCopyGeneratedAt: new Date(),
+        })
+        .where(eq(sportsDayRegistrations.id, input.registrationId));
+
+      return { enabled: true, firstVisit, returnVisit };
+    }),
+
+  // ─── Admin: toggle pop-ups globally ──────────────────────────────────────────
+  adminTogglePopups: adminProcedure
+    .input(z.object({ enabled: z.boolean() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const { sportsDaySettings } = await import("../drizzle/schema");
+      const existing = await db.select().from(sportsDaySettings).limit(1);
+      if (existing.length === 0) {
+        await db.insert(sportsDaySettings).values({ popupsEnabled: input.enabled });
+      } else {
+        await db.update(sportsDaySettings).set({ popupsEnabled: input.enabled });
+      }
+      return { success: true, popupsEnabled: input.enabled };
+    }),
+
+  // ─── Admin: get current settings (for admin panel display) ───────────────────
+  adminGetSettings: adminProcedure.query(async () => {
+    const settings = await getSportsDaySettings();
+    return settings;
+  }),
 
   // ─── Create Stripe PaymentIntent (embedded element) ─────────────────────────
   createPaymentIntent: publicProcedure

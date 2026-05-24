@@ -133,6 +133,11 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
   manuallyUnlockedBy: varchar("manuallyUnlockedBy", { length: 64 }),
   manualUnlockReason: text("manualUnlockReason"),
   manuallyUnlockedAt: timestamp("manuallyUnlockedAt"),
+
+  // AI-generated personalised pop-up copy (cached per user)
+  popupCopyFirstVisit: text("popupCopyFirstVisit"),   // JSON: { headline, body, cta }
+  popupCopyReturnVisit: text("popupCopyReturnVisit"), // JSON: { headline, body, cta }
+  popupCopyGeneratedAt: timestamp("popupCopyGeneratedAt"),
 });
 
 export type SportsDayRegistration = typeof sportsDayRegistrations.$inferSelect;
@@ -233,6 +238,9 @@ export const sportsDaySettings = mysqlTable("sports_day_settings", {
   // Manual overrides (admin can flip these)
   isPriceIncreaseActive: boolean("isPriceIncreaseActive").default(false),
   isPublicRevealActive: boolean("isPublicRevealActive").default(false),
+
+  // Funnel pop-ups toggle (admin enables before ads/emails go out)
+  popupsEnabled: boolean("popupsEnabled").default(false),
 
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

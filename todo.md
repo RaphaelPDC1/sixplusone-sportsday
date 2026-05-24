@@ -333,3 +333,33 @@
 - [ ] Fix ShirtConfirm.tsx: redirect to /team-hub after confirmation; guard unpaid users back to /holding
 - [ ] Returning paid users with completed reveal flow go straight to /team-hub
 - [ ] Add REPLAY REVEAL button to TeamHub (top-left); resets animation flags only, not payment/shirt/unlock
+
+## Two-Tier Journey System (Paid vs Free)
+
+- [x] Add SPORTS_DAY_UNLOCK_DATE constant (July 11th 2026 8pm BST) to shared/constants.ts
+- [x] Update sportsday.dashboard.ts: add PUBLIC_REVEAL state that triggers at July 11th 8pm for non-paid users
+- [x] Update revealJourney.ts: getNextRevealRoute() checks accessType — paid gets /unlock-reveal after /reveal, free gets /team-hub
+- [x] Update Reveal.tsx: after confetti, check accessType — paid → /unlock-reveal, free → /team-hub
+- [x] Update Holding.tsx: after July 11th 8pm, free users auto-unlock and redirect to /reveal
+- [x] Guard /unlock-reveal and /shirt-confirm: redirect free users away if they land there directly
+- [x] Update TeamHub REPLAY REVEAL: paid users replay full journey, free users replay simplified (/reveal → /team-hub)
+
+## Holding Page Funnel Redesign
+
+- [x] Amplify personalisation block at top: pulsing, urgent, cinematic — player name + team waiting as emotional hook
+- [x] Restructure page as conversion funnel: personalised hook → urgency/social proof → Apple Pay CTA
+- [x] Make Apple Pay the primary/leading payment option (visually prominent, shown first)
+- [x] First-time visitor pop-up: "This kit has a story. Once Sports Day is done, it's gone. Get yours before the price goes up."
+- [x] Second-time visitor pop-up: "You came back. Early access is still open — but not for long."
+- [x] Track visit count using localStorage (sd_visit_count) — increment on each page load
+- [x] Pop-up timing: first-time shows after ~2s, second-time shows after ~1s on return visit
+- [x] Pop-ups dismissible with X, do not reappear once dismissed per session (sd_popup_dismissed flag)
+
+## AI Pop-up Personalisation & Admin Toggle
+
+- [x] Add tRPC procedure `generatePopupCopy` — calls LLM with user profile data to produce personalised first-visit and return-visit pop-up copy
+- [x] Cache generated pop-up copy in DB per registration (avoid re-generating on every load)
+- [x] Add `popupsEnabled` boolean field to `sportsDaySettings` DB table (default: false, admin toggles on before ads/emails go out)
+- [x] Add admin toggle in Admin panel to enable/disable pop-ups globally
+- [x] Update FunnelPopup to fetch AI copy from backend and respect global enabled flag
+- [x] Holding page: only render FunnelPopup when settings.popupsEnabled === true

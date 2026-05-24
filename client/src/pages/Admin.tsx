@@ -99,7 +99,7 @@ export default function Admin() {
   const [passwordUnlocked, setPasswordUnlocked] = useState(
     () => sessionStorage.getItem("admin_unlocked") === "true"
   );
-  const [activeTab, setActiveTab] = useState<"users" | "health" | "leaderboard" | "schedule">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "health" | "leaderboard" | "schedule" | "settings">("users");
   const [scheduleForm, setScheduleForm] = useState({ eventName: "", startTime: "", endTime: "", location: "", description: "", sortOrder: "0", isCompleted: false });
   const [lbForm, setLbForm] = useState({
     eventName: "sprint",
@@ -154,6 +154,17 @@ export default function Admin() {
     onSuccess: () => { toast.success("Event deleted!"); refetchSchedule(); },
     onError: (e: { message: string }) => toast.error(e.message),
   });
+  const { data: adminSettings, refetch: refetchSettings } = trpc.sportsday.adminGetSettings.useQuery(undefined, {
+    enabled: canAccess && activeTab === "settings",
+  });
+  const togglePopupsMutation = trpc.sportsday.adminTogglePopups.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Pop-ups ${data.popupsEnabled ? "ENABLED" : "DISABLED"} globally`);
+      refetchSettings();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   const upsertLb = trpc.sportsday.adminUpsertLeaderboard.useMutation({
     onSuccess: () => {
       toast.success("Leaderboard updated!");
@@ -327,17 +338,17 @@ export default function Admin() {
 
         {/* Tabs */}
         <div className="flex gap-0 border-b border-[#1A1A1A]">
-          {(["users", "health", "leaderboard", "schedule"] as const).map((tab) => (
+          {(["users", "health", "leaderboard", "schedule", "settings"] as const).map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => setActiveTab(tab as typeof activeTab)}
               className={`font-mono text-xs tracking-[0.2em] px-6 py-3 transition-colors ${
                 activeTab === tab
                   ? "text-[#FF5500] border-b-2 border-[#FF5500]"
                   : "text-[#444] hover:text-[#F2F0EB]"
               }`}
             >
-              {tab === "users" ? "ALL REGISTRATIONS" : tab === "health" ? "HEALTH NOTES" : tab === "leaderboard" ? "LEADERBOARD" : "SCHEDULE"}
+              {tab === "users" ? "ALL REGISTRATIONS" : tab === "health" ? "HEALTH NOTES" : tab === "leaderboard" ? "LEADERBOARD" : tab === "schedule" ? "SCHEDULE" : "SETTINGS"}
             </button>
           ))}
         </div>
@@ -687,6 +698,82 @@ export default function Admin() {
         )}
 
         {/* Health Notes Tab */}
+        {activeTab === "settings" && (
+          <div className="space-y-6">
+            {/* Pop-up Toggle */}
+            <div className="border border-[#1A1A1A] bg-[#0D0D0D] p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <p className="font-mono text-[#FF5500] text-xs tracking-[0.2em] mb-1">FUNNEL POP-UPS</p>
+                  <p className="font-mono text-[#444] text-[10px] tracking-wider leading-relaxed max-w-sm">
+                    Enable before ads and emails go out. When on, each user gets AI-personalised pop-up copy
+                    (first-visit and return-visit variants) generated from their sports profile.
+                  </p>
+                </div>
+                <div
+                  className="flex items-center gap-2 shrink-0 ml-6"
+                >
+                  <span className={`font-mono text-xs tracking-wider ${
+                    adminSettings?.popupsEnabled ? "text-[#22c55e]" : "text-[#444]"
+                  }`}>
+                    {adminSettings?.popupsEnabled ? "ON" : "OFF"}
+                  </span>
+                  <button
+                    onClick={() => togglePopupsMutation.mutate({ enabled: !adminSettings?.popupsEnabled })}
+                    disabled={togglePopupsMutation.isPending}
+                    className={`relative w-14 h-7 rounded-full transition-colors duration-300 focus:outline-none ${
+                      adminSettings?.popupsEnabled ? "bg-[#22c55e]" : "bg-[#222]"
+                    }`}
+                    aria-label="Toggle pop-ups"
+                  >
+                    <span
+                      className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform duration-300 ${
+                        adminSettings?.popupsEnabled ? "translate-x-8" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {adminSettings?.popupsEnabled && (
+                <div className="border border-[#22c55e]/20 bg-[#22c55e]/5 px-4 py-3 mt-2">
+                  <p className="font-mono text-[#22c55e] text-[10px] tracking-wider">
+                    ✓ Pop-ups are LIVE. Users will see personalised first-visit and return-visit pop-ups on the holding page.
+                    Copy is generated by AI from each user's sports profile and cached in the DB.
+                  </p>
+                </div>
+              )}
+              {!adminSettings?.popupsEnabled && (
+                <div className="border border-[#444]/20 bg-[#444]/5 px-4 py-3 mt-2">
+                  <p className="font-mono text-[#444] text-[10px] tracking-wider">
+                    Pop-ups are OFF. Enable before running ads or sending emails so the funnel is ready.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Info block */}
+            <div className="border border-[#1A1A1A] bg-[#0D0D0D] p-5">
+              <p className="font-mono text-[#444] text-xs tracking-[0.2em] mb-3">HOW IT WORKS</p>
+              <ul className="space-y-2">
+                {[
+                  "First-visit pop-up: shown once to users who have never seen it. Angle: this kit has a story, one-of-a-kind.",
+                  "Return-visit pop-up: shown on second+ visit. Angle: you came back, early access still open but not for long.",
+                  "Copy is AI-generated per user using their sports profile, teammate type, strongest event, and tagline.",
+                  "Generated copy is cached in the DB — no LLM call on repeat visits.",
+                  "Pop-ups only show to unpaid/locked users (LOCKED_UNPAID or RETURNING_UNPAID state).",
+                  "Meta Pixel handles retargeting — no email capture needed.",
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 font-mono text-[#F2F0EB]/50 text-[10px] tracking-wider">
+                    <span className="text-[#FF5500] shrink-0">→</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
         {activeTab === "health" && (
           <div>
             <div className="border border-[#FF5500]/20 bg-[#FF5500]/5 p-4 mb-4">

@@ -9,6 +9,7 @@ import { ScratchCardGrid } from "@/components/ui/scratch-card";
 import { toPng } from "html-to-image";
 import { TopNameEditor } from "@/components/TopNameEditor";
 import { PaymentForm } from "@/components/PaymentForm";
+import { FunnelPopup } from "@/components/FunnelPopup";
 import {
   getNextRevealRoute,
   hasCompletedFullRevealFlow,
@@ -526,6 +527,14 @@ export default function Holding() {
   );
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
+  const paymentSectionRef = useRef<HTMLDivElement>(null);
+
+  const scrollToPayment = () => {
+    setUnlockStep("topname");
+    setTimeout(() => {
+      paymentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  };
 
   const handleSplashComplete = () => {
     sessionStorage.setItem("holding_splash_seen", "true");
@@ -610,12 +619,13 @@ export default function Holding() {
       hasRedirectedRef.current = true;
       // Use central state manager to determine the correct next route
       const registrationId = localStorage.getItem("sd_user_id") ?? "";
-      if (hasCompletedFullRevealFlow(registrationId)) {
-        // Returning paid user who has seen everything — go straight to dashboard
+      const accessType = dashboard.accessType; // "priority" for paid, "free" for free users
+      if (hasCompletedFullRevealFlow(registrationId, accessType)) {
+        // Returning user who has seen their full journey — go straight to dashboard
         navigateRef.current("/team-hub");
       } else {
-        // First-time paid user — start the reveal journey from where they left off
-        navigateRef.current(getNextRevealRoute(registrationId));
+        // First-time unlock — start the reveal journey from where they left off
+        navigateRef.current(getNextRevealRoute(registrationId, accessType));
       }
     }
   }, [dashboard?.state]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -721,6 +731,14 @@ export default function Holding() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden">
       {showSplash && <EntrySplash onComplete={handleSplashComplete} />}
+      {/* Funnel pop-ups: first-time and return-visit — only for unpaid/locked users */}
+      {(dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID") && userId && (
+        <FunnelPopup
+          registrationId={userId}
+          onCtaClick={scrollToPayment}
+          delay={2200}
+        />
+      )}
       {/* Full-page particle text background — fixed behind all content */}
       <ParticleTextBg
         words={["SPORTS DAY", "002", "GET READY", "YOUR TEAM", "AWAITS", "6+1", "JULY 2026"]}
@@ -751,9 +769,9 @@ export default function Holding() {
         <span className="font-mono text-[#FF5500] text-xs tracking-[0.2em]">SPORTS DAY 002</span>
       </header>
 
-      <div className="relative z-10 max-w-lg mx-auto px-5 pb-16 space-y-8">
+      <div className="relative z-10 max-w-lg mx-auto px-5 pb-16 space-y-6">
 
-        {/* ── Section 1: Hero Greeting ── */}
+        {/* ── Section 1: AMPLIFIED HERO GREETING ── */}
         <section className="pt-8">
           <div
             style={{
@@ -762,71 +780,152 @@ export default function Holding() {
               transform: heroVisible ? "translateY(0)" : "translateY(24px)",
             }}
           >
-            <p className="font-mono text-[#444] text-xs tracking-[0.35em] mb-3">YOU'RE REGISTERED</p>
-            
-            {/* Dashboard-driven headline */}
-            {dashboard?.headline && (
-              <h1
-                className="font-display text-[#F2F0EB] leading-[0.88] mb-2"
-                style={{ fontSize: "clamp(2.8rem, 12vw, 5.5rem)" }}
+            {/* Pulsing registration confirmed badge */}
+            <div className="flex items-center gap-2 mb-4">
+              <div
+                className="w-2 h-2 rounded-full bg-[#22c55e]"
+                style={{ animation: "pulse 1.6s ease-in-out infinite" }}
+              />
+              <p className="font-mono text-[#22c55e] text-[10px] tracking-[0.35em]">REGISTRATION CONFIRMED</p>
+            </div>
+
+            {/* Big personalised name headline */}
+            <h1
+              className="font-display text-[#F2F0EB] leading-[0.88] mb-3"
+              style={{ fontSize: "clamp(3.2rem, 14vw, 6rem)" }}
+            >
+              {dashboard?.headline ?? "YOU'RE"}<br />
+              <span
+                className="text-[#FF5500]"
+                style={{ animation: "pulse 2.5s ease-in-out infinite" }}
               >
-                {dashboard.headline}
-                {dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID" ? (
-                  <br />
-                ) : null}
-                {(dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID") && (
-                  <span className="text-[#FF5500]">{firstName}.</span>
-                )}
-              </h1>
-            )}
-            
-            {/* Dashboard-driven subheadline */}
-            {dashboard?.subheadline && (
+                {firstName}.
+              </span>
+            </h1>
+
+            {/* Profile type */}
+            {user?.sportsDayProfile && (
               <p
-                className="font-mono text-[#F2F0EB]/55 text-sm tracking-wider leading-relaxed max-w-sm mb-5"
+                className="font-mono text-[#FF5500]/70 text-xs tracking-[0.3em] mb-4"
                 style={{
-                  transition: "opacity 0.7s ease 0.8s",
+                  transition: "opacity 0.7s ease 0.5s",
                   opacity: heroVisible ? 1 : 0,
                 }}
               >
-                {dashboard.subheadline}
+                {user.sportsDayProfile.replace(/_/g, " ").toUpperCase()}
               </p>
             )}
-            
-            {user?.profileTagline && (dashboard.state === "UNLOCKED_PRIORITY" || dashboard.state === "PUBLIC_REVEAL") && (
+
+            {/* Subheadline / tagline */}
+            {(dashboard?.subheadline || user?.profileTagline) && (
               <p
-                className="font-mono text-[#F2F0EB]/55 text-sm tracking-wider leading-relaxed max-w-sm"
+                className="font-mono text-[#F2F0EB]/50 text-sm tracking-wider leading-relaxed max-w-sm mb-5"
                 style={{
                   transition: "opacity 0.7s ease 0.8s",
                   opacity: heroVisible ? 1 : 0,
                 }}
               >
-                {user.profileTagline}
+                {dashboard?.subheadline ?? user?.profileTagline}
               </p>
             )}
           </div>
         </section>
 
-        {/* ── Section 2: Profile Badge ── */}
+        {/* ── Section 2: AMPLIFIED STATUS BLOCK ── */}
+        {/* Enlarged, more critical, pulsing team-waiting block */}
         <section
           style={{
             transition: "opacity 0.7s ease 0.35s",
             opacity: heroVisible ? 1 : 0,
           }}
         >
+          <div
+            className="relative overflow-hidden border bg-black/20 backdrop-blur-sm"
+            style={{
+              borderColor: "rgba(255,85,0,0.4)",
+              boxShadow: heroVisible ? "0 0 40px rgba(255,85,0,0.12), inset 0 0 40px rgba(255,85,0,0.04)" : "none",
+              transition: "box-shadow 1s ease 1s",
+            }}
+          >
+            {/* Animated top border — full width, orange */}
+            <div
+              className="absolute top-0 left-0 h-[2px] bg-[#FF5500]"
+              style={{
+                width: heroVisible ? "100%" : "0%",
+                transition: "width 1.4s ease 0.8s",
+              }}
+            />
+
+            {/* Status rows */}
+            <div className="p-6 space-y-4">
+              <StatusRow label="REGISTRATION" value="COMPLETE" valueColor="#22c55e" delay={0} visible={heroVisible} />
+              <div className="h-px bg-white/5" />
+              <StatusRow label="TEAM ASSIGNED" value="HIDDEN" valueColor="#FF5500" delay={200} visible={heroVisible} blink />
+              <div className="h-px bg-white/5" />
+              <StatusRow
+                label="REVEAL STATUS"
+                value={user?.paymentStatus === "paid" ? "UNLOCKED" : "LOCKED"}
+                valueColor={user?.paymentStatus === "paid" ? "#22c55e" : "#444"}
+                delay={400}
+                visible={heroVisible}
+              />
+            </div>
+
+            {/* YOUR TEAM IS WAITING — critical + pulsing */}
+            <div
+              className="border-t px-6 py-5"
+              style={{
+                borderColor: "rgba(255,85,0,0.2)",
+                background: "rgba(255,85,0,0.04)",
+                transition: "opacity 0.6s ease 1.2s",
+                opacity: heroVisible ? 1 : 0,
+              }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <p
+                  className="font-display text-[#F2F0EB] tracking-widest"
+                  style={{
+                    fontSize: "clamp(1rem, 4.5vw, 1.4rem)",
+                    animation: "pulse 2s ease-in-out infinite",
+                  }}
+                >
+                  YOUR TEAM IS WAITING.
+                </p>
+                <div className="flex gap-1.5">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="w-2 h-2 rounded-full bg-[#FF5500]"
+                      style={{ animation: `pulse 1.4s ease-in-out ${i * 0.22}s infinite` }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <UnlockCounter visible={heroVisible} />
+            </div>
+          </div>
+        </section>
+
+        {/* ── Section 3: Profile Intel Card ── */}
+        <section
+          style={{
+            transition: "opacity 0.7s ease 0.6s",
+            opacity: heroVisible ? 1 : 0,
+          }}
+        >
           <div className="border border-white/8 bg-black/15 backdrop-blur-sm p-5">
             <div className="flex items-start justify-between mb-4">
-              <p className="font-mono text-[#444] text-xs tracking-[0.3em]">YOUR PROFILE</p>
-              <span className="font-mono text-[#FF5500] text-xs tracking-wider">
-                {user?.sportsDayProfile?.replace(/_/g, " ").toUpperCase() ?? "COMPETITOR"}
+              <p className="font-mono text-[#444] text-xs tracking-[0.3em]">YOUR INTEL</p>
+              <span className="font-mono text-[#FF5500] text-[10px] tracking-wider border border-[#FF5500]/30 px-2 py-0.5">
+                {user?.paymentStatus === "paid" ? "PRIORITY" : "STANDARD"}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
                 { label: "NAME", value: (user?.fullName ?? "").toUpperCase() },
-                { label: "STATUS", value: "REGISTERED", color: "#FF5500" },
+                { label: "STATUS", value: "REGISTERED", color: "#22c55e" },
                 { label: "TEAM", value: "CLASSIFIED", color: "#444" },
-                { label: "ACCESS", value: user?.paymentStatus === "paid" ? "PRIORITY" : "STANDARD", color: user?.paymentStatus === "paid" ? "#22c55e" : "#444" },
+                { label: "DATE", value: "11 JULY 2026", color: "#F2F0EB" },
               ].map(({ label, value, color }) => (
                 <div key={label}>
                   <p className="font-mono text-[#333] text-[10px] tracking-[0.2em] mb-1">{label}</p>
@@ -837,16 +936,8 @@ export default function Holding() {
           </div>
         </section>
 
-        {/* ── Section 3: Status Block ── */}
-        <section>
-          <StatusBlock visible={heroVisible} />
-        </section>
-
-        {/* ── Section 4: Scratch Card Replay + Share ── */}
+        {/* ── Section 4: Golden Ticket (collapsible) ── */}
         <ScratchReplaySection visible={heroVisible} />
-
-        {/* ── Particle breathing space ── */}
-        <div aria-hidden="true" style={{ height: "40vh", pointerEvents: "none" }} />
 
         {/* ── Section 5: Unlock CTA ── */}
         <section
