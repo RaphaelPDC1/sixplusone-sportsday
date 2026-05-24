@@ -44,6 +44,8 @@ export default function UnlockReveal() {
   useEffect(() => {
     if (isLoading) return;
     if (!dashboard) return;
+    // Once animation has started, do not re-evaluate guards — prevents infinite loops
+    if (hasStarted.current) return;
     const regId = userId ?? "";
 
     // If already seen unlock reveal, continue journey from where they left off
@@ -58,11 +60,9 @@ export default function UnlockReveal() {
       return;
     }
 
-    // Start animation sequence
-    if (!hasStarted.current) {
-      hasStarted.current = true;
-      startSequence();
-    }
+    // Start animation sequence (only once)
+    hasStarted.current = true;
+    startSequence();
   }, [dashboard, isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function startSequence() {

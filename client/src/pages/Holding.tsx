@@ -595,14 +595,19 @@ export default function Holding() {
   }, [error]);
 
   // ── Redirect unlocked users ──
+  // Guard: only redirect once per mount to prevent re-firing loops
+  const hasRedirectedRef = useRef(false);
+
   useEffect(() => {
     if (!dashboard) return;
+    if (hasRedirectedRef.current) return; // already redirected this mount
     const cameFromTeamHub = sessionStorage.getItem("came_from_teamhub") === "1";
     if (cameFromTeamHub) {
       sessionStorage.removeItem("came_from_teamhub");
       return;
     }
     if (dashboard.state === "UNLOCKED_PRIORITY" || dashboard.state === "PUBLIC_REVEAL") {
+      hasRedirectedRef.current = true;
       // Use central state manager to determine the correct next route
       const registrationId = localStorage.getItem("sd_user_id") ?? "";
       if (hasCompletedFullRevealFlow(registrationId)) {
