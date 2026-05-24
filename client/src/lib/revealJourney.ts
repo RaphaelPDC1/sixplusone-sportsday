@@ -58,9 +58,10 @@ export function markShirtConfirmSeen(registrationId: string): void {
  * Does NOT reset payment, unlock status, shirt size, or any server state.
  */
 export function resetRevealJourneyForReplay(registrationId: string): void {
-  localStorage.removeItem(KEY_UNLOCK_REVEAL(registrationId));
+  // Clear both reveal flags so the full sequence replays: /reveal → /unlock-reveal → /shirt-confirm
   localStorage.removeItem(KEY_TEAM_REVEAL(registrationId));
-  // Keep shirt confirm — no need to re-confirm shirt after replay
+  localStorage.removeItem(KEY_UNLOCK_REVEAL(registrationId));
+  // Keep shirt confirm — no need to re-confirm shirt size after replay
 }
 
 // ─── Next route helper ────────────────────────────────────────────────────────
@@ -69,16 +70,19 @@ export function resetRevealJourneyForReplay(registrationId: string): void {
  * Given the current registration ID and paid/unlocked status,
  * returns the correct next route for a paid user.
  *
+ * Correct sequence:
+ *   Payment → Confirming → /reveal (team reveal, big moment) → /unlock-reveal (player pack celebration) → /shirt-confirm → /team-hub
+ *
  * Logic:
  *   - Not paid → /holding (should not be here)
- *   - Paid, not seen unlock reveal → /unlock-reveal
- *   - Paid, seen unlock reveal, not seen team reveal → /reveal
- *   - Paid, seen team reveal, not seen shirt confirm → /shirt-confirm
+ *   - Paid, not seen team reveal → /reveal  (FIRST: team reveal with confetti)
+ *   - Paid, seen team reveal, not seen unlock reveal → /unlock-reveal  (SECOND: player pack animation)
+ *   - Paid, seen unlock reveal, not seen shirt confirm → /shirt-confirm
  *   - Paid, completed full flow → /team-hub
  */
 export function getNextRevealRoute(registrationId: string): string {
-  if (!hasSeenUnlockReveal(registrationId)) return "/unlock-reveal";
   if (!hasSeenTeamReveal(registrationId)) return "/reveal";
+  if (!hasSeenUnlockReveal(registrationId)) return "/unlock-reveal";
   if (!hasSeenShirtConfirm(registrationId)) return "/shirt-confirm";
   return "/team-hub";
 }

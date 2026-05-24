@@ -634,10 +634,10 @@ export default function Holding() {
   useEffect(() => {
     if (unlockStep === "confirming" && (dashboard?.state === "UNLOCKED_PRIORITY" || dashboard?.state === "PUBLIC_REVEAL")) {
       setUnlockStep("idle");
-      console.log("[Holding] Unlock confirmed — redirecting to /unlock-reveal");
-      // Always go to reveal screen after a fresh payment confirmation
-      // (UnlockReveal itself will skip to /team-hub if hasSeenUnlockReveal is already set)
-      navigateRef.current("/unlock-reveal");
+      console.log("[Holding] Unlock confirmed — redirecting to /reveal (team reveal first)");
+      // Always go to /reveal first after a fresh payment confirmation — team reveal is the big moment
+      // The reveal journey manager will route through /unlock-reveal → /shirt-confirm → /team-hub
+      navigateRef.current("/reveal");
     }
   }, [dashboard?.state, unlockStep]);
 

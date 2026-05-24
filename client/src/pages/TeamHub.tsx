@@ -243,11 +243,12 @@ export default function TeamHub() {
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center justify-between mb-5">
             <BackNav
-              to="/unlock-reveal"
+              to="/reveal"
               inline
               label="REPLAY REVEAL"
               onBeforeNavigate={() => {
                 // Reset reveal journey flags so the full sequence replays from the start
+                // Sequence: /reveal → /unlock-reveal → /shirt-confirm → /team-hub
                 const regId = localStorage.getItem("sd_user_id") ?? "";
                 resetRevealJourneyForReplay(regId);
                 // Clear reveal splash so it plays fresh

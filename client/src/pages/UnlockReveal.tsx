@@ -48,9 +48,9 @@ export default function UnlockReveal() {
     if (hasStarted.current) return;
     const regId = userId ?? "";
 
-    // If already seen unlock reveal, continue journey from where they left off
+    // If already seen unlock reveal, skip to shirt confirm
     if (hasSeenUnlockReveal(regId)) {
-      navigate(getNextRevealRoute(regId), { replace: true });
+      navigate("/shirt-confirm", { replace: true });
       return;
     }
 
@@ -82,9 +82,9 @@ export default function UnlockReveal() {
 
   function handleEnterHub() {
     const regId = userId ?? "";
-    // Mark unlock reveal as seen, then proceed to team reveal
+    // Mark unlock reveal as seen, then proceed to shirt confirmation
     markUnlockRevealSeen(regId);
-    navigate("/reveal", { replace: true });
+    navigate("/shirt-confirm", { replace: true });
   }
 
   const team = dashboard?.team ?? null;
@@ -279,7 +279,11 @@ export default function UnlockReveal() {
         {/* Skip link — always visible after phase 2 so user is never trapped */}
         {phase >= 2 && (
           <button
-            onClick={() => navigate("/reveal", { replace: true })}
+            onClick={() => {
+              const regId = userId ?? "";
+              markUnlockRevealSeen(regId);
+              navigate("/shirt-confirm", { replace: true });
+            }}
             className="font-mono text-[#F2F0EB]/20 text-[10px] tracking-[0.2em] hover:text-[#F2F0EB]/50 transition-colors mt-2"
           >
             SKIP

@@ -618,33 +618,46 @@ export default function Reveal() {
       ctx.fillText("@6plus1", 540, 1860);
     };
 
-    const drawWithLogo = (headingFont: string) => {
+    const drawWithLogo = (headingFont: string, logoBlobUrl: string | null) => {
       drawCard(headingFont);
+      if (!logoBlobUrl) {
+        // No logo — capture card as-is
+        setShareCardDataUrl(canvas.toDataURL("image/png"));
+        return;
+      }
       const logoImg = new Image();
-      logoImg.crossOrigin = "anonymous";
       logoImg.onload = () => {
         ctx.save(); ctx.filter = "brightness(0) invert(1)";
         const logoH = 150, logoW = (logoImg.width / logoImg.height) * logoH;
         ctx.drawImage(logoImg, (1080 - logoW) / 2, 65, logoW, logoH);
         ctx.restore();
-        // Capture as data URL for display and sharing
+        URL.revokeObjectURL(logoBlobUrl);
+        // Capture as data URL — no cross-origin taint because we used a blob URL
         setShareCardDataUrl(canvas.toDataURL("image/png"));
       };
       logoImg.onerror = () => {
-        // Logo failed to load — still capture the card without it
+        URL.revokeObjectURL(logoBlobUrl);
         setShareCardDataUrl(canvas.toDataURL("image/png"));
       };
-      logoImg.src = LOGO_URL;
+      logoImg.src = logoBlobUrl;
     };
 
+    // Fetch logo as blob to avoid canvas cross-origin taint, then load font
+    const fetchLogo = fetch(LOGO_URL)
+      .then((r) => r.blob())
+      .then((b) => URL.createObjectURL(b))
+      .catch(() => null);
+
     // Load Bebas Neue via FontFace API for crisp canvas text
-    const font = new FontFace(
+    const fontLoad = new FontFace(
       "Bebas Neue",
       "url(https://fonts.gstatic.com/s/bebasneuepro/v1/CNz9x_HTkHBMRBBqBBbMgMBBFBBnAA.woff2)"
-    );
-    font.load()
-      .then((loaded) => { document.fonts.add(loaded); drawWithLogo("'Bebas Neue'"); })
-      .catch(() => { drawWithLogo("'Arial Narrow', Arial, sans-serif"); });
+    ).load().then((loaded) => { document.fonts.add(loaded); return "'Bebas Neue'"; })
+     .catch(() => "'Arial Narrow', Arial, sans-serif");
+
+    Promise.all([fontLoad, fetchLogo]).then(([headingFont, logoBlobUrl]) => {
+      drawWithLogo(headingFont, logoBlobUrl);
+    });
   }, [phase, config.color, team]);
 
   const handleShare = async () => {
@@ -805,7 +818,8 @@ export default function Reveal() {
             <button onClick={() => {
                 const regId = localStorage.getItem("sd_user_id") ?? "";
                 markTeamRevealSeen(regId);
-                navigate("/shirt-confirm");
+                // Next step: /unlock-reveal (player pack celebration)
+                navigate("/unlock-reveal");
               }}
               className="w-full border-2 border-white text-white font-display text-xl tracking-widest py-5 hover:bg-white/10 transition-colors active:scale-[0.98]">
               CONTINUE →
