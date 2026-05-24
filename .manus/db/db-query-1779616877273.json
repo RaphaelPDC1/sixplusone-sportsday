@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, earlyPrice, futurePrice, priceIncreaseAt, isPriceIncreaseActive FROM sports_day_settings;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT id, earlyPrice, futurePrice, priceIncreaseAt, isPriceIncreaseActive FROM sports_day_settings;",
+  "rows": [
+    {
+      "id": "1",
+      "earlyPrice": "2000",
+      "futurePrice": "3500",
+      "priceIncreaseAt": "2026-05-27 18:25:31",
+      "isPriceIncreaseActive": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tearlyPrice\tfuturePrice\tpriceIncreaseAt\tisPriceIncreaseActive\n1\t2000\t3500\t2026-05-27 18:25:31\t0\n",
+  "stderr": "",
+  "execution_time_ms": 351
+}

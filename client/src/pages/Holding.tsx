@@ -951,11 +951,7 @@ export default function Holding() {
                         {dashboard.priceState.currentPriceLabel}
                       </span>
                     )}
-                    {import.meta.env.VITE_TEST_UNLOCK_PRICE_PENCE && (
-                      <span className="font-mono text-[#FF5500] text-xs tracking-wider border border-[#FF5500] px-2 py-0.5 bg-[#FF5500]/10">
-                        TEST PRICE
-                      </span>
-                    )}
+
                   </div>
                 )}
 

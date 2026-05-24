@@ -90,9 +90,9 @@ export async function getSportsDaySettings() {
 function buildPriceState(settings: typeof sportsDaySettings.$inferSelect | null): PriceState {
   const now = Date.now();
 
-  // Use test price if set, otherwise use database settings
-  const earlyPricePence = ENV.TEST_UNLOCK_PRICE_PENCE ?? (settings?.earlyPrice ?? 2500); // £25.00 or test override
-  const futurePricePence = ENV.TEST_UNLOCK_PRICE_PENCE ?? (settings?.futurePrice ?? 3500); // £35.00 or test override
+  // Price comes from database settings
+  const earlyPricePence = settings?.earlyPrice ?? 2000; // £20.00 default
+  const futurePricePence = settings?.futurePrice ?? 3500; // £35.00 default
   
   // If no priceIncreaseAt is set, default to 1 week from now
   let priceIncreaseAtTime = settings?.priceIncreaseAt ? new Date(settings.priceIncreaseAt).getTime() : null;

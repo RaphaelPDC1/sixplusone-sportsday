@@ -986,15 +986,12 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
         settings?.isPriceIncreaseActive === true ||
         (priceIncreaseAt !== null && now >= priceIncreaseAt.getTime());
       
-      // Use test price if set, otherwise use database settings
-      let amountPence = ENV.TEST_UNLOCK_PRICE_PENCE;
-      if (!amountPence) {
-        amountPence = isPriceIncreased
-          ? (settings?.futurePrice ?? 3500)
-          : (settings?.earlyPrice ?? 2500);
-      }
+      // Price always comes from database settings
+      const amountPence = isPriceIncreased
+        ? (settings?.futurePrice ?? 3500)
+        : (settings?.earlyPrice ?? 2000);
       
-      const isTestMode = ENV.TEST_UNLOCK_PRICE_PENCE !== null;
+      const isTestMode = false;
 
       const stripeKey = ENV.STRIPE_SECRET_KEY;
       if (!stripeKey) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Stripe not configured" });
