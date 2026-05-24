@@ -934,6 +934,32 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
       return { success: true, topName: sanitised };
     }),
 
+  // ─── Update shirt size/fit (from shirt confirm screen) ────────────────────────
+  updateShirtSelection: publicProcedure
+    .input(z.object({
+      registrationId: z.string(),
+      shirtSize: z.enum(["XS", "S", "M", "L", "XL", "XXL"]),
+      shirtFit: z.enum(["regular", "oversized"]),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const reg = await getRegistrationById(input.registrationId);
+      if (!reg) throw new TRPCError({ code: "NOT_FOUND" });
+      const settings = await getSportsDaySettings();
+      if (settings?.topProductionCutoffAt) {
+        const cutoff = new Date(settings.topProductionCutoffAt);
+        if (Date.now() >= cutoff.getTime()) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Shirt selection is locked. Production has started." });
+        }
+      }
+      await db
+        .update(sportsDayRegistrations)
+        .set({ shirtSize: input.shirtSize, shirtFit: input.shirtFit })
+        .where(eq(sportsDayRegistrations.id, input.registrationId));
+      return { success: true };
+    }),
+
   // ─── Create Stripe PaymentIntent (embedded element) ─────────────────────────
   createPaymentIntent: publicProcedure
     .input(z.object({ registrationId: z.string() }))

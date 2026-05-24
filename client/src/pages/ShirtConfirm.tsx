@@ -5,9 +5,12 @@ import { markShirtConfirmSeen } from "@/lib/revealJourney";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
-// Shirt size and fit options (mirrors TopNameEditor)
+// Shirt size and fit options — must exactly match the registration questionnaire
 const SHIRT_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
-const SHIRT_FITS = ["Regular", "Slim"];
+const SHIRT_FITS: Array<{ val: "regular" | "oversized"; label: string }> = [
+  { val: "regular", label: "REGULAR" },
+  { val: "oversized", label: "OVERSIZED" },
+];
 
 export default function ShirtConfirm() {
   const [, navigate] = useLocation();
@@ -23,14 +26,15 @@ export default function ShirtConfirm() {
   const [confirmed, setConfirmed] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedFit, setSelectedFit] = useState<string | null>(null);
+  const [selectedFit, setSelectedFit] = useState<"regular" | "oversized" | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const updateShirtSelection = trpc.sportsday.updateShirtSelection.useMutation();
 
   // Initialize from dashboard
   useEffect(() => {
-    if (dashboard?.shirtSize && dashboard?.shirtFit) {
-      setSelectedSize(dashboard.shirtSize);
-      setSelectedFit(dashboard.shirtFit);
-    }
+    if (dashboard?.shirtSize) setSelectedSize(dashboard.shirtSize);
+    if (dashboard?.shirtFit) setSelectedFit(dashboard.shirtFit as "regular" | "oversized");
   }, [dashboard?.shirtSize, dashboard?.shirtFit]);
 
   // Guard: if not unlocked, redirect to holding
@@ -43,16 +47,24 @@ export default function ShirtConfirm() {
     }
   }, [dashboard, isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function handleConfirm() {
-    const regId = userId ?? "";
-    // Mark shirt confirm as seen using central state manager
-    markShirtConfirmSeen(regId);
-    navigate("/team-hub", { replace: true });
-  }
-
-  function handleEdit() {
-    // Go back to top name editor to change shirt selection
-    navigate("/holding", { replace: true });
+  async function handleConfirm() {
+    if (!selectedSize || !selectedFit || !userId) return;
+    setSaving(true);
+    try {
+      // Save updated shirt selection if changed
+      if (selectedSize !== dashboard?.shirtSize || selectedFit !== dashboard?.shirtFit) {
+        await updateShirtSelection.mutateAsync({
+          registrationId: userId,
+          shirtSize: selectedSize as "XS" | "S" | "M" | "L" | "XL" | "XXL",
+          shirtFit: selectedFit,
+        });
+      }
+      // Mark shirt confirm as seen using central state manager
+      markShirtConfirmSeen(userId);
+      navigate("/team-hub", { replace: true });
+    } catch {
+      setSaving(false);
+    }
   }
 
   if (isLoading) {
@@ -160,18 +172,18 @@ export default function ShirtConfirm() {
                 SELECT FIT
               </p>
               <div className="grid grid-cols-2 gap-2">
-                {SHIRT_FITS.map((fit) => (
+                {SHIRT_FITS.map(({ val, label }) => (
                   <button
-                    key={fit}
-                    onClick={() => setSelectedFit(fit)}
+                    key={val}
+                    onClick={() => setSelectedFit(val)}
                     className="py-2 px-3 border rounded-sm font-mono text-sm tracking-[0.15em] transition-all"
                     style={{
-                      borderColor: selectedFit === fit ? "#FF5500" : "rgba(255,255,255,0.1)",
-                      background: selectedFit === fit ? "rgba(255,85,0,0.2)" : "transparent",
-                      color: selectedFit === fit ? "#FF5500" : "#F2F0EB/60",
+                      borderColor: selectedFit === val ? "#FF5500" : "rgba(255,255,255,0.1)",
+                      background: selectedFit === val ? "rgba(255,85,0,0.2)" : "transparent",
+                      color: selectedFit === val ? "#FF5500" : "rgba(242,240,235,0.6)",
                     }}
                   >
-                    {fit}
+                    {label}
                   </button>
                 ))}
               </div>
@@ -202,8 +214,8 @@ export default function ShirtConfirm() {
               boxShadow: selectedSize && selectedFit ? "0 0 20px rgba(255,85,0,0.3)" : "none",
             }}
           >
-            CONFIRM & ENTER TEAM HUB →
-          </button>
+            {saving ? "SAVING..." : "CONFIRM & ENTER TEAM HUB →"}
+            </button>
 
           {editMode && (
             <button
