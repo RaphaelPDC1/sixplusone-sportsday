@@ -31,6 +31,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { ENV } from "./_core/env";
 import { invokeLLM } from "./_core/llm";
+import { handleSportsDayRegistration, handleSportsDayPayment, handleTeamReassignment, handleAutoUnlock, handleShirtUpdate } from "./_core/klaviyo";
 import { TRPCError } from "@trpc/server";
 
 // ─── In-memory rate limiter ───────────────────────────────────────────────────
@@ -198,6 +199,19 @@ const sportsDayRouter = router({
       if (input.referredBy) {
         await incrementReferralCount(input.referredBy);
       }
+
+      // Send to Klaviyo (non-blocking)
+      handleSportsDayRegistration(
+        email,
+        input.fullName.trim(),
+        team,
+        finalGroupCode ?? null,
+        input.shirtSize ?? null,
+        "unpaid",
+        input.contentConsent === "yes"
+      ).catch((err) => {
+        console.error("[Registration] Klaviyo sync failed:", err);
+      });
 
       return { id, referralCode, team, profile, tagline };
     }),

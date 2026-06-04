@@ -1,0 +1,31 @@
+{
+  "query": "\nSELECT id, fullName, email, team, revealStatus\nFROM sports_day_registrations\nWHERE fullName IN ('Charlotte', 'Ryan', 'Nat')\nORDER BY fullName;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute \nSELECT id, fullName, email, team, revealStatus\nFROM sports_day_registrations\nWHERE fullName IN ('Charlotte', 'Ryan', 'Nat')\nORDER BY fullName;\n",
+  "rows": [
+    {
+      "id": "f39e01b4-2fa1-4ba1-88ff-a39190609b7f",
+      "fullName": "Charlotte",
+      "email": "charlottetruemanmarsden@gmail.com",
+      "team": "pink",
+      "revealStatus": "locked"
+    },
+    {
+      "id": "4a333815-17ff-48a5-aaa4-068abb713b9d",
+      "fullName": "Nat",
+      "email": "nataliearihanna@hotmail.com",
+      "team": "pink",
+      "revealStatus": "locked"
+    },
+    {
+      "id": "fa996e43-27bc-4e48-b944-9f13e479ac8b",
+      "fullName": "Ryan",
+      "email": "ryanbeard007@gmail.com",
+      "team": "pink",
+      "revealStatus": "locked"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfullName\temail\tteam\trevealStatus\nf39e01b4-2fa1-4ba1-88ff-a39190609b7f\tCharlotte\tcharlottetruemanmarsden@gmail.com\tpink\tlocked\n4a333815-17ff-48a5-aaa4-068abb713b9d\tNat\tnataliearihanna@hotmail.com\tpink\tlocked\nfa996e43-27bc-4e48-b944-9f13e479ac8b\tRyan\tryanbeard007@gmail.com\tpink\tlocked\n",
+  "stderr": "",
+  "execution_time_ms": 378
+}

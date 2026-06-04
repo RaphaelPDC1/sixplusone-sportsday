@@ -1,0 +1,64 @@
+{
+  "query": "\nSELECT \n  groupCode,\n  COUNT(*) as memberCount,\n  GROUP_CONCAT(CONCAT(fullName, ' (', team, ')') ORDER BY groupRole DESC, fullName SEPARATOR ' | ') as members,\n  SUM(CASE WHEN groupRole = 'creator' THEN 1 ELSE 0 END) as creatorCount\nFROM sports_day_registrations\nWHERE groupCode IS NOT NULL AND groupCode != ''\nGROUP BY groupCode\nORDER BY memberCount DESC, groupCode;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute \nSELECT \n  groupCode,\n  COUNT(*) as memberCount,\n  GROUP_CONCAT(CONCAT(fullName, ' (', team, ')') ORDER BY groupRole DESC, fullName SEPARATOR ' | ') as members,\n  SUM(CASE WHEN groupRole = 'creator' THEN 1 ELSE 0 END) as creatorCount\nFROM sports_day_registrations\nWHERE groupCode IS NOT NULL AND groupCode != ''\nGROUP BY groupCode\nORDER BY memberCount DESC, groupCode;\n",
+  "rows": [
+    {
+      "groupCode": "SD002-5MQVK",
+      "memberCount": "4",
+      "members": "Libby (orange) | papa (orange) | Sophie (orange) | Karl (blue)",
+      "creatorCount": "1"
+    },
+    {
+      "groupCode": "SD002-L53S8",
+      "memberCount": "3",
+      "members": "Evie (blue) | Kiera (red) | Teal (pink)",
+      "creatorCount": "0"
+    },
+    {
+      "groupCode": "SD002-M9PLA",
+      "memberCount": "3",
+      "members": "Abbie (blue) | Jessica (blue) | Caitlin (orange)",
+      "creatorCount": "1"
+    },
+    {
+      "groupCode": "SD002-UDX",
+      "memberCount": "3",
+      "members": "Milly (blue) | Sharmila (red) | Leah (red)",
+      "creatorCount": "1"
+    },
+    {
+      "groupCode": "SD002-BBH",
+      "memberCount": "1",
+      "members": "Gracie (orange)",
+      "creatorCount": "1"
+    },
+    {
+      "groupCode": "SD002-EW2QW",
+      "memberCount": "1",
+      "members": "Papis (orange)",
+      "creatorCount": "1"
+    },
+    {
+      "groupCode": "SD002-KJS",
+      "memberCount": "1",
+      "members": "KING George (blue)",
+      "creatorCount": "1"
+    },
+    {
+      "groupCode": "SD002-R2L",
+      "memberCount": "1",
+      "members": "Ruby (pink)",
+      "creatorCount": "1"
+    },
+    {
+      "groupCode": "SD002-YPA",
+      "memberCount": "1",
+      "members": "Billie (pink)",
+      "creatorCount": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "groupCode\tmemberCount\tmembers\tcreatorCount\nSD002-5MQVK\t4\tLibby (orange) | papa (orange) | Sophie (orange) | Karl (blue)\t1\nSD002-L53S8\t3\tEvie (blue) | Kiera (red) | Teal (pink)\t0\nSD002-M9PLA\t3\tAbbie (blue) | Jessica (blue) | Caitlin (orange)\t1\nSD002-UDX\t3\tMilly (blue) | Sharmila (red) | Leah (red)\t1\nSD002-BBH\t1\tGracie (orange)\t1\nSD002-EW2QW\t1\tPapis (orange)\t1\nSD002-KJS\t1\tKING George (blue)\t1\nSD002-R2L\t1\tRuby (pink)\t1\nSD002-YPA\t1\tBillie (pink)\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1106
+}

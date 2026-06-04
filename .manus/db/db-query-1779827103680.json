@@ -1,0 +1,26 @@
+{
+  "query": "\nSELECT \n  team,\n  COUNT(*) as total\nFROM sports_day_registrations\nGROUP BY team\nORDER BY team;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute \nSELECT \n  team,\n  COUNT(*) as total\nFROM sports_day_registrations\nGROUP BY team\nORDER BY team;\n",
+  "rows": [
+    {
+      "team": "red",
+      "total": "26"
+    },
+    {
+      "team": "blue",
+      "total": "26"
+    },
+    {
+      "team": "pink",
+      "total": "27"
+    },
+    {
+      "team": "orange",
+      "total": "26"
+    }
+  ],
+  "messages": [],
+  "stdout": "team\ttotal\nred\t26\nblue\t26\npink\t27\norange\t26\n",
+  "stderr": "",
+  "execution_time_ms": 267
+}

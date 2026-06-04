@@ -1,0 +1,31 @@
+{
+  "query": "\nSELECT fullName, email, team, groupCode, groupRole\nFROM sports_day_registrations\nWHERE UPPER(groupCode) = 'SD002-UDX'\nORDER BY groupRole DESC, fullName;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute \nSELECT fullName, email, team, groupCode, groupRole\nFROM sports_day_registrations\nWHERE UPPER(groupCode) = 'SD002-UDX'\nORDER BY groupRole DESC, fullName;\n",
+  "rows": [
+    {
+      "fullName": "Milly",
+      "email": "akseville@gmail.com",
+      "team": "blue",
+      "groupCode": "SD002-UDX",
+      "groupRole": "joiner"
+    },
+    {
+      "fullName": "Sharmila",
+      "email": "sharmilaroy94@gmail.com",
+      "team": "red",
+      "groupCode": "SD002-UDX",
+      "groupRole": "joiner"
+    },
+    {
+      "fullName": "Leah",
+      "email": "leahpbp@gmail.com",
+      "team": "red",
+      "groupCode": "SD002-UDX",
+      "groupRole": "creator"
+    }
+  ],
+  "messages": [],
+  "stdout": "fullName\temail\tteam\tgroupCode\tgroupRole\nMilly\takseville@gmail.com\tblue\tSD002-UDX\tjoiner\nSharmila\tsharmilaroy94@gmail.com\tred\tSD002-UDX\tjoiner\nLeah\tleahpbp@gmail.com\tred\tSD002-UDX\tcreator\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}

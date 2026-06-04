@@ -1,0 +1,18 @@
+{
+  "query": "\n-- First, check if Milly exists\nSELECT id, fullName, email, team, groupCode, groupRole\nFROM sports_day_registrations\nWHERE LOWER(email) = 'akseville@gmail.com';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute \n-- First, check if Milly exists\nSELECT id, fullName, email, team, groupCode, groupRole\nFROM sports_day_registrations\nWHERE LOWER(email) = 'akseville@gmail.com';\n",
+  "rows": [
+    {
+      "id": "a622bf75-fd5b-46de-beca-b4150fa581e5",
+      "fullName": "Milly",
+      "email": "akseville@gmail.com",
+      "team": "blue",
+      "groupCode": "NULL",
+      "groupRole": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfullName\temail\tteam\tgroupCode\tgroupRole\na622bf75-fd5b-46de-beca-b4150fa581e5\tMilly\takseville@gmail.com\tblue\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}

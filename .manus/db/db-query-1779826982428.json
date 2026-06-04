@@ -1,0 +1,100 @@
+{
+  "query": "\nSELECT \n  id,\n  fullName,\n  email,\n  team,\n  groupCode,\n  competitiveness,\n  strongestEvent\nFROM sports_day_registrations\nWHERE team = 'blue' AND (groupCode IS NULL OR groupCode = '')\nORDER BY createdAt ASC\nLIMIT 10;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute \nSELECT \n  id,\n  fullName,\n  email,\n  team,\n  groupCode,\n  competitiveness,\n  strongestEvent\nFROM sports_day_registrations\nWHERE team = 'blue' AND (groupCode IS NULL OR groupCode = '')\nORDER BY createdAt ASC\nLIMIT 10;\n",
+  "rows": [
+    {
+      "id": "4ce4a880-3c0c-4449-beea-1c9cc194b8dc",
+      "fullName": "Kwabs",
+      "email": "kwabenamensah177@gmail.com",
+      "team": "blue",
+      "groupCode": "NULL",
+      "competitiveness": "winner",
+      "strongestEvent": "speed"
+    },
+    {
+      "id": "9a93d8ab-a502-4eae-96ed-0973ed6d1b6f",
+      "fullName": "Luca",
+      "email": "lucascaw@live.co.uk",
+      "team": "blue",
+      "groupCode": "NULL",
+      "competitiveness": "winner",
+      "strongestEvent": "vibes"
+    },
+    {
+      "id": "f39e01b4-2fa1-4ba1-88ff-a39190609b7f",
+      "fullName": "Charlotte",
+      "email": "charlottetruemanmarsden@gmail.com",
+      "team": "blue",
+      "groupCode": "NULL",
+      "competitiveness": "balanced",
+      "strongestEvent": "vibes"
+    },
+    {
+      "id": "de82ccb4-88ee-42c4-aac0-d6a1907af86c",
+      "fullName": "Chloe",
+      "email": "chloe.butler2001@hotmail.com",
+      "team": "blue",
+      "groupCode": "NULL",
+      "competitiveness": "winner",
+      "strongestEvent": "strength"
+    },
+    {
+      "id": "fa996e43-27bc-4e48-b944-9f13e479ac8b",
+      "fullName": "Ryan",
+      "email": "ryanbeard007@gmail.com",
+      "team": "blue",
+      "groupCode": "NULL",
+      "competitiveness": "balanced",
+      "strongestEvent": "endurance"
+    },
+    {
+      "id": "4a333815-17ff-48a5-aaa4-068abb713b9d",
+      "fullName": "Nat",
+      "email": "nataliearihanna@hotmail.com",
+      "team": "blue",
+      "groupCode": "NULL",
+      "competitiveness": "balanced",
+      "strongestEvent": "vibes"
+    },
+    {
+      "id": "a25d8224-0958-46e6-bba8-55a60ce7c056",
+      "fullName": "musty",
+      "email": "mdotdarboe@gmail.com",
+      "team": "blue",
+      "groupCode": "NULL",
+      "competitiveness": "winner",
+      "strongestEvent": "endurance"
+    },
+    {
+      "id": "06bd958a-81b7-43d3-93d0-d54230f38e6a",
+      "fullName": "Nardos",
+      "email": "nardos695@gmail.com",
+      "team": "blue",
+      "groupCode": "NULL",
+      "competitiveness": "winner",
+      "strongestEvent": "speed"
+    },
+    {
+      "id": "7f13c96d-9e3c-480b-9068-2157828ad582",
+      "fullName": "Henz",
+      "email": "henryzemah@hotmail.co.uk",
+      "team": "blue",
+      "groupCode": "NULL",
+      "competitiveness": "winner",
+      "strongestEvent": "strength"
+    },
+    {
+      "id": "90419902-8a28-467b-86d8-6ec1a129a987",
+      "fullName": "Vezza vee",
+      "email": "verity-archer@hotmail.co.uk",
+      "team": "blue",
+      "groupCode": "NULL",
+      "competitiveness": "vibes",
+      "strongestEvent": "vibes"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfullName\temail\tteam\tgroupCode\tcompetitiveness\tstrongestEvent\n4ce4a880-3c0c-4449-beea-1c9cc194b8dc\tKwabs\tkwabenamensah177@gmail.com\tblue\tNULL\twinner\tspeed\n9a93d8ab-a502-4eae-96ed-0973ed6d1b6f\tLuca\tlucascaw@live.co.uk\tblue\tNULL\twinner\tvibes\nf39e01b4-2fa1-4ba1-88ff-a39190609b7f\tCharlotte\tcharlottetruemanmarsden@gmail.com\tblue\tNULL\tbalanced\tvibes\nde82ccb4-88ee-42c4-aac0-d6a1907af86c\tChloe\tchloe.butler2001@hotmail.com\tblue\tNULL\twinner\tstrength\nfa996e43-27bc-4e48-b944-9f13e479ac8b\tRyan\tryanbeard007@gmail.com\tblue\tNULL\tbalanced\tendurance\n4a333815-17ff-48a5-aaa4-068abb713b9d\tNat\tnataliearihanna@hotmail.com\tblue\tNULL\tbalanced\tvibes\na25d8224-0958-46e6-bba8-55a60ce7c056\tmusty\tmdotdarboe@gmail.com\tblue\tNULL\twinner\tendurance\n06bd958a-81b7-43d3-93d0-d54230f38e6a\tNardos\tnardos695@gmail.com\tblue\tNULL\twinner\tspeed\n7f13c96d-9e3c-480b-9068-2157828ad582\tHenz\thenryzemah@hotmail.co.uk\tblue\tNULL\twinner\tstrength\n90419902-8a28-467b-86d8-6ec1a129a987\tVezza vee\tverity-archer@hotmail.co.uk\tblue\tNULL\tvibes\tvibes\n",
+  "stderr": "",
+  "execution_time_ms": 1128
+}

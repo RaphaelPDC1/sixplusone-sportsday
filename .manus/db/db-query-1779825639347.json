@@ -1,0 +1,30 @@
+{
+  "query": "\nSELECT fullName, email, team, accessType, paymentStatus, referralCode, groupCode, groupRole\nFROM sports_day_registrations\nWHERE UPPER(referralCode) LIKE '%UDX%'\n   OR UPPER(groupCode) LIKE '%UDX%'\nLIMIT 10;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute \nSELECT fullName, email, team, accessType, paymentStatus, referralCode, groupCode, groupRole\nFROM sports_day_registrations\nWHERE UPPER(referralCode) LIKE '%UDX%'\n   OR UPPER(groupCode) LIKE '%UDX%'\nLIMIT 10;\n",
+  "rows": [
+    {
+      "fullName": "Sharmila",
+      "email": "sharmilaroy94@gmail.com",
+      "team": "red",
+      "accessType": "free",
+      "paymentStatus": "unpaid",
+      "referralCode": "6VXUHS",
+      "groupCode": "SD002-UDX",
+      "groupRole": "joiner"
+    },
+    {
+      "fullName": "Leah",
+      "email": "leahpbp@gmail.com",
+      "team": "red",
+      "accessType": "free",
+      "paymentStatus": "unpaid",
+      "referralCode": "GYEJE2",
+      "groupCode": "SD002-UDX",
+      "groupRole": "creator"
+    }
+  ],
+  "messages": [],
+  "stdout": "fullName\temail\tteam\taccessType\tpaymentStatus\treferralCode\tgroupCode\tgroupRole\nSharmila\tsharmilaroy94@gmail.com\tred\tfree\tunpaid\t6VXUHS\tSD002-UDX\tjoiner\nLeah\tleahpbp@gmail.com\tred\tfree\tunpaid\tGYEJE2\tSD002-UDX\tcreator\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}

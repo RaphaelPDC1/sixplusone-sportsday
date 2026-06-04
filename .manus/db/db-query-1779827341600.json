@@ -1,0 +1,47 @@
+{
+  "query": "\nSELECT \n  fullName,\n  email,\n  team,\n  profileTagline,\n  aiTeamIdentity\nFROM sports_day_registrations\nWHERE fullName IN ('Charlotte', 'Ryan', 'Nat', 'Kwabs')\nORDER BY fullName;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute \nSELECT \n  fullName,\n  email,\n  team,\n  profileTagline,\n  aiTeamIdentity\nFROM sports_day_registrations\nWHERE fullName IN ('Charlotte', 'Ryan', 'Nat', 'Kwabs')\nORDER BY fullName;\n",
+  "rows": [
+    {
+      "fullName": "Charlotte",
+      "email": "charlottetruemanmarsden@gmail.com",
+      "team": "pink",
+      "profileTagline": "You bring the spark. The team brings the fire.",
+      "aiTeamIdentity": "NULL"
+    },
+    {
+      "fullName": "Kwabs",
+      "email": "kwabenamensah177@gmail.com",
+      "team": "blue",
+      "profileTagline": "You're looking like a calculated threat.",
+      "aiTeamIdentity": "**BLUE BLUR STRATEGIST**"
+    },
+    {
+      "fullName": "Kwabs",
+      "email": "hello@gaiso.co.uk",
+      "team": "blue",
+      "profileTagline": "You keep everyone guessing. That's the plan.",
+      "aiTeamIdentity": "NULL"
+    },
+    {
+      "fullName": "Nat",
+      "email": "nataliearihanna@hotmail.com",
+      "team": "pink",
+      "profileTagline": "The glue. Every team needs one.",
+      "aiTeamIdentity": "NULL"
+    },
+    {
+      "fullName": "Ryan",
+      "email": "ryanbeard007@gmail.com",
+      "team": "pink",
+      "profileTagline": "The glue. Every team needs one.",
+      "aiTeamIdentity": "NULL"
+    }
+  ],
+  "messages": [
+    "Fearless, fast, and always winning, Kwabs is the returning strategist Team Blue needs."
+  ],
+  "stdout": "fullName\temail\tteam\tprofileTagline\taiTeamIdentity\nCharlotte\tcharlottetruemanmarsden@gmail.com\tpink\tYou bring the spark. The team brings the fire.\tNULL\nKwabs\tkwabenamensah177@gmail.com\tblue\tYou're looking like a calculated threat.\t**BLUE BLUR STRATEGIST**\nFearless, fast, and always winning, Kwabs is the returning strategist Team Blue needs.\nKwabs\thello@gaiso.co.uk\tblue\tYou keep everyone guessing. That's the plan.\tNULL\nNat\tnataliearihanna@hotmail.com\tpink\tThe glue. Every team needs one.\tNULL\nRyan\tryanbeard007@gmail.com\tpink\tThe glue. Every team needs one.\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 273
+}

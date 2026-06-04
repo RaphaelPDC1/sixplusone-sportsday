@@ -1,0 +1,9 @@
+{
+  "query": "\n-- SD002-5MQVK: 3 orange, 1 blue → move Karl to orange\nUPDATE sports_day_registrations\nSET team = 'orange'\nWHERE groupCode = 'SD002-5MQVK' AND fullName = 'Karl';\n\n-- SD002-L53S8: 1 blue, 1 red, 1 pink → no majority, but let's check who is in it\n-- Evie (blue), Kiera (red), Teal (pink) - we'll move to blue (first member)\nUPDATE sports_day_registrations\nSET team = 'blue'\nWHERE groupCode = 'SD002-L53S8' AND fullName IN ('Kiera', 'Teal');\n\n-- SD002-M9PLA: 2 blue, 1 orange → move Caitlin to blue\nUPDATE sports_day_registrations\nSET team = 'blue'\nWHERE groupCode = 'SD002-M9PLA' AND fullName = 'Caitlin';\n\n-- SD002-UDX: 2 red, 1 blue → move Milly to red\nUPDATE sports_day_registrations\nSET team = 'red'\nWHERE groupCode = 'SD002-UDX' AND fullName = 'Milly';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute \n-- SD002-5MQVK: 3 orange, 1 blue → move Karl to orange\nUPDATE sports_day_registrations\nSET team = 'orange'\nWHERE groupCode = 'SD002-5MQVK' AND fullName = 'Karl';\n\n-- SD002-L53S8: 1 blue, 1 red, 1 pink → no majority, but let's check who is in it\n-- Evie (blue), Kiera (red), Teal (pink) - we'll move to blue (first member)\nUPDATE sports_day_registrations\nSET team = 'blue'\nWHERE groupCode = 'SD002-L53S8' AND fullName IN ('Kiera', 'Teal');\n\n-- SD002-M9PLA: 2 blue, 1 orange → move Caitlin to blue\nUPDATE sports_day_registrations\nSET team = 'blue'\nWHERE groupCode = 'SD002-M9PLA' AND fullName = 'Caitlin';\n\n-- SD002-UDX: 2 red, 1 blue → move Milly to red\nUPDATE sports_day_registrations\nSET team = 'red'\nWHERE groupCode = 'SD002-UDX' AND fullName = 'Milly';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1138
+}

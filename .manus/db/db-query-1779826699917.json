@@ -1,0 +1,34 @@
+{
+  "query": "\nSELECT \n  groupCode,\n  COUNT(*) as memberCount,\n  GROUP_CONCAT(CONCAT(fullName, ' (', team, ')') ORDER BY fullName SEPARATOR ' | ') as members,\n  GROUP_CONCAT(DISTINCT team) as teamAssigned\nFROM sports_day_registrations\nWHERE groupCode IS NOT NULL AND groupCode != '' AND groupCode IN ('SD002-5MQVK', 'SD002-L53S8', 'SD002-M9PLA', 'SD002-UDX')\nGROUP BY groupCode\nORDER BY groupCode;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute \nSELECT \n  groupCode,\n  COUNT(*) as memberCount,\n  GROUP_CONCAT(CONCAT(fullName, ' (', team, ')') ORDER BY fullName SEPARATOR ' | ') as members,\n  GROUP_CONCAT(DISTINCT team) as teamAssigned\nFROM sports_day_registrations\nWHERE groupCode IS NOT NULL AND groupCode != '' AND groupCode IN ('SD002-5MQVK', 'SD002-L53S8', 'SD002-M9PLA', 'SD002-UDX')\nGROUP BY groupCode\nORDER BY groupCode;\n",
+  "rows": [
+    {
+      "groupCode": "SD002-5MQVK",
+      "memberCount": "4",
+      "members": "Karl (orange) | Libby (orange) | papa (orange) | Sophie (orange)",
+      "teamAssigned": "orange"
+    },
+    {
+      "groupCode": "SD002-L53S8",
+      "memberCount": "3",
+      "members": "Evie (blue) | Kiera (blue) | Teal (blue)",
+      "teamAssigned": "blue"
+    },
+    {
+      "groupCode": "SD002-M9PLA",
+      "memberCount": "3",
+      "members": "Abbie (blue) | Caitlin (blue) | Jessica (blue)",
+      "teamAssigned": "blue"
+    },
+    {
+      "groupCode": "SD002-UDX",
+      "memberCount": "3",
+      "members": "Leah (red) | Milly (red) | Sharmila (red)",
+      "teamAssigned": "red"
+    }
+  ],
+  "messages": [],
+  "stdout": "groupCode\tmemberCount\tmembers\tteamAssigned\nSD002-5MQVK\t4\tKarl (orange) | Libby (orange) | papa (orange) | Sophie (orange)\torange\nSD002-L53S8\t3\tEvie (blue) | Kiera (blue) | Teal (blue)\tblue\nSD002-M9PLA\t3\tAbbie (blue) | Caitlin (blue) | Jessica (blue)\tblue\nSD002-UDX\t3\tLeah (red) | Milly (red) | Sharmila (red)\tred\n",
+  "stderr": "",
+  "execution_time_ms": 259
+}

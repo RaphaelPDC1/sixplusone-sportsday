@@ -1,0 +1,42 @@
+{
+  "query": "\nSELECT \n  team,\n  COUNT(*) as total,\n  SUM(CASE WHEN paymentStatus = 'paid' THEN 1 ELSE 0 END) as paid,\n  SUM(CASE WHEN paymentStatus = 'unpaid' THEN 1 ELSE 0 END) as unpaid,\n  SUM(CASE WHEN accessType = 'priority' THEN 1 ELSE 0 END) as priority_access,\n  SUM(CASE WHEN accessType = 'free' THEN 1 ELSE 0 END) as free_access\nFROM sports_day_registrations\nGROUP BY team\nORDER BY total DESC;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute \nSELECT \n  team,\n  COUNT(*) as total,\n  SUM(CASE WHEN paymentStatus = 'paid' THEN 1 ELSE 0 END) as paid,\n  SUM(CASE WHEN paymentStatus = 'unpaid' THEN 1 ELSE 0 END) as unpaid,\n  SUM(CASE WHEN accessType = 'priority' THEN 1 ELSE 0 END) as priority_access,\n  SUM(CASE WHEN accessType = 'free' THEN 1 ELSE 0 END) as free_access\nFROM sports_day_registrations\nGROUP BY team\nORDER BY total DESC;\n",
+  "rows": [
+    {
+      "team": "blue",
+      "total": "28",
+      "paid": "1",
+      "unpaid": "27",
+      "priority_access": "1",
+      "free_access": "27"
+    },
+    {
+      "team": "red",
+      "total": "26",
+      "paid": "1",
+      "unpaid": "25",
+      "priority_access": "1",
+      "free_access": "25"
+    },
+    {
+      "team": "orange",
+      "total": "26",
+      "paid": "1",
+      "unpaid": "25",
+      "priority_access": "1",
+      "free_access": "25"
+    },
+    {
+      "team": "pink",
+      "total": "25",
+      "paid": "0",
+      "unpaid": "25",
+      "priority_access": "0",
+      "free_access": "25"
+    }
+  ],
+  "messages": [],
+  "stdout": "team\ttotal\tpaid\tunpaid\tpriority_access\tfree_access\nblue\t28\t1\t27\t1\t27\nred\t26\t1\t25\t1\t25\norange\t26\t1\t25\t1\t25\npink\t25\t0\t25\t0\t25\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}

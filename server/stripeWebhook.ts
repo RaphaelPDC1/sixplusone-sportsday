@@ -18,6 +18,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "./db";
 import { sportsDayRegistrations, unmatchedPayments } from "../drizzle/schema";
 import { ENV } from "./_core/env";
+import { handleSportsDayPayment } from "./_core/klaviyo";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -139,6 +140,10 @@ async function handlePaymentSucceeded(
       }
       await unlockRegistration(db, reg.id, paymentIntentId, checkoutSessionId, paymentEmail, "matched_by_token", topName);
       log("DB_UPDATE_SUCCESS", { registrationId: reg.id, method: "matched_by_token" });
+      // Sync to Klaviyo (non-blocking)
+      handleSportsDayPayment(reg.email, reg.team).catch((err) => {
+        console.error("[Stripe Webhook] Klaviyo sync failed:", err);
+      });
       return;
     }
     log("TOKEN_NO_MATCH", { unlockToken: `${unlockToken.substring(0, 8)}...` });
@@ -160,6 +165,10 @@ async function handlePaymentSucceeded(
       }
       await unlockRegistration(db, reg.id, paymentIntentId, checkoutSessionId, paymentEmail, "matched_by_id", topName);
       log("DB_UPDATE_SUCCESS", { registrationId: reg.id, method: "matched_by_id" });
+      // Sync to Klaviyo (non-blocking)
+      handleSportsDayPayment(reg.email, reg.team).catch((err) => {
+        console.error("[Stripe Webhook] Klaviyo sync failed:", err);
+      });
       return;
     }
     log("ID_NO_MATCH", { registrationId: `${registrationId.substring(0, 8)}...` });
@@ -182,6 +191,10 @@ async function handlePaymentSucceeded(
       }
       await unlockRegistration(db, reg.id, paymentIntentId, checkoutSessionId, paymentEmail, "matched_by_email", topName);
       log("DB_UPDATE_SUCCESS", { registrationId: reg.id, method: "matched_by_email" });
+      // Sync to Klaviyo (non-blocking)
+      handleSportsDayPayment(reg.email, reg.team).catch((err) => {
+        console.error("[Stripe Webhook] Klaviyo sync failed:", err);
+      });
       return;
     }
     log("EMAIL_NO_MATCH", { emailToMatch });

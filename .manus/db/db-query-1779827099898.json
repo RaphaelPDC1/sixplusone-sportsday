@@ -1,0 +1,9 @@
+{
+  "query": "\nUPDATE sports_day_registrations\nSET team = 'blue'\nWHERE fullName = 'Kwabs' AND email = 'hello@gaiso.co.uk';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute \nUPDATE sports_day_registrations\nSET team = 'blue'\nWHERE fullName = 'Kwabs' AND email = 'hello@gaiso.co.uk';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 270
+}

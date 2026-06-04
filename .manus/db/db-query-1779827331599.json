@@ -1,0 +1,181 @@
+{
+  "query": "\nSELECT COLUMN_NAME\nFROM INFORMATION_SCHEMA.COLUMNS\nWHERE TABLE_NAME = 'sports_day_registrations'\nORDER BY ORDINAL_POSITION;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute \nSELECT COLUMN_NAME\nFROM INFORMATION_SCHEMA.COLUMNS\nWHERE TABLE_NAME = 'sports_day_registrations'\nORDER BY ORDINAL_POSITION;\n",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    },
+    {
+      "COLUMN_NAME": "fullName"
+    },
+    {
+      "COLUMN_NAME": "email"
+    },
+    {
+      "COLUMN_NAME": "instagramHandle"
+    },
+    {
+      "COLUMN_NAME": "attendedBefore"
+    },
+    {
+      "COLUMN_NAME": "comingType"
+    },
+    {
+      "COLUMN_NAME": "groupCode"
+    },
+    {
+      "COLUMN_NAME": "groupRole"
+    },
+    {
+      "COLUMN_NAME": "date4July"
+    },
+    {
+      "COLUMN_NAME": "date11July"
+    },
+    {
+      "COLUMN_NAME": "date18July"
+    },
+    {
+      "COLUMN_NAME": "dateAny"
+    },
+    {
+      "COLUMN_NAME": "competitiveness"
+    },
+    {
+      "COLUMN_NAME": "teammateType"
+    },
+    {
+      "COLUMN_NAME": "strongestEvent"
+    },
+    {
+      "COLUMN_NAME": "fear"
+    },
+    {
+      "COLUMN_NAME": "eventMotivation"
+    },
+    {
+      "COLUMN_NAME": "captainVoteInterest"
+    },
+    {
+      "COLUMN_NAME": "sportsDayProfile"
+    },
+    {
+      "COLUMN_NAME": "profileTagline"
+    },
+    {
+      "COLUMN_NAME": "shirtSize"
+    },
+    {
+      "COLUMN_NAME": "shirtFit"
+    },
+    {
+      "COLUMN_NAME": "healthNotes"
+    },
+    {
+      "COLUMN_NAME": "contentConsent"
+    },
+    {
+      "COLUMN_NAME": "team"
+    },
+    {
+      "COLUMN_NAME": "revealStatus"
+    },
+    {
+      "COLUMN_NAME": "accessType"
+    },
+    {
+      "COLUMN_NAME": "paymentStatus"
+    },
+    {
+      "COLUMN_NAME": "shopifyOrderId"
+    },
+    {
+      "COLUMN_NAME": "paidAt"
+    },
+    {
+      "COLUMN_NAME": "referralCode"
+    },
+    {
+      "COLUMN_NAME": "referredBy"
+    },
+    {
+      "COLUMN_NAME": "referralCount"
+    },
+    {
+      "COLUMN_NAME": "referralRewardUnlocked"
+    },
+    {
+      "COLUMN_NAME": "klaviyoTags"
+    },
+    {
+      "COLUMN_NAME": "shopifyCustomerId"
+    },
+    {
+      "COLUMN_NAME": "ipAddress"
+    },
+    {
+      "COLUMN_NAME": "userAgent"
+    },
+    {
+      "COLUMN_NAME": "aiTeamIdentity"
+    },
+    {
+      "COLUMN_NAME": "revealSeen"
+    },
+    {
+      "COLUMN_NAME": "unlockToken"
+    },
+    {
+      "COLUMN_NAME": "stripeCheckoutSessionId"
+    },
+    {
+      "COLUMN_NAME": "stripePaymentIntentId"
+    },
+    {
+      "COLUMN_NAME": "paymentEmail"
+    },
+    {
+      "COLUMN_NAME": "paymentMatchStatus"
+    },
+    {
+      "COLUMN_NAME": "manualUnlock"
+    },
+    {
+      "COLUMN_NAME": "manuallyUnlockedBy"
+    },
+    {
+      "COLUMN_NAME": "manualUnlockReason"
+    },
+    {
+      "COLUMN_NAME": "manuallyUnlockedAt"
+    },
+    {
+      "COLUMN_NAME": "topName"
+    },
+    {
+      "COLUMN_NAME": "topNameLastEditedAt"
+    },
+    {
+      "COLUMN_NAME": "topNameLockedAt"
+    },
+    {
+      "COLUMN_NAME": "shopifyOrderStatus"
+    },
+    {
+      "COLUMN_NAME": "popupCopyFirstVisit"
+    },
+    {
+      "COLUMN_NAME": "popupCopyReturnVisit"
+    },
+    {
+      "COLUMN_NAME": "popupCopyGeneratedAt"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\ncreatedAt\nfullName\nemail\ninstagramHandle\nattendedBefore\ncomingType\ngroupCode\ngroupRole\ndate4July\ndate11July\ndate18July\ndateAny\ncompetitiveness\nteammateType\nstrongestEvent\nfear\neventMotivation\ncaptainVoteInterest\nsportsDayProfile\nprofileTagline\nshirtSize\nshirtFit\nhealthNotes\ncontentConsent\nteam\nrevealStatus\naccessType\npaymentStatus\nshopifyOrderId\npaidAt\nreferralCode\nreferredBy\nreferralCount\nreferralRewardUnlocked\nklaviyoTags\nshopifyCustomerId\nipAddress\nuserAgent\naiTeamIdentity\nrevealSeen\nunlockToken\nstripeCheckoutSessionId\nstripePaymentIntentId\npaymentEmail\npaymentMatchStatus\nmanualUnlock\nmanuallyUnlockedBy\nmanualUnlockReason\nmanuallyUnlockedAt\ntopName\ntopNameLastEditedAt\ntopNameLockedAt\nshopifyOrderStatus\npopupCopyFirstVisit\npopupCopyReturnVisit\npopupCopyGeneratedAt\n",
+  "stderr": "",
+  "execution_time_ms": 259
+}
