@@ -1,0 +1,466 @@
+{
+  "query": "DESCRIBE sports_day_registrations;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute DESCRIBE sports_day_registrations;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "varchar(36)",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "fullName",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "email",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "instagramHandle",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "attendedBefore",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "comingType",
+      "Type": "enum('solo','with_friends')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "groupCode",
+      "Type": "varchar(15)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "groupRole",
+      "Type": "enum('creator','joiner')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "date4July",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "date11July",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "date18July",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "dateAny",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "competitiveness",
+      "Type": "enum('vibes','balanced','winner')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teammateType",
+      "Type": "enum('motivator','strategist','wildcard','silent_assassin','energy_bringer')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "strongestEvent",
+      "Type": "enum('speed','strength','endurance','coordination','vibes')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "fear",
+      "Type": "enum('sprinting','team_events','letting_team_down','looking_unfit','nothing')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "eventMotivation",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "captainVoteInterest",
+      "Type": "enum('yes','no','maybe')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "sportsDayProfile",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "profileTagline",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "shirtSize",
+      "Type": "enum('XS','S','M','L','XL','XXL')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "shirtFit",
+      "Type": "enum('regular','oversized')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "healthNotes",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "contentConsent",
+      "Type": "enum('yes','no','ask')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "team",
+      "Type": "enum('red','blue','pink','orange')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "revealStatus",
+      "Type": "enum('locked','unlocked')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "locked",
+      "Extra": ""
+    },
+    {
+      "Field": "accessType",
+      "Type": "enum('free','priority')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "free",
+      "Extra": ""
+    },
+    {
+      "Field": "paymentStatus",
+      "Type": "enum('unpaid','paid')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "unpaid",
+      "Extra": ""
+    },
+    {
+      "Field": "shopifyOrderId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "paidAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "referralCode",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "referredBy",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "referralCount",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "referralRewardUnlocked",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "klaviyoTags",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "shopifyCustomerId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "ipAddress",
+      "Type": "varchar(45)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "userAgent",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "aiTeamIdentity",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "revealSeen",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "unlockToken",
+      "Type": "varchar(36)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "stripeCheckoutSessionId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "stripePaymentIntentId",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "paymentEmail",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "paymentMatchStatus",
+      "Type": "enum('none','matched_by_token','matched_by_id','matched_by_email','unmatched','manual_verified')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "none",
+      "Extra": ""
+    },
+    {
+      "Field": "manualUnlock",
+      "Type": "tinyint(1)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "manuallyUnlockedBy",
+      "Type": "varchar(64)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "manualUnlockReason",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "manuallyUnlockedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "topName",
+      "Type": "varchar(32)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "topNameLastEditedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "topNameLockedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "shopifyOrderStatus",
+      "Type": "enum('pending_configuration','created','failed')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "popupCopyFirstVisit",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "popupCopyReturnVisit",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "popupCopyGeneratedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tvarchar(36)\tNO\tPRI\tNULL\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nfullName\tvarchar(255)\tNO\t\tNULL\t\nemail\tvarchar(255)\tNO\tUNI\tNULL\t\ninstagramHandle\tvarchar(100)\tYES\t\tNULL\t\nattendedBefore\ttinyint(1)\tYES\t\tNULL\t\ncomingType\tenum('solo','with_friends')\tYES\t\tNULL\t\ngroupCode\tvarchar(15)\tYES\t\tNULL\t\ngroupRole\tenum('creator','joiner')\tYES\t\tNULL\t\ndate4July\ttinyint(1)\tYES\t\t0\t\ndate11July\ttinyint(1)\tYES\t\t0\t\ndate18July\ttinyint(1)\tYES\t\t0\t\ndateAny\ttinyint(1)\tYES\t\t0\t\ncompetitiveness\tenum('vibes','balanced','winner')\tYES\t\tNULL\t\nteammateType\tenum('motivator','strategist','wildcard','silent_assassin','energy_bringer')\tYES\t\tNULL\t\nstrongestEvent\tenum('speed','strength','endurance','coordination','vibes')\tYES\t\tNULL\t\nfear\tenum('sprinting','team_events','letting_team_down','looking_unfit','nothing')\tYES\t\tNULL\t\neventMotivation\ttext\tYES\t\tNULL\t\ncaptainVoteInterest\tenum('yes','no','maybe')\tYES\t\tNULL\t\nsportsDayProfile\tvarchar(50)\tYES\t\tNULL\t\nprofileTagline\ttext\tYES\t\tNULL\t\nshirtSize\tenum('XS','S','M','L','XL','XXL')\tYES\t\tNULL\t\nshirtFit\tenum('regular','oversized')\tYES\t\tNULL\t\nhealthNotes\ttext\tYES\t\tNULL\t\ncontentConsent\tenum('yes','no','ask')\tYES\t\tNULL\t\nteam\tenum('red','blue','pink','orange')\tYES\t\tNULL\t\nrevealStatus\tenum('locked','unlocked')\tYES\t\tlocked\t\naccessType\tenum('free','priority')\tYES\t\tfree\t\npaymentStatus\tenum('unpaid','paid')\tYES\t\tunpaid\t\nshopifyOrderId\tvarchar(100)\tYES\t\tNULL\t\npaidAt\ttimestamp\tYES\t\tNULL\t\nreferralCode\tvarchar(10)\tYES\tUNI\tNULL\t\nreferredBy\tvarchar(10)\tYES\t\tNULL\t\nreferralCount\tint\tYES\t\t0\t\nreferralRewardUnlocked\ttinyint(1)\tYES\t\t0\t\nklaviyoTags\tjson\tYES\t\tNULL\t\nshopifyCustomerId\tvarchar(100)\tYES\t\tNULL\t\nipAddress\tvarchar(45)\tYES\t\tNULL\t\nuserAgent\ttext\tYES\t\tNULL\t\naiTeamIdentity\ttext\tYES\t\tNULL\t\nrevealSeen\ttinyint(1)\tYES\t\t0\t\nunlockToken\tvarchar(36)\tNO\tUNI\tNULL\t\nstripeCheckoutSessionId\tvarchar(100)\tYES\t\tNULL\t\nstripePaymentIntentId\tvarchar(100)\tYES\t\tNULL\t\npaymentEmail\tvarchar(255)\tYES\t\tNULL\t\npaymentMatchStatus\tenum('none','matched_by_token','matched_by_id','matched_by_email','unmatched','manual_verified')\tYES\t\tnone\t\nmanualUnlock\ttinyint(1)\tYES\t\t0\t\nmanuallyUnlockedBy\tvarchar(64)\tYES\t\tNULL\t\nmanualUnlockReason\ttext\tYES\t\tNULL\t\nmanuallyUnlockedAt\ttimestamp\tYES\t\tNULL\t\ntopName\tvarchar(32)\tYES\t\tNULL\t\ntopNameLastEditedAt\ttimestamp\tYES\t\tNULL\t\ntopNameLockedAt\ttimestamp\tYES\t\tNULL\t\nshopifyOrderStatus\tenum('pending_configuration','created','failed')\tYES\t\tNULL\t\npopupCopyFirstVisit\ttext\tYES\t\tNULL\t\npopupCopyReturnVisit\ttext\tYES\t\tNULL\t\npopupCopyGeneratedAt\ttimestamp\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}
