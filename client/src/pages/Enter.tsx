@@ -103,9 +103,13 @@ export default function Enter() {
     onSuccess: (data) => {
       localStorage.setItem("sd_user_id", data.id);
       localStorage.setItem("sd_referral_code", data.referralCode);
-      // Fire Meta Pixel CompleteRegistration event
+      // Fire Meta Pixel events
       if (typeof window !== 'undefined' && (window as any).fbq) {
         (window as any).fbq('track', 'CompleteRegistration');
+        (window as any).fbq('track', 'SportsDayRegistered', {
+          event_interest: 'sports_day_002',
+          team: data.team,
+        });
       }
       navigate("/holding");
     },

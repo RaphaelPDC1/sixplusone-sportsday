@@ -53,6 +53,14 @@ function InnerPaymentForm({ amount, currency, onPaymentSuccess, onCancel }: Inne
     setProcessing(true);
     setErrorMsg("");
 
+    // Fire Meta Pixel InitiateCheckout event
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'InitiateCheckout', {
+        currency: currency.toUpperCase(),
+        value: amount / 100,
+      });
+    }
+
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
@@ -65,6 +73,13 @@ function InnerPaymentForm({ amount, currency, onPaymentSuccess, onCancel }: Inne
       setErrorMsg(error.message ?? "Payment failed. Please try again.");
       setProcessing(false);
     } else {
+      // Fire Meta Pixel Purchase event
+      if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq('track', 'Purchase', {
+          currency: 'GBP',
+          value: 13,
+        });
+      }
       onPaymentSuccess();
     }
   };
