@@ -1,0 +1,8 @@
+{
+  "query": "SELECT \n  SUM(CASE WHEN marketingConsent = 1 OR marketingConsent = true THEN 1 ELSE 0 END) as consent_true,\n  SUM(CASE WHEN marketingConsent = 0 OR marketingConsent = false THEN 1 ELSE 0 END) as consent_false,\n  SUM(CASE WHEN marketingConsent IS NULL THEN 1 ELSE 0 END) as consent_null,\n  COUNT(*) as total\nFROM sports_day_registrations;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT \n  SUM(CASE WHEN marketingConsent = 1 OR marketingConsent = true THEN 1 ELSE 0 END) as consent_true,\n  SUM(CASE WHEN marketingConsent = 0 OR marketingConsent = false THEN 1 ELSE 0 END) as consent_false,\n  SUM(CASE WHEN marketingConsent IS NULL THEN 1 ELSE 0 END) as consent_null,\n  COUNT(*) as total\nFROM sports_day_registrations;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'marketingconsent' in ''"
+  ]
+}

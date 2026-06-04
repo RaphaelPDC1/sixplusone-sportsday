@@ -1,0 +1,16 @@
+{
+  "query": "SELECT \n  SUM(CASE WHEN contentConsent = 1 OR contentConsent = true THEN 1 ELSE 0 END) as consent_true,\n  SUM(CASE WHEN contentConsent = 0 OR contentConsent = false THEN 1 ELSE 0 END) as consent_false,\n  SUM(CASE WHEN contentConsent IS NULL THEN 1 ELSE 0 END) as consent_null,\n  COUNT(*) as total\nFROM sports_day_registrations;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT \n  SUM(CASE WHEN contentConsent = 1 OR contentConsent = true THEN 1 ELSE 0 END) as consent_true,\n  SUM(CASE WHEN contentConsent = 0 OR contentConsent = false THEN 1 ELSE 0 END) as consent_false,\n  SUM(CASE WHEN contentConsent IS NULL THEN 1 ELSE 0 END) as consent_null,\n  COUNT(*) as total\nFROM sports_day_registrations;",
+  "rows": [
+    {
+      "consent_true": "1",
+      "consent_false": "0",
+      "consent_null": "107",
+      "total": "109"
+    }
+  ],
+  "messages": [],
+  "stdout": "consent_true\tconsent_false\tconsent_null\ttotal\n1\t0\t107\t109\n",
+  "stderr": "",
+  "execution_time_ms": 269
+}

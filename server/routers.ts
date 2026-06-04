@@ -91,6 +91,7 @@ const sportsDayRouter = router({
         shirtFit: z.enum(["regular", "oversized"]).optional(),
         healthNotes: z.string().optional(),
         contentConsent: z.enum(["yes", "no", "ask"]).optional(),
+        marketingConsent: z.boolean().optional(),
         referredBy: z.string().optional(),
       })
     )
@@ -208,10 +209,20 @@ const sportsDayRouter = router({
         finalGroupCode ?? null,
         input.shirtSize ?? null,
         "unpaid",
-        input.contentConsent === "yes"
+        input.marketingConsent ?? false
       ).catch((err) => {
         console.error("[Registration] Klaviyo sync failed:", err);
       });
+
+      // Save marketing consent to database
+      await db.update(sportsDayRegistrations).set({
+        marketingConsent: input.marketingConsent ?? false,
+        marketingConsentCapturedAt: new Date(),
+        operationalConsent: true,
+        operationalConsentReason: "Submitting means we can contact you about Sports Day 002",
+        operationalConsentSource: "Sports Day 002 registration form",
+        operationalConsentCapturedAt: new Date(),
+      }).where(eq(sportsDayRegistrations.id, id));
 
       return { id, referralCode, team, profile, tagline };
     }),

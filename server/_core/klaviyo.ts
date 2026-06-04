@@ -222,7 +222,7 @@ export async function handleSportsDayRegistration(
   groupCode: string | null,
   shirtSize: string | null,
   paymentStatus: "paid" | "unpaid",
-  contentConsent: boolean
+  marketingConsent: boolean
 ): Promise<boolean> {
   try {
     const now = new Date().toISOString();
@@ -237,7 +237,12 @@ export async function handleSportsDayRegistration(
       sports_day_002_friend_group_code: groupCode || null,
       sports_day_002_shirt_size: shirtSize || null,
       sports_day_002_submitted_at: now,
-      marketing_consent: contentConsent,
+      operational_consent: true,
+      operational_consent_reason: "Submitting means we can contact you about Sports Day 002",
+      operational_consent_source: "Sports Day 002 registration form",
+      operational_consent_captured_at: now,
+      marketing_consent: marketingConsent,
+      marketing_consent_captured_at: marketingConsent ? now : null,
       first_name: fullName.split(" ")[0] || fullName,
     };
 

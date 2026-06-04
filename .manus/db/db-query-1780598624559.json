@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `sports_day_registrations` ADD `operationalConsent` boolean DEFAULT true;\nALTER TABLE `sports_day_registrations` ADD `operationalConsentReason` text;\nALTER TABLE `sports_day_registrations` ADD `operationalConsentSource` varchar(100);\nALTER TABLE `sports_day_registrations` ADD `operationalConsentCapturedAt` timestamp;\nALTER TABLE `sports_day_registrations` ADD `marketingConsent` boolean DEFAULT false;\nALTER TABLE `sports_day_registrations` ADD `marketingConsentCapturedAt` timestamp;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute ALTER TABLE `sports_day_registrations` ADD `operationalConsent` boolean DEFAULT true;\nALTER TABLE `sports_day_registrations` ADD `operationalConsentReason` text;\nALTER TABLE `sports_day_registrations` ADD `operationalConsentSource` varchar(100);\nALTER TABLE `sports_day_registrations` ADD `operationalConsentCapturedAt` timestamp;\nALTER TABLE `sports_day_registrations` ADD `marketingConsent` boolean DEFAULT false;\nALTER TABLE `sports_day_registrations` ADD `marketingConsentCapturedAt` timestamp;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2494
+}

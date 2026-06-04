@@ -138,6 +138,14 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
   popupCopyFirstVisit: text("popupCopyFirstVisit"),   // JSON: { headline, body, cta }
   popupCopyReturnVisit: text("popupCopyReturnVisit"), // JSON: { headline, body, cta }
   popupCopyGeneratedAt: timestamp("popupCopyGeneratedAt"),
+
+  // Consent tracking
+  operationalConsent: boolean("operationalConsent").default(true), // consent to contact about Sports Day 002
+  operationalConsentReason: text("operationalConsentReason"), // why operational consent was given
+  operationalConsentSource: varchar("operationalConsentSource", { length: 100 }), // where consent came from
+  operationalConsentCapturedAt: timestamp("operationalConsentCapturedAt"), // when operational consent was captured
+  marketingConsent: boolean("marketingConsent").default(false), // consent for marketing emails
+  marketingConsentCapturedAt: timestamp("marketingConsentCapturedAt"), // when marketing consent was given
 });
 
 export type SportsDayRegistration = typeof sportsDayRegistrations.$inferSelect;

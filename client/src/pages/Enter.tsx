@@ -29,6 +29,7 @@ type FormData = {
   shirtFit: "regular" | "oversized" | null;
   healthNotes: string;
   contentConsent: "yes" | "no" | "ask" | null;
+  marketingConsent: boolean;
   captainVoteInterest: "yes" | "no" | "maybe" | null;
   eventMotivation: string;
 };
@@ -91,6 +92,7 @@ export default function Enter() {
     shirtFit: null,
     healthNotes: "",
     contentConsent: null,
+    marketingConsent: false,
     captainVoteInterest: null,
     eventMotivation: "",
   });
@@ -207,6 +209,7 @@ export default function Enter() {
       shirtFit: form.shirtFit ?? undefined,
       healthNotes: form.healthNotes || undefined,
       contentConsent: form.contentConsent ?? undefined,
+      marketingConsent: form.marketingConsent,
       referredBy,
     });
   };
@@ -637,7 +640,21 @@ export default function Enter() {
                       className="w-full bg-black/30 border border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-sm p-4 transition-colors placeholder:text-white/20 resize-none"
                     />
                   </div>
-                  {/* Camera consent removed — not collecting this */}
+                  {/* Marketing consent */}
+                  <div>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.marketingConsent}
+                        onChange={(e) => set("marketingConsent", e.target.checked)}
+                        className="mt-1 w-5 h-5 accent-[#FF5500] cursor-pointer"
+                      />
+                      <span className="font-mono text-white/60 text-xs tracking-widest leading-relaxed">
+                        Send me 6+1 updates, future events, retreats, drops and community news by email.
+                      </span>
+                    </label>
+                  </div>
+                  {/* Captain vote interest */}
                   <div>
                     <p className="font-mono text-white/40 text-xs tracking-widest mb-3">
                       Would you vote for team captains?
