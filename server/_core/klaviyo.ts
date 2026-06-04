@@ -111,8 +111,41 @@ export async function upsertKlaviyoProfile(
       },
     };
 
-    const result = await makeKlaviyoRequest("POST", "/profiles", payload);
+    let result = await makeKlaviyoRequest("POST", "/profiles", payload);
+    
+    // If POST failed (409 conflict), try PATCH
     if (!result) {
+      console.log(`[Klaviyo] Profile exists, attempting PATCH...`);
+      try {
+        const filterStr = encodeURIComponent(`equals(email,"${email}")`);
+        const fetchUrl = `https://a.klaviyo.com/api/profiles?filter=${filterStr}`;
+        const fetchResponse = await fetch(fetchUrl, {
+          headers: {
+            'Authorization': `Klaviyo-API-Key ${ENV.KLAVIYO_API_KEY}`,
+            'revision': '2024-10-15',
+          },
+        });
+        
+        const fetchData = await fetchResponse.json();
+        if (fetchData.data && fetchData.data.length > 0) {
+          const profileId = fetchData.data[0].id;
+          const patchPayload = {
+            data: {
+              type: "profile",
+              id: profileId,
+              attributes: { properties },
+            },
+          };
+          
+          result = await makeKlaviyoRequest("PATCH", `/profiles/${profileId}`, patchPayload);
+          if (result) {
+            console.log(`[Klaviyo] Profile updated via PATCH for ${email}`);
+            return true;
+          }
+        }
+      } catch (err) {
+        console.error(`[Klaviyo] PATCH fallback failed:`, err);
+      }
       console.warn(`[Klaviyo] Profile upsert failed for ${email}`);
       return false;
     }
@@ -400,3 +433,8 @@ export async function handleShirtUpdate(
     return false;
   }
 }
+
+// Named aliases matching the expected function names
+export const handleSportsDayTeamChange = handleTeamReassignment;
+export const handleSportsDayShirtUpdate = handleShirtUpdate;
+export const handleSportsDayAutoUnlock = handleAutoUnlock;

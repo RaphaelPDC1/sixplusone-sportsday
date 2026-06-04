@@ -1,0 +1,19 @@
+{
+  "query": "SELECT id, fullName, email, team, paymentStatus, accessType, createdAt FROM sports_day_registrations WHERE email = 'raphael.togbe@yahoo.com' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT id, fullName, email, team, paymentStatus, accessType, createdAt FROM sports_day_registrations WHERE email = 'raphael.togbe@yahoo.com' LIMIT 5;",
+  "rows": [
+    {
+      "id": "8f6be368-8615-4e9a-8f6a-3e86c8e81abb",
+      "fullName": "Sen",
+      "email": "raphael.togbe@yahoo.com",
+      "team": "orange",
+      "paymentStatus": "paid",
+      "accessType": "priority",
+      "createdAt": "2026-05-24 10:00:41"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfullName\temail\tteam\tpaymentStatus\taccessType\tcreatedAt\n8f6be368-8615-4e9a-8f6a-3e86c8e81abb\tSen\traphael.togbe@yahoo.com\torange\tpaid\tpriority\t2026-05-24 10:00:41\n",
+  "stderr": "",
+  "execution_time_ms": 2714
+}

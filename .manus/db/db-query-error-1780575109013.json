@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO sports_day_registrations (\n  id, fullName, email, team, revealStatus, paymentStatus, accessType,\n  competitiveness, teammateType, strongestEvent, contentConsent, shirtSize,\n  sportsDayProfile, profileTagline, referralCode, createdAt\n) VALUES (\n  'test-klaviyo-001', 'Test Klaviyo', 'test.klaviyo.001@example.com', 'blue', \n  'locked', 'unpaid', 'free',\n  'balanced', 'strategist', 'endurance', 'yes', 'M',\n  '{}', 'Test tagline', 'TEST001', NOW()\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute INSERT INTO sports_day_registrations (\n  id, fullName, email, team, revealStatus, paymentStatus, accessType,\n  competitiveness, teammateType, strongestEvent, contentConsent, shirtSize,\n  sportsDayProfile, profileTagline, referralCode, createdAt\n) VALUES (\n  'test-klaviyo-001', 'Test Klaviyo', 'test.klaviyo.001@example.com', 'blue', \n  'locked', 'unpaid', 'free',\n  'balanced', 'strategist', 'endurance', 'yes', 'M',\n  '{}', 'Test tagline', 'TEST001', NOW()\n);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1364 (HY000) at line 1: Field 'unlockToken' doesn't have a default value"
+  ]
+}
