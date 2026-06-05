@@ -19,6 +19,7 @@ import { getDb } from "./db";
 import { sportsDayRegistrations, unmatchedPayments } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { handleSportsDayPayment } from "./_core/klaviyo";
+import { sendPurchaseEvent, extractUserDataFromRequest } from "./_core/metaConversionsApi";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -144,6 +145,13 @@ async function handlePaymentSucceeded(
       handleSportsDayPayment(reg.email, reg.team).catch((err) => {
         console.error("[Stripe Webhook] Klaviyo sync failed:", err);
       });
+      // Send Meta Conversions API Purchase event (non-blocking)
+      sendPurchaseEvent(paymentIntentId, amount, currency, {
+        email: reg.email,
+        ...extractUserDataFromRequest({ headers: {} }),
+      }).catch((err) => {
+        console.error("[Stripe Webhook] Meta Conversions API failed:", err);
+      });
       return;
     }
     log("TOKEN_NO_MATCH", { unlockToken: `${unlockToken.substring(0, 8)}...` });
@@ -168,6 +176,13 @@ async function handlePaymentSucceeded(
       // Sync to Klaviyo (non-blocking)
       handleSportsDayPayment(reg.email, reg.team).catch((err) => {
         console.error("[Stripe Webhook] Klaviyo sync failed:", err);
+      });
+      // Send Meta Conversions API Purchase event (non-blocking)
+      sendPurchaseEvent(paymentIntentId, amount, currency, {
+        email: reg.email,
+        ...extractUserDataFromRequest({ headers: {} }),
+      }).catch((err) => {
+        console.error("[Stripe Webhook] Meta Conversions API failed:", err);
       });
       return;
     }
@@ -194,6 +209,13 @@ async function handlePaymentSucceeded(
       // Sync to Klaviyo (non-blocking)
       handleSportsDayPayment(reg.email, reg.team).catch((err) => {
         console.error("[Stripe Webhook] Klaviyo sync failed:", err);
+      });
+      // Send Meta Conversions API Purchase event (non-blocking)
+      sendPurchaseEvent(paymentIntentId, amount, currency, {
+        email: reg.email,
+        ...extractUserDataFromRequest({ headers: {} }),
+      }).catch((err) => {
+        console.error("[Stripe Webhook] Meta Conversions API failed:", err);
       });
       return;
     }

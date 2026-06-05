@@ -558,6 +558,7 @@ export default function Holding() {
   // ── Payment UI state ──
   const [unlockStep, setUnlockStep] = useState<"idle" | "topname" | "payment" | "confirming">("idle");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number>(2200);
   const [confirmedTopName, setConfirmedTopName] = useState<string | null>(null);
   const [confirmingStartedAt, setConfirmingStartedAt] = useState<number | null>(null);
@@ -692,6 +693,7 @@ export default function Holding() {
         registrationId: userId!,
       });
       setClientSecret(result.clientSecret);
+      setPaymentIntentId(result.paymentIntentId);
       setPaymentAmount(result.amountPence);
       setUnlockStep("payment");
     } catch (err) {
@@ -1009,6 +1011,7 @@ export default function Holding() {
               clientSecret={clientSecret}
               amount={paymentAmount}
               currency="gbp"
+              paymentIntentId={paymentIntentId || undefined}
               onPaymentSuccess={handlePaymentSuccess}
               onCancel={handlePaymentCancel}
             />

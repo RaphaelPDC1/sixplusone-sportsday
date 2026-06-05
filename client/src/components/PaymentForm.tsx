@@ -36,11 +36,12 @@ function getStripePromise() {
 interface InnerFormProps {
   amount: number;
   currency: string;
+  paymentIntentId?: string;
   onPaymentSuccess: () => void;
   onCancel: () => void;
 }
 
-function InnerPaymentForm({ amount, currency, onPaymentSuccess, onCancel }: InnerFormProps) {
+function InnerPaymentForm({ amount, currency, paymentIntentId, onPaymentSuccess, onCancel }: InnerFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
@@ -73,11 +74,12 @@ function InnerPaymentForm({ amount, currency, onPaymentSuccess, onCancel }: Inne
       setErrorMsg(error.message ?? "Payment failed. Please try again.");
       setProcessing(false);
     } else {
-      // Fire Meta Pixel Purchase event
+      // Fire Meta Pixel Purchase event with paymentIntentId for deduplication
       if (typeof window !== 'undefined' && (window as any).fbq) {
         (window as any).fbq('track', 'Purchase', {
           currency: 'GBP',
           value: 22,
+          eventID: paymentIntentId,
         });
       }
       onPaymentSuccess();

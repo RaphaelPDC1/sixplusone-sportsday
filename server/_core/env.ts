@@ -10,4 +10,5 @@ export const ENV = {
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ?? "",
   TEST_UNLOCK_PRICE_PENCE: process.env.TEST_UNLOCK_PRICE_PENCE ? parseInt(process.env.TEST_UNLOCK_PRICE_PENCE, 10) : null,
   KLAVIYO_API_KEY: process.env.KLAVIYO_API_KEY ?? "",
+  META_CONVERSIONS_API_TOKEN: process.env.META_CONVERSIONS_API_TOKEN ?? "",
 };

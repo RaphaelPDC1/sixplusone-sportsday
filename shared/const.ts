@@ -18,6 +18,9 @@ export const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
 // When this timestamp is reached, all registered users get auto-unlocked (PUBLIC_REVEAL)
 export const SPORTS_DAY_PUBLIC_REVEAL_AT = new Date("2026-07-11T19:00:00.000Z").getTime();
 
+// ─── Meta Pixel & Conversions API ────────────────────────────────────────────
+export const META_PIXEL_ID = '1495386808512228';
+
 export const AXIOS_TIMEOUT_MS = 30_000;
 export const UNAUTHED_ERR_MSG = 'Please login (10001)';
 export const NOT_ADMIN_ERR_MSG = 'You do not have required permission (10002)';

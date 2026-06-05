@@ -32,6 +32,7 @@ import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { ENV } from "./_core/env";
 import { invokeLLM } from "./_core/llm";
 import { handleSportsDayRegistration, handleSportsDayPayment, handleTeamReassignment, handleAutoUnlock, handleShirtUpdate } from "./_core/klaviyo";
+import { sendCompleteRegistrationEvent, extractUserDataFromRequest } from "./_core/metaConversionsApi";
 import { TRPCError } from "@trpc/server";
 
 // ─── In-memory rate limiter ───────────────────────────────────────────────────
@@ -93,6 +94,7 @@ const sportsDayRouter = router({
         contentConsent: z.enum(["yes", "no", "ask"]).optional(),
         marketingConsent: z.boolean().optional(),
         referredBy: z.string().optional(),
+        eventId: z.string().uuid().optional(),
       })
     )
      .mutation(async ({ input, ctx }) => {
@@ -214,6 +216,16 @@ const sportsDayRouter = router({
         console.error("[Registration] Klaviyo sync failed:", err);
       });
 
+      // Send Meta Conversions API CompleteRegistration event (non-blocking)
+      // Use provided eventId or generate one for deduplication with frontend pixel
+      const completeRegistrationEventId = input.eventId || crypto.randomUUID();
+      sendCompleteRegistrationEvent(completeRegistrationEventId, {
+        email,
+        ...extractUserDataFromRequest(ctx.req),
+      }).catch((err) => {
+        console.error("[Registration] Meta Conversions API failed:", err);
+      });
+
       // Save marketing consent to database
       await db.update(sportsDayRegistrations).set({
         marketingConsent: input.marketingConsent ?? false,
@@ -224,7 +236,7 @@ const sportsDayRouter = router({
         operationalConsentCapturedAt: new Date(),
       }).where(eq(sportsDayRegistrations.id, id));
 
-      return { id, referralCode, team, profile, tagline };
+      return { id, referralCode, team, profile, tagline, eventId: input.eventId || id };
     }),
 
   getUserStatus: publicProcedure

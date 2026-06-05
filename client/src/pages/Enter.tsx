@@ -187,6 +187,8 @@ export default function Enter() {
   };
 
   const handleSubmit = async () => {
+    // Generate UUID for CompleteRegistration event deduplication
+    const eventId = crypto.randomUUID();
     await registerMutation.mutateAsync({
       fullName: form.fullName,
       email: form.email,
@@ -211,6 +213,7 @@ export default function Enter() {
       contentConsent: form.contentConsent ?? undefined,
       marketingConsent: form.marketingConsent,
       referredBy,
+      eventId,
     });
   };
 

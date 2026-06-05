@@ -374,3 +374,43 @@
 - [x] All tests passing (22 tests), TypeScript clean (0 errors)
 - [ ] Test end-to-end: holding page displays £22, checkout shows £22, Meta Pixel fires with value: 22
 - [ ] Verify Stripe webhook receives correct amount and stores it
+
+## Meta Conversions API Implementation (Requested 5 June)
+
+### Phase 1: Infrastructure Setup ✓
+- [x] Create server/_core/metaConversionsApi.ts helper with:
+  - [x] SHA-256 hashing function for email/phone
+  - [x] Meta Conversions API client function
+  - [x] User data extraction from request headers
+  - [x] Event ID deduplication pattern
+- [x] Add META_CONVERSIONS_API_TOKEN to env.ts as placeholder
+- [x] Add META_PIXEL_ID constant to shared/const.ts (1495386808512228)
+
+### Phase 2: Purchase Event (Priority 1) ✓
+- [x] Update stripeWebhook.ts to call Conversions API after payment success
+- [x] Use paymentIntentId from Stripe as event_id for deduplication
+- [x] Send Purchase event with: event_name, event_time, value (22), currency (GBP), user_data
+- [x] Add logging for API responses and errors
+- [x] PaymentForm.tsx: Pass paymentIntentId as eventID to Meta Pixel
+- [x] Holding.tsx: Capture and pass paymentIntentId to PaymentForm
+
+### Phase 3: CompleteRegistration Event (Priority 2) ✓
+- [x] Update Enter.tsx to generate UUID and pass event_id in registration request
+- [x] Update routers.ts registration endpoint to accept event_id parameter
+- [x] Call Conversions API after successful registration
+- [x] Send CompleteRegistration event with user_data
+- [x] Add logging for API responses and errors
+- [x] Return eventId in registration response for frontend pixel
+
+### Phase 4: Testing & Validation (In Progress)
+- [x] Add server-side logging to confirm API calls are being made
+- [ ] Test in Meta Events Manager Test Events tab
+- [ ] Verify deduplication: browser pixel + server API should not double-count
+- [ ] Verify data quality score improves from 5.4
+- [ ] Verify Purchase value warnings resolved
+
+### Phase 5: Delivery
+- [x] All tests passing (36 tests)
+- [x] TypeScript clean (0 errors)
+- [x] Update todo.md with completion status
+- [ ] Save checkpoint with Conversions API fully implemented
