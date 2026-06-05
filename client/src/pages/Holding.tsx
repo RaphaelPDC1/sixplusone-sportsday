@@ -558,7 +558,7 @@ export default function Holding() {
   // ── Payment UI state ──
   const [unlockStep, setUnlockStep] = useState<"idle" | "topname" | "payment" | "confirming">("idle");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState<number>(2500);
+  const [paymentAmount, setPaymentAmount] = useState<number>(2200);
   const [confirmedTopName, setConfirmedTopName] = useState<string | null>(null);
   const [confirmingStartedAt, setConfirmingStartedAt] = useState<number | null>(null);
   const [confirmingTimedOut, setConfirmingTimedOut] = useState(false);

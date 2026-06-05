@@ -1,0 +1,1 @@
+ALTER TABLE `sports_day_settings` MODIFY COLUMN `earlyPrice` int NOT NULL DEFAULT 2200;

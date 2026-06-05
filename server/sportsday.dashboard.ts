@@ -93,7 +93,7 @@ function buildPriceState(settings: typeof sportsDaySettings.$inferSelect | null)
   const now = Date.now();
 
   // Price comes from database settings
-  const earlyPricePence = settings?.earlyPrice ?? 2000; // £20.00 default
+  const earlyPricePence = settings?.earlyPrice ?? 2200; // £22.00 default
   const futurePricePence = settings?.futurePrice ?? 3500; // £35.00 default
   
   // If no priceIncreaseAt is set, default to 1 week from now

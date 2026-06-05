@@ -77,7 +77,7 @@ function InnerPaymentForm({ amount, currency, onPaymentSuccess, onCancel }: Inne
       if (typeof window !== 'undefined' && (window as any).fbq) {
         (window as any).fbq('track', 'Purchase', {
           currency: 'GBP',
-          value: 13,
+          value: 22,
         });
       }
       onPaymentSuccess();

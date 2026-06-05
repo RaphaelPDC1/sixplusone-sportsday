@@ -1180,7 +1180,7 @@ Return ONLY valid JSON with this exact shape:
       // Price always comes from database settings
       const amountPence = isPriceIncreased
         ? (settings?.futurePrice ?? 3500)
-        : (settings?.earlyPrice ?? 2000);
+        : (settings?.earlyPrice ?? 2200);
       
       const isTestMode = false;
 

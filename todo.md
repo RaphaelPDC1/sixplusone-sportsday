@@ -363,3 +363,14 @@
 - [x] Add admin toggle in Admin panel to enable/disable pop-ups globally
 - [x] Update FunnelPopup to fetch AI copy from backend and respect global enabled flag
 - [x] Holding page: only render FunnelPopup when settings.popupsEnabled === true
+
+## Price Update: £13 → £22 (Requested 5 June)
+- [x] Update Holding.tsx: paymentAmount state from 2500 pence (£25) to 2200 pence (£22)
+- [x] Update PaymentForm.tsx: Meta Pixel Purchase event value from 13 to 22
+- [x] Update schema.ts: earlyPrice default from 2500 to 2200
+- [x] Generate and apply Drizzle migration for schema change
+- [x] Update sportsday.dashboard.ts fallback from 2000 to 2200 (£22.00)
+- [x] Update routers.ts fallback from 2000 to 2200 (£22.00)
+- [x] All tests passing (22 tests), TypeScript clean (0 errors)
+- [ ] Test end-to-end: holding page displays £22, checkout shows £22, Meta Pixel fires with value: 22
+- [ ] Verify Stripe webhook receives correct amount and stores it
