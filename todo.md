@@ -414,3 +414,52 @@
 - [x] TypeScript clean (0 errors)
 - [x] Update todo.md with completion status
 - [ ] Save checkpoint with Conversions API fully implemented
+
+## Auto-Unlock Klaviyo Event Implementation (Requested 8 June) ✓
+
+### Phase 1: Database Schema ✓
+- [x] Add autoUnlockEventFired boolean flag to track event firing
+- [x] Add autoUnlockedAt timestamp field
+- [x] Generate and apply Drizzle migration (0014_real_smiling_tiger.sql)
+
+### Phase 2: Klaviyo Helper ✓
+- [x] Create server/_core/autoUnlockKlaviyo.ts with:
+  - [x] fireAutoUnlockEvent() function
+  - [x] hasAutoUnlockEventFired() check
+  - [x] Proper error handling (non-blocking)
+  - [x] Logging for debugging
+
+### Phase 3: Dashboard Integration ✓
+- [x] Integrate auto-unlock event firing into sportsday.dashboard.ts
+- [x] Fire only when isPublicReveal = true AND user not already unlocked
+- [x] Fire only once per user (checked via autoUnlockEventFired flag)
+- [x] Non-blocking: Klaviyo failures don't break dashboard
+
+### Phase 4: Testing ✓
+- [x] Created server/autoUnlockKlaviyo.test.ts with 9 comprehensive tests
+- [x] All tests passing (45 total tests, 0 failures)
+- [x] Verified event payload structure
+- [x] Verified profile property updates
+- [x] Verified error handling
+- [x] Verified non-blocking behavior
+
+### Verification Checklist ✓
+- [x] Event fires only once per user (tracked via autoUnlockEventFired)
+- [x] Does NOT fire for paid users (isUnlocked check)
+- [x] Does NOT fire for users who already had event fired
+- [x] Fires "Sports Day 002 Auto Unlocked" event (NOT "Sports Day 002 Paid")
+- [x] Updates Klaviyo profile with:
+  - [x] sports_day_002_auto_unlocked = true
+  - [x] sports_day_002_unlock_status = "auto_unlocked"
+  - [x] sports_day_002_auto_unlocked_at = timestamp
+- [x] Non-blocking: Klaviyo failures logged but don't break dashboard
+- [x] TypeScript: 0 errors
+- [x] All tests: 45 passing
+
+### Behavior Summary
+- When July 11th 8pm BST arrives (isPublicReveal = true):
+  - Unpaid users (free access) see PUBLIC_REVEAL state
+  - Team reveal animation shows for unpaid users ✓
+  - Shirt reconfirmation animation ONLY shows to paid users ✓
+  - Auto-unlock Klaviyo event fires once per unpaid user ✓
+  - Paid users (priority access) are unaffected ✓

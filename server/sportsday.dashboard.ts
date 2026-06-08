@@ -3,6 +3,7 @@ import { sportsDayRegistrations, sportsDaySettings } from "../drizzle/schema";
 import { getDb } from "./db";
 import { ENV } from "./_core/env";
 import { SPORTS_DAY_PUBLIC_REVEAL_AT } from "../shared/const";
+import { fireAutoUnlockEvent, hasAutoUnlockEventFired } from "./_core/autoUnlockKlaviyo";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -169,6 +170,20 @@ export async function buildSportsDayDashboard(
     reg.revealStatus === "unlocked" ||
     reg.paymentStatus === "paid" ||
     reg.manualUnlock === true;
+
+  // ─── Fire auto-unlock event (once per user when PUBLIC_REVEAL becomes true) ──
+  if (isPublicReveal && !reg.autoUnlockEventFired && !isUnlocked) {
+    // Only fire for unpaid users who haven't already had the event fired
+    // Paid users (isUnlocked) don't get this event — they get Sports Day 002 Paid instead
+    fireAutoUnlockEvent({
+      registrationId: reg.id,
+      email: reg.email,
+      fullName: reg.fullName ?? "Player",
+    }).catch((err) => {
+      // Non-blocking: log error but continue
+      console.error("[Dashboard] Error firing auto-unlock event:", err);
+    });
+  }
 
   // ─── Determine state ───────────────────────────────────────────────────────
 

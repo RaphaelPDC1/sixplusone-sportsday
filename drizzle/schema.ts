@@ -146,6 +146,10 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
   operationalConsentCapturedAt: timestamp("operationalConsentCapturedAt"), // when operational consent was captured
   marketingConsent: boolean("marketingConsent").default(false), // consent for marketing emails
   marketingConsentCapturedAt: timestamp("marketingConsentCapturedAt"), // when marketing consent was given
+
+  // Auto-unlock tracking (July 11th 8pm BST)
+  autoUnlockEventFired: boolean("autoUnlockEventFired").default(false), // true once Sports Day 002 Auto Unlocked event sent to Klaviyo
+  autoUnlockedAt: timestamp("autoUnlockedAt"), // timestamp when auto-unlock event fired
 });
 
 export type SportsDayRegistration = typeof sportsDayRegistrations.$inferSelect;
