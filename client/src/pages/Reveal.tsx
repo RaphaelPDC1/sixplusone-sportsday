@@ -544,6 +544,7 @@ export default function Reveal() {
   const [aiLoading, setAiLoading] = useState(false);
   const shareCanvasRef = useRef<HTMLCanvasElement>(null);
   const [shareCardDataUrl, setShareCardDataUrl] = useState<string | null>(null);
+  const shareFileRef = useRef<File | null>(null); // Pre-built File for synchronous Web Share API on iOS
 
   const { data: user } = trpc.sportsday.getUserStatus.useQuery(
     { id: userId! },
@@ -628,7 +629,10 @@ export default function Reveal() {
       drawCard(headingFont);
       if (!logoBlobUrl) {
         // No logo — capture card as-is
-        setShareCardDataUrl(canvas.toDataURL("image/png"));
+        canvas.toBlob((blob) => {
+          if (blob) shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
+          setShareCardDataUrl(canvas.toDataURL("image/png"));
+        }, 'image/png');
         return;
       }
       const logoImg = new Image();
@@ -639,11 +643,17 @@ export default function Reveal() {
         ctx.restore();
         URL.revokeObjectURL(logoBlobUrl);
         // Capture as data URL — no cross-origin taint because we used a blob URL
-        setShareCardDataUrl(canvas.toDataURL("image/png"));
+        canvas.toBlob((blob) => {
+          if (blob) shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
+          setShareCardDataUrl(canvas.toDataURL("image/png"));
+        }, 'image/png');
       };
       logoImg.onerror = () => {
         URL.revokeObjectURL(logoBlobUrl);
-        setShareCardDataUrl(canvas.toDataURL("image/png"));
+        canvas.toBlob((blob) => {
+          if (blob) shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
+          setShareCardDataUrl(canvas.toDataURL("image/png"));
+        }, 'image/png');
       };
       logoImg.src = logoBlobUrl;
     };
@@ -666,35 +676,37 @@ export default function Reveal() {
     });
   }, [phase, config.color, team]);
 
-  const handleShare = async () => {
+  const handleShare = () => {
+    // Use the pre-built File ref — avoids async/await so iOS Safari doesn't block the share sheet
+    const file = shareFileRef.current;
     const dataUrl = shareCardDataUrl;
-    if (!dataUrl) return;
+    if (!file && !dataUrl) return;
 
-    // Convert data URL to blob for Web Share API
-    const res = await fetch(dataUrl);
-    const blob = await res.blob();
-    const file = new File([blob], `team-${team}-sports-day-002.png`, { type: "image/png" });
-
-    // iOS Safari supports Web Share API with files — try this first
-    if (typeof navigator.share === 'function' && navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({
-          files: [file],
-          title: `I'm Team ${team.toUpperCase()} — Sports Day 002`,
-          text: "Just found out my team. @6plus1 #SportsDay002",
-        });
-        return;
-      } catch (e: any) {
-        // User cancelled (AbortError) or share failed — fall through
-        if (e?.name === 'AbortError') return; // User cancelled, don't download
-      }
+    // iOS Safari: Web Share API with files must be called synchronously in user gesture
+    if (file && typeof navigator.share === 'function' && navigator.canShare?.({ files: [file] })) {
+      navigator.share({
+        files: [file],
+        title: `I'm Team ${team.toUpperCase()} — Sports Day 002`,
+        text: "Just found out my team. @6plus1 #SportsDay002",
+      }).catch((e: any) => {
+        // AbortError = user cancelled; anything else = fall through to download
+        if (e?.name !== 'AbortError' && dataUrl) {
+          const link = document.createElement('a');
+          link.download = `team-${team}-sports-day-002.png`;
+          link.href = dataUrl;
+          link.click();
+        }
+      });
+      return;
     }
 
-    // Fallback: open image in new tab so user can long-press to save on iOS
-    // This is more reliable than link.click() on iOS Safari
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    // Non-iOS fallback: direct download
+    if (dataUrl) {
+      const link = document.createElement('a');
+      link.download = `team-${team}-sports-day-002.png`;
+      link.href = dataUrl;
+      link.click();
+    }
   };
 
   if (!user) {
