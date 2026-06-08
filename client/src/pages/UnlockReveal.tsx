@@ -27,14 +27,17 @@ type Phase = 0 | 1 | 2 | 3 | 4 | 5;
 
 export default function UnlockReveal() {
   const [, navigate] = useLocation();
-  const [userId] = useState<string | null>(
+  const [userIdFromStorage] = useState<string | null>(
     () => (typeof window !== "undefined" ? localStorage.getItem("sd_user_id") : null)
   );
 
   const { data: dashboard, isLoading } = trpc.sportsday.getSportsDayDashboard.useQuery(
-    { registrationId: userId! },
-    { enabled: !!userId, retry: false }
+    { registrationId: userIdFromStorage! },
+    { enabled: !!userIdFromStorage, retry: false }
   );
+
+  // Use the dashboard's registration ID (source of truth) instead of localStorage
+  const userId = dashboard?.registrationId ?? userIdFromStorage;
 
   const [phase, setPhase] = useState<Phase>(0);
   const [ctaVisible, setCtaVisible] = useState(false);
@@ -59,7 +62,9 @@ export default function UnlockReveal() {
     }
 
     // If already seen unlock reveal, skip to shirt confirm (paid users only)
-    if (hasSeenUnlockReveal(regId)) {
+    // Use dashboard registration ID as source of truth
+    const dashboardRegId = dashboard?.registrationId ?? regId;
+    if (hasSeenUnlockReveal(dashboardRegId)) {
       navigate("/shirt-confirm", { replace: true });
       return;
     }
@@ -91,7 +96,8 @@ export default function UnlockReveal() {
   }
 
   function handleEnterHub() {
-    const regId = userId ?? "";
+    // Use dashboard registration ID as source of truth
+    const regId = dashboard?.registrationId ?? userId ?? "";
     // Mark unlock reveal as seen, then proceed to shirt confirmation
     markUnlockRevealSeen(regId);
     navigate("/shirt-confirm", { replace: true });

@@ -669,21 +669,32 @@ export default function Reveal() {
   const handleShare = async () => {
     const dataUrl = shareCardDataUrl;
     if (!dataUrl) return;
-    // Convert data URL to blob
+
+    // Convert data URL to blob for Web Share API
     const res = await fetch(dataUrl);
     const blob = await res.blob();
     const file = new File([blob], `team-${team}-sports-day-002.png`, { type: "image/png" });
-    if (navigator.canShare?.({ files: [file] })) {
+
+    // iOS Safari supports Web Share API with files — try this first
+    if (typeof navigator.share === 'function' && navigator.canShare?.({ files: [file] })) {
       try {
-        await navigator.share({ files: [file], title: `I'm Team ${team.toUpperCase()} — Sports Day 002`, text: "Just found out my team. @6plus1 #SportsDay002" });
+        await navigator.share({
+          files: [file],
+          title: `I'm Team ${team.toUpperCase()} — Sports Day 002`,
+          text: "Just found out my team. @6plus1 #SportsDay002",
+        });
         return;
-      } catch { /* cancelled or unsupported — fall through to download */ }
+      } catch (e: any) {
+        // User cancelled (AbortError) or share failed — fall through
+        if (e?.name === 'AbortError') return; // User cancelled, don't download
+      }
     }
-    // Fallback: trigger download
-    const link = document.createElement("a");
-    link.download = `team-${team}-sports-day-002.png`;
-    link.href = dataUrl;
-    link.click();
+
+    // Fallback: open image in new tab so user can long-press to save on iOS
+    // This is more reliable than link.click() on iOS Safari
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
   };
 
   if (!user) {
@@ -836,7 +847,7 @@ export default function Reveal() {
             </button>
           </div>
           <p className="font-mono text-white/40 text-xs tracking-wider mt-3">
-            Tap share to post to your story. Tag @6plus1.
+            Tap share → save image → add to your Instagram story. Tag @6plus1.
           </p>
         </div>
       )}
