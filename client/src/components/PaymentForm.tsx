@@ -2,17 +2,29 @@
  * PaymentForm
  *
  * Embedded Stripe Payment Element — no popup, no redirect.
- * The payment form lives directly on the holding page.
+ * Uses ExpressCheckoutElement (Apple Pay / Google Pay / Link) as the
+ * primary one-click option, with the card form as fallback.
+ *
+ * Layout:
+ *   1. ExpressCheckoutElement  — Apple Pay (Safari/macOS), Google Pay (Chrome), Link
+ *   2. "— or pay with card —" divider  (only shown when express options are available)
+ *   3. PaymentElement (card only, wallets suppressed to avoid duplication)
+ *   4. Submit button
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Elements,
+  ExpressCheckoutElement,
   PaymentElement,
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
-import { loadStripe, type Stripe as StripeType } from "@stripe/stripe-js";
+import {
+  loadStripe,
+  type Stripe as StripeType,
+  type StripeExpressCheckoutElementConfirmEvent,
+} from "@stripe/stripe-js";
 
 // ─── Stripe singleton ─────────────────────────────────────────────────────────
 
@@ -46,7 +58,52 @@ function InnerPaymentForm({ amount, currency, paymentIntentId, onPaymentSuccess,
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [expressAvailable, setExpressAvailable] = useState(false);
 
+  const formattedAmount = new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(amount / 100);
+
+  // ── Shared success handler ─────────────────────────────────────────────────
+  const handleSuccess = useCallback(() => {
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      (window as any).fbq("track", "Purchase", {
+        currency: "GBP",
+        value: 22,
+        eventID: paymentIntentId,
+      });
+    }
+    onPaymentSuccess();
+  }, [paymentIntentId, onPaymentSuccess]);
+
+  // ── Express Checkout (Apple Pay / Google Pay / Link) ───────────────────────
+  const handleExpressConfirm = useCallback(
+    async (event: StripeExpressCheckoutElementConfirmEvent) => {
+      if (!stripe) return;
+      setProcessing(true);
+      setErrorMsg("");
+
+      const { error } = await stripe.confirmPayment({
+        elements: elements!,
+        confirmParams: {
+          return_url: `${window.location.origin}/holding?payment_confirmed=true`,
+        },
+        redirect: "if_required",
+      });
+
+      if (error) {
+        event.paymentFailed({ reason: "fail" });
+        setErrorMsg(error.message ?? "Payment failed. Please try again.");
+        setProcessing(false);
+      } else {
+        handleSuccess();
+      }
+    },
+    [stripe, elements, handleSuccess]
+  );
+
+  // ── Card form submit ───────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
@@ -54,9 +111,8 @@ function InnerPaymentForm({ amount, currency, paymentIntentId, onPaymentSuccess,
     setProcessing(true);
     setErrorMsg("");
 
-    // Fire Meta Pixel InitiateCheckout event
-    if (typeof window !== 'undefined' && (window as any).fbq) {
-      (window as any).fbq('track', 'InitiateCheckout', {
+    if (typeof window !== "undefined" && (window as any).fbq) {
+      (window as any).fbq("track", "InitiateCheckout", {
         currency: currency.toUpperCase(),
         value: amount / 100,
       });
@@ -74,62 +130,88 @@ function InnerPaymentForm({ amount, currency, paymentIntentId, onPaymentSuccess,
       setErrorMsg(error.message ?? "Payment failed. Please try again.");
       setProcessing(false);
     } else {
-      // Fire Meta Pixel Purchase event with paymentIntentId for deduplication
-      if (typeof window !== 'undefined' && (window as any).fbq) {
-        (window as any).fbq('track', 'Purchase', {
-          currency: 'GBP',
-          value: 22,
-          eventID: paymentIntentId,
-        });
-      }
-      onPaymentSuccess();
+      handleSuccess();
     }
   };
 
-  const formattedAmount = new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: currency.toUpperCase(),
-  }).format(amount / 100);
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-black/20 border border-white/10 rounded-lg p-4">
-        <PaymentElement
+    <div className="space-y-5">
+      {/* ── Express Checkout (Apple Pay / Google Pay / Link) ── */}
+      <div>
+        <ExpressCheckoutElement
+          onConfirm={handleExpressConfirm}
+          onReady={(event) => {
+            // Show divider only when at least one express method is available
+            setExpressAvailable((event.availablePaymentMethods?.applePay ?? false) ||
+              (event.availablePaymentMethods?.googlePay ?? false) ||
+              (event.availablePaymentMethods?.link ?? false) ||
+              (event.availablePaymentMethods?.amazonPay ?? false));
+          }}
           options={{
-            layout: "tabs",
-            wallets: { applePay: "auto", googlePay: "auto" },
-            paymentMethodOrder: ["apple_pay", "google_pay", "card"],
+            buttonHeight: 52,
+            buttonTheme: {
+              applePay: "black",
+              googlePay: "black",
+            },
+            layout: {
+              maxColumns: 1,
+              maxRows: 3,
+              overflow: "auto",
+            },
+            paymentMethodOrder: ["apple_pay", "google_pay", "link"],
           }}
         />
       </div>
 
-      {errorMsg && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-          <p className="text-red-400 text-sm font-mono">{errorMsg}</p>
+      {/* ── Divider (only shown when express options are available) ── */}
+      {expressAvailable && (
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-white/10" />
+          <span className="font-mono text-white/30 text-xs tracking-widest">OR PAY WITH CARD</span>
+          <div className="flex-1 h-px bg-white/10" />
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={processing || !stripe || !elements}
-        className="w-full bg-[#FF5500] hover:bg-[#FF5500]/90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-mono text-sm tracking-widest uppercase py-4 transition-all"
-      >
-        {processing ? "PROCESSING…" : `PAY ${formattedAmount} — UNLOCK MY PLAYER PACK`}
-      </button>
+      {/* ── Card form ── */}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="bg-black/20 border border-white/10 rounded-lg p-4">
+          <PaymentElement
+            options={{
+              layout: "tabs",
+              // Suppress wallets here — they're shown in ExpressCheckoutElement above
+              wallets: { applePay: "never", googlePay: "never" },
+            }}
+          />
+        </div>
 
-      <button
-        type="button"
-        onClick={onCancel}
-        disabled={processing}
-        className="w-full text-[#F2F0EB]/40 hover:text-[#F2F0EB]/70 font-mono text-xs tracking-widest uppercase py-2 transition-colors"
-      >
-        Cancel — keep my registration
-      </button>
+        {errorMsg && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+            <p className="text-red-400 text-sm font-mono">{errorMsg}</p>
+          </div>
+        )}
 
-      <p className="text-[#F2F0EB]/25 text-xs text-center font-mono">
-        Secured by Stripe · Your registration is safe either way
-      </p>
-    </form>
+        <button
+          type="submit"
+          disabled={processing || !stripe || !elements}
+          className="w-full bg-[#FF5500] hover:bg-[#FF5500]/90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-mono text-sm tracking-widest uppercase py-4 transition-all"
+        >
+          {processing ? "PROCESSING…" : `PAY ${formattedAmount} — UNLOCK MY PLAYER PACK`}
+        </button>
+
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={processing}
+          className="w-full text-[#F2F0EB]/40 hover:text-[#F2F0EB]/70 font-mono text-xs tracking-widest uppercase py-2 transition-colors"
+        >
+          Cancel — keep my registration
+        </button>
+
+        <p className="text-[#F2F0EB]/25 text-xs text-center font-mono">
+          Secured by Stripe · Your registration is safe either way
+        </p>
+      </form>
+    </div>
   );
 }
 

@@ -6,10 +6,10 @@
  * TWO DISTINCT JOURNEYS:
  *
  * PAID (Priority) users — accessType === "priority":
- *   /reveal → /unlock-reveal → /shirt-confirm → /team-hub
+ *   /reveal → /unlock-reveal → /shirt-confirm → /team-dashboard → /team-hub
  *
- * FREE users — accessType === "free" (unlocked on July 11th 8pm):
- *   /reveal → /team-hub  (NO player pack animation, NO shirt confirm)
+ * FREE users — accessType === "free" (unlocked on July 4th 8pm):
+ *   /reveal → /team-dashboard → /team-hub  (NO player pack animation, NO shirt confirm)
  *
  * Flags are stored in localStorage keyed by registration ID so that
  * different users on the same device don't share state.
@@ -120,6 +120,6 @@ export function getNextRevealRoute(
     if (!hasSeenShirtConfirm(registrationId)) return "/shirt-confirm";
   }
 
-  // Both end at team hub
-  return "/team-hub";
+  // Both end at team dashboard (landing screen before full team hub)
+  return "/team-dashboard";
 }

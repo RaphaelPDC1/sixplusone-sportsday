@@ -69,9 +69,9 @@ export default function UnlockReveal() {
       return;
     }
 
-    // If not paid/priority, redirect to team-hub (free users who somehow landed here)
+    // If not paid/priority, redirect to team-dashboard (free users who somehow landed here)
     if (dashboard.accessType !== "priority") {
-      navigate("/team-hub", { replace: true });
+      navigate("/team-dashboard", { replace: true });
       return;
     }
 

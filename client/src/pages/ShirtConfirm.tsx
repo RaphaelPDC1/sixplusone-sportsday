@@ -67,7 +67,7 @@ export default function ShirtConfirm() {
       }
       // Mark shirt confirm as seen using central state manager
       markShirtConfirmSeen(userId);
-      navigate("/team-hub", { replace: true });
+      navigate("/team-dashboard", { replace: true });
     } catch {
       setSaving(false);
     }

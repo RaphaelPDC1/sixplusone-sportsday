@@ -295,6 +295,23 @@
 - [ ] Run tests and save checkpoint
 
 
+## Apple Pay / Google Pay Desktop Fix (9 June)
+- [x] Add ExpressCheckoutElement above card form (Apple Pay / Google Pay / Link as one-click buttons)
+- [x] Suppress wallet options in PaymentElement to avoid duplication
+- [x] Shared Meta Pixel Purchase event handler for both express and card paths
+- [x] Divider "OR PAY WITH CARD" only shown when express options are available
+
+## Team Dashboard Landing Screen (9 June)
+- [x] Create /team-dashboard page — clean, mobile-first, 6+1 brand (black/white/bold)
+- [x] Shows: team name in team colour, identity line, captain candidate, teammates list, event details
+- [x] Single CTA: "ENTER YOUR TEAM HUB →"
+- [x] Route registered in App.tsx
+- [x] revealJourney.ts updated: both paid and free journeys end at /team-dashboard
+- [x] ShirtConfirm.tsx redirects to /team-dashboard after confirmation
+- [x] Reveal.tsx routes free users to /team-dashboard after reveal
+- [x] UnlockReveal.tsx redirects stray free users to /team-dashboard
+- [x] 45 tests passing, TypeScript clean (0 errors)
+
 ## Phase 13: Registration Form Review/Edit Screen (NEW)
 - [ ] Add registration form review/edit screen component
 - [ ] Show all entered data (name, email, team preference, shirt size, etc.) in review state

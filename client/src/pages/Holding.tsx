@@ -6,7 +6,6 @@ import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
 import { ParticleTextBg } from "@/components/ui/particle-text-bg";
 import { ScratchCardGrid } from "@/components/ui/scratch-card";
-import { toPng } from "html-to-image";
 import { TopNameEditor } from "@/components/TopNameEditor";
 import { PaymentForm } from "@/components/PaymentForm";
 import { FunnelPopup } from "@/components/FunnelPopup";
@@ -561,12 +560,11 @@ export default function Holding() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number>(2200);
-  const [confirmedTopName, setConfirmedTopName] = useState<string | null>(null);
   const [confirmingStartedAt, setConfirmingStartedAt] = useState<number | null>(null);
   const [confirmingTimedOut, setConfirmingTimedOut] = useState(false);
 
   // ── Dashboard query (replaces getUserStatus) ──
-  const { data: dashboard, isLoading, error, refetch: refetchDashboard } = trpc.sportsday.getSportsDayDashboard.useQuery(
+  const { data: dashboard, isLoading, error } = trpc.sportsday.getSportsDayDashboard.useQuery(
     { registrationId: userId! },
     {
       enabled: !!userId,
@@ -686,7 +684,6 @@ export default function Holding() {
   };
 
   const handleTopNameConfirmed = async (topName: string) => {
-    setConfirmedTopName(topName);
     try {
       // topName is already saved by TopNameEditor via saveTopName mutation
       // createPaymentIntent only needs registrationId
@@ -731,11 +728,16 @@ export default function Holding() {
 
   const firstName = (user?.fullName ?? "").split(" ")[0].toUpperCase() || "PLAYER";
 
+  // Derived state for simplified UI
+  const isUnlocked = dashboard.state === "UNLOCKED_PRIORITY" || dashboard.state === "PUBLIC_REVEAL";
+  const isLocked = dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID";
+  const price = dashboard?.priceState ? `£${(dashboard.priceState.currentPricePence / 100).toFixed(0)}` : "£22";
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden">
       {showSplash && <EntrySplash onComplete={handleSplashComplete} />}
       {/* Funnel pop-ups: first-time and return-visit — only for unpaid/locked users */}
-      {(dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID") && userId && (
+      {isLocked && userId && (
         <FunnelPopup
           registrationId={userId}
           onCtaClick={scrollToPayment}
@@ -743,7 +745,7 @@ export default function Holding() {
         />
       )}
       {/* Ad popup — shown 3s after load to Meta ad traffic who are registered but not paid */}
-      {(dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID") && (
+      {isLocked && (
         <AdPopup
           variant="registered"
           onCtaClick={scrollToPayment}
@@ -773,192 +775,87 @@ export default function Holding() {
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 pt-6 pb-4">
         <BackNav to="/" inline />
-        {/* Logo absolutely centred so it's not pushed by unequal side elements */}
         <div className="absolute inset-x-0 flex justify-center pointer-events-none">
           <img src={LOGO_URL} alt="6+1" className="h-12 w-auto pointer-events-auto" style={{ filter: "invert(1)" }} />
         </div>
         <span className="font-mono text-[#FF5500] text-xs tracking-[0.2em]">SPORTS DAY 002</span>
       </header>
 
-      <div className="relative z-10 max-w-lg mx-auto px-5 pb-16 space-y-6">
+      <div className="relative z-10 max-w-lg mx-auto px-5 pb-16">
 
-        {/* ── Section 1: AMPLIFIED HERO GREETING ── */}
-        <section className="pt-8">
-          <div
-            style={{
-              transition: "opacity 0.9s ease, transform 0.9s ease",
-              opacity: heroVisible ? 1 : 0,
-              transform: heroVisible ? "translateY(0)" : "translateY(24px)",
-            }}
-          >
-            {/* Pulsing registration confirmed badge */}
-            <div className="flex items-center gap-2 mb-4">
-              <div
-                className="w-2 h-2 rounded-full bg-[#22c55e]"
-                style={{ animation: "pulse 1.6s ease-in-out infinite" }}
-              />
-              <p className="font-mono text-[#22c55e] text-[10px] tracking-[0.35em]">REGISTRATION CONFIRMED</p>
-            </div>
-
-            {/* Big personalised name headline */}
-            <h1
-              className="font-display text-[#F2F0EB] leading-[0.88] mb-3"
-              style={{ fontSize: "clamp(3.2rem, 14vw, 6rem)" }}
-            >
-              {dashboard?.headline ?? "YOU'RE"}<br />
-              <span
-                className="text-[#FF5500]"
-                style={{ animation: "pulse 2.5s ease-in-out infinite" }}
-              >
-                {firstName}.
-              </span>
-            </h1>
-
-            {/* Profile type */}
-            {user?.sportsDayProfile && (
-              <p
-                className="font-mono text-[#FF5500]/70 text-xs tracking-[0.3em] mb-4"
-                style={{
-                  transition: "opacity 0.7s ease 0.5s",
-                  opacity: heroVisible ? 1 : 0,
-                }}
-              >
-                {user.sportsDayProfile.replace(/_/g, " ").toUpperCase()}
-              </p>
-            )}
-
-            {/* Subheadline / tagline */}
-            {(dashboard?.subheadline || user?.profileTagline) && (
-              <p
-                className="font-mono text-[#F2F0EB]/50 text-sm tracking-wider leading-relaxed max-w-sm mb-5"
-                style={{
-                  transition: "opacity 0.7s ease 0.8s",
-                  opacity: heroVisible ? 1 : 0,
-                }}
-              >
-                {dashboard?.subheadline ?? user?.profileTagline}
-              </p>
-            )}
+        {/* ── HERO ── */}
+        <section
+          className="pt-10 pb-8"
+          style={{
+            transition: "opacity 0.9s ease, transform 0.9s ease",
+            opacity: heroVisible ? 1 : 0,
+            transform: heroVisible ? "translateY(0)" : "translateY(24px)",
+          }}
+        >
+          {/* Registration confirmed badge */}
+          <div className="flex items-center gap-2 mb-5">
+            <div className="w-2 h-2 rounded-full bg-[#22c55e]" style={{ animation: "pulse 1.6s ease-in-out infinite" }} />
+            <p className="font-mono text-[#22c55e] text-[10px] tracking-[0.35em]">REGISTRATION CONFIRMED</p>
           </div>
+
+          {/* Main headline */}
+          <h1
+            className="font-display text-[#F2F0EB] leading-[0.88] mb-4"
+            style={{ fontSize: "clamp(3rem, 16vw, 7rem)" }}
+          >
+            SPORTS DAY<br />
+            <span className="text-[#FF5500]">002.</span>
+          </h1>
+
+          {/* Event details line */}
+          <p className="font-mono text-[#F2F0EB]/50 text-sm tracking-[0.25em] mb-1">
+            FRIDAY 11 JULY 2026
+          </p>
+          <p className="font-mono text-[#F2F0EB]/30 text-xs tracking-[0.3em]">
+            SHEFFIELD
+          </p>
         </section>
 
-        {/* ── Section 2: AMPLIFIED STATUS BLOCK ── */}
-        {/* Enlarged, more critical, pulsing team-waiting block */}
+        {/* ── STATUS INDICATOR ── */}
         <section
+          className="mb-6"
           style={{
             transition: "opacity 0.7s ease 0.35s",
             opacity: heroVisible ? 1 : 0,
           }}
         >
-          <div
-            className="relative overflow-hidden border bg-black/20 backdrop-blur-sm"
-            style={{
-              borderColor: "rgba(255,85,0,0.4)",
-              boxShadow: heroVisible ? "0 0 40px rgba(255,85,0,0.12), inset 0 0 40px rgba(255,85,0,0.04)" : "none",
-              transition: "box-shadow 1s ease 1s",
-            }}
-          >
-            {/* Animated top border — full width, orange */}
-            <div
-              className="absolute top-0 left-0 h-[2px] bg-[#FF5500]"
-              style={{
-                width: heroVisible ? "100%" : "0%",
-                transition: "width 1.4s ease 0.8s",
-              }}
-            />
-
-            {/* Status rows */}
-            <div className="p-6 space-y-4">
-              <StatusRow label="REGISTRATION" value="COMPLETE" valueColor="#22c55e" delay={0} visible={heroVisible} />
-              <div className="h-px bg-white/5" />
-              <StatusRow label="TEAM ASSIGNED" value="HIDDEN" valueColor="#FF5500" delay={200} visible={heroVisible} blink />
-              <div className="h-px bg-white/5" />
-              <StatusRow
-                label="REVEAL STATUS"
-                value={user?.paymentStatus === "paid" ? "UNLOCKED" : "LOCKED"}
-                valueColor={user?.paymentStatus === "paid" ? "#22c55e" : "#444"}
-                delay={400}
-                visible={heroVisible}
-              />
-            </div>
-
-            {/* YOUR TEAM IS WAITING — critical + pulsing */}
-            <div
-              className="border-t px-6 py-5"
-              style={{
-                borderColor: "rgba(255,85,0,0.2)",
-                background: "rgba(255,85,0,0.04)",
-                transition: "opacity 0.6s ease 1.2s",
-                opacity: heroVisible ? 1 : 0,
-              }}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <p
-                  className="font-display text-[#F2F0EB] tracking-widest"
+          {/* Minimal status indicator */}
+          <div className="border border-white/10 bg-black/20 backdrop-blur-sm px-5 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-2 h-2 rounded-full"
                   style={{
-                    fontSize: "clamp(1rem, 4.5vw, 1.4rem)",
-                    animation: "pulse 2s ease-in-out infinite",
+                    background: isUnlocked ? "#22c55e" : "#FF5500",
+                    animation: "pulse 1.6s ease-in-out infinite",
                   }}
-                >
-                  YOUR TEAM IS WAITING.
-                </p>
-                <div className="flex gap-1.5">
-                  {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="w-2 h-2 rounded-full bg-[#FF5500]"
-                      style={{ animation: `pulse 1.4s ease-in-out ${i * 0.22}s infinite` }}
-                    />
-                  ))}
-                </div>
+                />
+                <span className="font-mono text-xs tracking-[0.25em]" style={{ color: isUnlocked ? "#22c55e" : "#FF5500" }}>
+                  {isUnlocked ? "TEAM UNLOCKED" : "TEAM LOCKED"}
+                </span>
               </div>
-              <UnlockCounter visible={heroVisible} />
-            </div>
-          </div>
-        </section>
-
-        {/* ── Section 3: Profile Intel Card ── */}
-        <section
-          style={{
-            transition: "opacity 0.7s ease 0.6s",
-            opacity: heroVisible ? 1 : 0,
-          }}
-        >
-          <div className="border border-white/8 bg-black/15 backdrop-blur-sm p-5">
-            <div className="flex items-start justify-between mb-4">
-              <p className="font-mono text-[#444] text-xs tracking-[0.3em]">YOUR INTEL</p>
-              <span className="font-mono text-[#FF5500] text-[10px] tracking-wider border border-[#FF5500]/30 px-2 py-0.5">
-                {user?.paymentStatus === "paid" ? "PRIORITY" : "STANDARD"}
+              <span className="font-mono text-[#444] text-[10px] tracking-widest">
+                {firstName}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: "NAME", value: (user?.fullName ?? "").toUpperCase() },
-                { label: "STATUS", value: "REGISTERED", color: "#22c55e" },
-                { label: "TEAM", value: "CLASSIFIED", color: "#444" },
-                { label: "DATE", value: "11 JULY 2026", color: "#F2F0EB" },
-              ].map(({ label, value, color }) => (
-                <div key={label}>
-                  <p className="font-mono text-[#333] text-[10px] tracking-[0.2em] mb-1">{label}</p>
-                  <p className="font-mono text-sm tracking-wider" style={{ color: color ?? "#F2F0EB" }}>{value}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
 
-        {/* ── Section 4: Golden Ticket (collapsible) ── */}
-        <ScratchReplaySection visible={heroVisible} />
-
-        {/* ── Section 5: Funnel CTA ── */}
+        {/* ── PAYMENT / UNLOCK FLOW ── */}
         <section
           ref={paymentSectionRef}
+          className="mt-6"
           style={{
-            transition: "opacity 0.7s ease 0.9s",
+            transition: "opacity 0.7s ease 0.5s",
             opacity: heroVisible ? 1 : 0,
           }}
         >
-          {/* ── Cancelled checkout soft message ── */}
+          {/* Cancelled checkout soft message */}
           {paymentCancelled && unlockStep === "idle" && (
             <div className="mb-4 border border-white/8 bg-black/20 px-5 py-4">
               <p className="font-mono text-[#F2F0EB]/60 text-xs tracking-wider leading-relaxed">
@@ -1026,219 +923,74 @@ export default function Holding() {
             />
           )}
 
-          {/* ── FUNNEL: Kit story + social proof + CTA ── */}
-          {unlockStep === "idle" && (dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID") && (
-            <div className="space-y-4">
-
-              {/* ── RETURNING UNPAID: urgency banner ── */}
+          {/* ── Single CTA based on state ── */}
+          {unlockStep === "idle" && isLocked && (
+            <div className="space-y-3">
+              {/* Urgency line for returning users */}
               {dashboard.state === "RETURNING_UNPAID" && (
-                <div
-                  className="border border-[#FF5500]/40 bg-[#FF5500]/8 px-5 py-4 flex items-start gap-3"
-                  style={{ animation: "pulse 2.5s ease-in-out infinite" }}
-                >
-                  <div className="w-2 h-2 rounded-full bg-[#FF5500] shrink-0 mt-1" style={{ animation: "pulse 1.4s ease-in-out infinite" }} />
-                  <div>
-                    <p className="font-mono text-[#FF5500] text-xs tracking-[0.25em] mb-0.5">YOU CAME BACK.</p>
-                    <p className="font-mono text-[#F2F0EB]/60 text-[10px] tracking-wider">
-                      Early access is still open — but the price won’t stay here.
-                    </p>
-                  </div>
+                <div className="flex items-center gap-2 px-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#FF5500]" style={{ animation: "pulse 1.4s ease-in-out infinite" }} />
+                  <p className="font-mono text-[#FF5500] text-[10px] tracking-[0.25em]">YOU CAME BACK. EARLY ACCESS STILL OPEN.</p>
                 </div>
               )}
-
-              {/* ── KIT STORY BLOCK ── */}
-              <div className="relative overflow-hidden border border-white/10 bg-black/25 backdrop-blur-sm">
-                {/* Subtle orange glow top border */}
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF5500]/60 to-transparent" />
-
-                <div className="p-6">
-                  {/* Eyebrow */}
-                  <p className="font-mono text-[#FF5500] text-[10px] tracking-[0.4em] mb-3">THE KIT · ONE RUN ONLY</p>
-
-                  {/* Headline */}
-                  <h2
-                    className="font-display text-[#F2F0EB] leading-[0.9] mb-4"
-                    style={{ fontSize: "clamp(1.8rem, 8vw, 2.8rem)" }}
-                  >
-                    PEOPLE WILL<br />
-                    <span className="text-[#FF5500]">ASK WHERE</span><br />
-                    YOU GOT IT.
-                  </h2>
-
-                  {/* Body copy */}
-                  <p className="font-mono text-[#F2F0EB]/55 text-xs tracking-wider leading-relaxed mb-5">
-                    One colour. One event. One run. Your team-colour top is printed with your name,
-                    built for this day only. When Sports Day 002 is done — it’s done.
-                    No restock. No second run.
-                  </p>
-
-                  {/* Kit features */}
-                  <div className="grid grid-cols-2 gap-3 mb-6">
-                    {[
-                      { icon: "⚡", label: "Instant team reveal" },
-                      { icon: "🏆", label: "Priority event access" },
-                      { icon: "👕", label: "Name on the top" },
-                      { icon: "🔒", label: "One-of-one, never remade" },
-                    ].map(({ icon, label }) => (
-                      <div key={label} className="flex items-center gap-2">
-                        <span className="text-sm">{icon}</span>
-                        <span className="font-mono text-[#F2F0EB]/60 text-[10px] tracking-wider">{label}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Divider */}
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="flex-1 h-px bg-white/8" />
-                    <span className="font-mono text-[#333] text-[10px] tracking-[0.3em]">FREE TO ATTEND</span>
-                    <div className="flex-1 h-px bg-white/8" />
-                  </div>
-                  <p className="font-mono text-[#F2F0EB]/30 text-[10px] tracking-wider mb-5">
-                    The event is free. The kit is optional — but it’s the piece that makes the story yours.
-                  </p>
-
-                  {/* Price block */}
-                  {dashboard?.priceState && (
-                    <div className="flex items-end gap-3 mb-5">
-                      <span className="font-display text-[#F2F0EB]" style={{ fontSize: "clamp(2.2rem, 10vw, 3.2rem)" }}>
-                        £{(dashboard.priceState.currentPricePence / 100).toFixed(0)}
-                      </span>
-                      {dashboard.priceState.isEarlyPrice && dashboard.priceState.futurePricePence && (
-                        <div className="pb-1">
-                          <span className="font-mono text-[#444] text-xs tracking-wider line-through block">
-                            £{(dashboard.priceState.futurePricePence / 100).toFixed(0)}
-                          </span>
-                          <span className="font-mono text-[#FF5500] text-[10px] tracking-wider">
-                            EARLY PRICE
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Countdown urgency */}
-                  {dashboard?.priceState?.countdownMs !== null && (dashboard?.priceState?.countdownMs ?? 0) > 0 && (
-                    <div className="border border-[#FF5500]/25 bg-[#FF5500]/5 px-4 py-3 mb-5 flex items-center gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#FF5500]" style={{ animation: "pulse 1.4s ease-in-out infinite" }} />
-                      <p className="font-mono text-[#FF5500] text-[10px] tracking-[0.25em]">
-                        {dashboard.priceState?.currentPriceLabel}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Social proof */}
-                  <UnlockCounter visible={heroVisible} />
-
-                </div>
+              {/* Main unlock CTA */}
+              <button
+                onClick={handleStartUnlock}
+                className="w-full bg-[#FF5500] text-[#0A0A0A] font-display tracking-widest py-5 hover:bg-[#F2F0EB] transition-all active:scale-[0.98]"
+                style={{ fontSize: "clamp(1.1rem, 5vw, 1.4rem)" }}
+              >
+                UNLOCK YOUR TEAM — {price}
+              </button>
+              {/* Trust micro-copy */}
+              <div className="flex items-center justify-center gap-5">
+                <span className="font-mono text-[#333] text-[10px] tracking-wider">Secure checkout</span>
+                <span className="font-mono text-[#333] text-[10px] tracking-wider">Instant unlock</span>
+                <span className="font-mono text-[#333] text-[10px] tracking-wider">Apple Pay</span>
               </div>
-
-              {/* ── APPLE PAY / PAYMENT CTA ── */}
-              <div className="relative overflow-hidden">
-                {/* Glow border */}
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{ boxShadow: "0 0 40px rgba(255,85,0,0.15), inset 0 0 40px rgba(255,85,0,0.04)", border: "1px solid rgba(255,85,0,0.35)" }}
-                />
-                <div className="relative bg-black/30 backdrop-blur-sm p-6">
-
-                  {/* Apple Pay badge */}
-                  <div className="flex items-center gap-2 mb-4">
-                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-[#F2F0EB]" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                    </svg>
-                    <span className="font-mono text-[#F2F0EB]/60 text-[10px] tracking-[0.3em]">APPLE PAY & CARD ACCEPTED</span>
-                  </div>
-
-                  {/* Main CTA */}
-                  <button
-                    onClick={handleStartUnlock}
-                    className="w-full bg-[#FF5500] text-[#0A0A0A] font-display tracking-widest py-5 hover:bg-[#F2F0EB] transition-all active:scale-[0.98] mb-3"
-                    style={{ fontSize: "clamp(1.1rem, 5vw, 1.4rem)" }}
-                  >
-                    {dashboard?.state === "RETURNING_UNPAID"
-                      ? `UNLOCK BEFORE PRICE CHANGES — £${dashboard.priceState ? (dashboard.priceState.currentPricePence / 100).toFixed(0) : "25"}`
-                      : `UNLOCK MY PLAYER PACK — £${dashboard?.priceState ? (dashboard.priceState.currentPricePence / 100).toFixed(0) : "25"}`
-                    }
-                  </button>
-
-                  {/* Trust signals */}
-                  <div className="flex items-center justify-center gap-4 flex-wrap">
-                    {[
-                      { icon: "🔒", text: "Secure checkout" },
-                      { icon: "⚡", text: "Instant unlock" },
-                      { icon: "🏆", text: "Free to attend" },
-                    ].map(({ icon, text }) => (
-                      <div key={text} className="flex items-center gap-1.5">
-                        <span className="text-xs">{icon}</span>
-                        <span className="font-mono text-[#444] text-[10px] tracking-wider">{text}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {dashboard?.ctaNote && (
-                    <p className="font-mono text-[#333] text-xs text-center mt-3 tracking-wider">
-                      {dashboard.ctaNote}
-                    </p>
-                  )}
-                </div>
-              </div>
-
             </div>
+          )}
+
+          {/* ── Unlocked: See your team CTA ── */}
+          {unlockStep === "idle" && isUnlocked && (
+            <button
+              onClick={() => navigate("/team-dashboard")}
+              className="w-full border border-[#F2F0EB]/20 text-[#F2F0EB] font-display tracking-widest py-5 hover:bg-white/5 transition-all active:scale-[0.98]"
+              style={{ fontSize: "clamp(1.1rem, 5vw, 1.4rem)" }}
+            >
+              SEE YOUR TEAM →
+            </button>
           )}
         </section>
 
-        {/* ── Section 6: Referral Block ── */}
-        <section
-          style={{
-            transition: "opacity 0.7s ease 1.1s",
-            opacity: heroVisible ? 1 : 0,
-          }}
-        >
-          <div className="border border-white/8 bg-black/15 backdrop-blur-sm p-6">
-            <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-4">BRING YOUR PEOPLE</p>
-            <p className="font-mono text-[#F2F0EB]/80 text-sm tracking-wider mb-1">
-              Refer 3 friends. Earn your unlock.
-            </p>
-            <p className="font-mono text-[#444] text-xs tracking-wider mb-4">
-              Reward: merch discount + priority captain vote
-            </p>
-            <div className="bg-black/15 border border-white/8 p-3 mb-3">
-              <p className="font-mono text-[#FF5500] text-xs tracking-wider break-all">
-                {referralLink || "Generating your link..."}
-              </p>
-            </div>
-            <button
-              onClick={copyReferralLink}
-              className={`w-full border font-mono text-sm tracking-widest py-3 transition-all ${
-                copied
-                  ? "border-[#FF5500] text-[#FF5500] bg-[#FF5500]/5"
-                  : "border-white/10 text-[#F2F0EB]/50 hover:border-[#FF5500] hover:text-[#FF5500]"
-              }`}
-            >
-              {copied ? "✓ COPIED" : "COPY REFERRAL LINK"}
-            </button>
-            {(user?.referralCount ?? 0) > 0 && (
-              <div className="mt-4 flex items-center gap-3">
-                <div className="flex gap-1.5">
-                  {[1, 2, 3].map((n) => (
-                    <div
-                      key={n}
-                      className="h-1 transition-colors duration-500"
-                      style={{
-                        width: "2rem",
-                        background: n <= (user?.referralCount ?? 0) ? "#FF5500" : "rgba(255,255,255,0.08)",
-                      }}
-                    />
-                  ))}
+        {/* ── Referral link (compact) ── */}
+        {referralLink && (
+          <section
+            className="mt-6 pb-4"
+            style={{
+              transition: "opacity 0.7s ease 0.8s",
+              opacity: heroVisible ? 1 : 0,
+            }}
+          >
+            <div className="border border-white/8 bg-black/15 backdrop-blur-sm px-5 py-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-mono text-[#444] text-[10px] tracking-[0.3em] mb-1">YOUR REFERRAL LINK</p>
+                  <p className="font-mono text-[#FF5500] text-xs tracking-wider truncate">{referralLink}</p>
                 </div>
-                <span className="font-mono text-[#444] text-xs tracking-wider">
-                  <AnimatedNumber value={user?.referralCount ?? 0} />/3
-                  {user?.referralRewardUnlocked && " — REWARD UNLOCKED"}
-                </span>
+                <button
+                  onClick={copyReferralLink}
+                  className={`shrink-0 border font-mono text-[10px] tracking-widest px-3 py-2 transition-all ${
+                    copied
+                      ? "border-[#FF5500] text-[#FF5500]"
+                      : "border-white/10 text-[#F2F0EB]/40 hover:border-[#FF5500] hover:text-[#FF5500]"
+                  }`}
+                >
+                  {copied ? "✓ COPIED" : "COPY"}
+                </button>
               </div>
-            )}
-          </div>
-        </section>
+            </div>
+          </section>
+        )}
       </div>
 
     </div>

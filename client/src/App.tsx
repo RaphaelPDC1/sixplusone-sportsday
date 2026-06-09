@@ -17,6 +17,7 @@ import PostFeed from "./pages/PostFeed";
 import UnlockReveal from "./pages/UnlockReveal";
 import ShirtConfirm from "./pages/ShirtConfirm";
 import Terms from "./pages/Terms";
+import TeamDashboard from "./pages/TeamDashboard";
 import Privacy from "./pages/Privacy";
 
 function Router() {
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/unlock/success" component={UnlockSuccess} />
       <Route path="/admin" component={Admin} />
       <Route path="/team-hub" component={TeamHub} />
+      <Route path="/team-dashboard" component={TeamDashboard} />
       <Route path="/unlock-reveal" component={UnlockReveal} />
       <Route path="/shirt-confirm" component={ShirtConfirm} />
       <Route path="/feed" component={PostFeed} />
