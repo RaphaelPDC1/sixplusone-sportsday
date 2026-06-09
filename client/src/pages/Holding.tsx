@@ -10,6 +10,7 @@ import { toPng } from "html-to-image";
 import { TopNameEditor } from "@/components/TopNameEditor";
 import { PaymentForm } from "@/components/PaymentForm";
 import { FunnelPopup } from "@/components/FunnelPopup";
+import { AdPopup } from "@/components/AdPopup";
 import {
   getNextRevealRoute,
   hasCompletedFullRevealFlow,
@@ -739,6 +740,14 @@ export default function Holding() {
           registrationId={userId}
           onCtaClick={scrollToPayment}
           delay={2200}
+        />
+      )}
+      {/* Ad popup — shown 3s after load to Meta ad traffic who are registered but not paid */}
+      {(dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID") && (
+        <AdPopup
+          variant="registered"
+          onCtaClick={scrollToPayment}
+          delay={3000}
         />
       )}
       {/* Full-page particle text background — fixed behind all content */}

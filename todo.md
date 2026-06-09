@@ -487,3 +487,9 @@
 - [ ] Check data exposure risks
 - [ ] Check GDPR compliance gaps
 - [ ] Report findings before patching
+
+## Task 2 — Ad Popups (9 June) ✓
+- [x] Popup 1: New visitor from ad on Home page (UTM facebook/instagram, not registered, 3s delay)
+- [x] Popup 2: Registered but not paid on Holding page (UTM facebook/instagram, registered, not paid, 3s delay)
+- [x] Session storage on both so they don't reappear on refresh
+- [x] Do not show Popup 2 to paid users (guarded by LOCKED_UNPAID/RETURNING_UNPAID state check)

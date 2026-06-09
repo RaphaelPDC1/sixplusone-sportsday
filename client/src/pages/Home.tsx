@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import AnimatedShaderHero from "@/components/ui/animated-shader-hero";
 import { ShootingStarCanvas } from "@/components/ui/shooting-star-canvas";
+import { AdPopup } from "@/components/AdPopup";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -52,6 +53,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
+      {/* Ad popup — shown 3s after load to Meta ad traffic who haven't registered */}
+      <AdPopup
+        variant="new_visitor"
+        onCtaClick={() => navigate("/enter")}
+        delay={3000}
+      />
+
       {/* Shooting star canvas overlay — renders above everything */}
       {starActive && (
         <ShootingStarCanvas
