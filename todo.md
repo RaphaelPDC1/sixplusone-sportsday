@@ -472,21 +472,15 @@
 - [x] Add footer links in app footer / Home page
 - [x] Register /terms and /privacy routes in App.tsx
 
-## Task 2 — Holding Page Ad Popup (9 June)
-- [ ] Detect UTM source = facebook or instagram on holding page
-- [ ] Show popup after 3 seconds for ad traffic only
-- [ ] Popup headline: "You found us."
-- [ ] Popup body: "Sports Day 002. Sheffield. July 11th. Register free and unlock your team for £22."
-- [ ] Popup button: "Register now" → scrolls to registration form
-- [ ] Do not show to organic visitors or already-registered users
+## Task 2 — Holding Page Ad Popup (9 June) ✓ (see Task 2 Ad Popups below)
 
-## Task 3 — Security Audit (9 June)
-- [ ] Check for exposed API keys or secrets in frontend code
-- [ ] Check authentication vulnerabilities
-- [ ] Check payment security issues
-- [ ] Check data exposure risks
-- [ ] Check GDPR compliance gaps
-- [ ] Report findings before patching
+## Task 3 — Security Audit (9 June) ✓
+- [x] Check for exposed API keys or secrets in frontend code (none found)
+- [x] Check authentication vulnerabilities (admin procedures protected)
+- [x] Check payment security issues (confirmPayment bypass found and patched)
+- [x] Check data exposure risks (playerEmail found and removed)
+- [x] Check GDPR compliance gaps (deletion endpoint added)
+- [x] Reported findings before patching
 
 ## Task 2 — Ad Popups (9 June) ✓
 - [x] Popup 1: New visitor from ad on Home page (UTM facebook/instagram, not registered, 3s delay)
@@ -494,9 +488,9 @@
 - [x] Session storage on both so they don't reappear on refresh
 - [x] Do not show Popup 2 to paid users (guarded by LOCKED_UNPAID/RETURNING_UNPAID state check)
 
-## Security Patches (9 June)
+## Security Patches (9 June) ✓
 
-- [ ] PATCH 1: Fix confirmPayment bypass — require valid Stripe paymentIntentId verification
-- [ ] PATCH 2: Add rate limiting to checkEmailExists (5 req/min/IP)
-- [ ] PATCH 3: Remove playerEmail from public dashboard response
-- [ ] PATCH 4: GDPR admin deletion procedure + privacy page link
+- [x] PATCH 1: Fix confirmPayment bypass — requires valid Stripe paymentIntentId, verifies with Stripe API, checks status=succeeded and metadata.registration_id match
+- [x] PATCH 2: Added rate limiting to checkEmailExists (5 req/min/IP, matching checkEmail)
+- [x] PATCH 3: Removed playerEmail from SportsDayDashboard interface and public dashboard response
+- [x] PATCH 4: Added adminDeleteUserData procedure (GDPR erasure) + prominent deletion request box in Privacy page
