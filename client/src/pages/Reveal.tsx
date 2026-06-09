@@ -850,9 +850,9 @@ export default function Reveal() {
                 markTeamRevealSeen(regId);
                 // Route based on access type:
                 // Paid (priority) → /unlock-reveal (player pack animation)
-                // Free → /team-dashboard (orientation screen before full team hub)
+                // Free → /team-hub
                 const isPaid = user.accessType === "priority";
-                navigate(isPaid ? "/unlock-reveal" : "/team-dashboard");
+                navigate(isPaid ? "/unlock-reveal" : "/team-hub");
               }}
               className="w-full border-2 border-white text-white font-display text-xl tracking-widest py-5 hover:bg-white/10 transition-colors active:scale-[0.98]">
               CONTINUE →

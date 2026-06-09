@@ -953,11 +953,11 @@ export default function Holding() {
           {/* ── Unlocked: See your team CTA ── */}
           {unlockStep === "idle" && isUnlocked && (
             <button
-              onClick={() => navigate("/team-dashboard")}
+              onClick={() => navigate("/team-hub")}
               className="w-full border border-[#F2F0EB]/20 text-[#F2F0EB] font-display tracking-widest py-5 hover:bg-white/5 transition-all active:scale-[0.98]"
               style={{ fontSize: "clamp(1.1rem, 5vw, 1.4rem)" }}
             >
-              SEE YOUR TEAM →
+              ENTER YOUR TEAM HUB →
             </button>
           )}
         </section>
