@@ -140,16 +140,23 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-6">
-          <img
-            src={LOGO_URL}
-            alt="6+1"
-            className="h-5 w-auto opacity-40"
-            style={{ filter: "invert(1)" }}
-          />
-          <p className="font-mono text-[#333] text-xs tracking-wider">
-            © 6+1 SPORTS DAY 002 — 2026
-          </p>
+        <div className="flex flex-col items-center gap-3 px-6 py-6 border-t border-white/10">
+          <div className="flex items-center gap-6">
+            <a href="/terms" className="font-mono text-white/30 text-xs tracking-wider hover:text-white/60 transition-colors">TERMS &amp; CONDITIONS</a>
+            <span className="text-white/20 text-xs">|</span>
+            <a href="/privacy" className="font-mono text-white/30 text-xs tracking-wider hover:text-white/60 transition-colors">PRIVACY POLICY</a>
+          </div>
+          <div className="flex items-center justify-between w-full">
+            <img
+              src={LOGO_URL}
+              alt="6+1"
+              className="h-5 w-auto opacity-40"
+              style={{ filter: "invert(1)" }}
+            />
+            <p className="font-mono text-[#333] text-xs tracking-wider">
+              © 6+1 SPORTS DAY 002 — 2026
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -463,3 +463,27 @@
   - Shirt reconfirmation animation ONLY shows to paid users ✓
   - Auto-unlock Klaviyo event fires once per unpaid user ✓
   - Paid users (priority access) are unaffected ✓
+
+## Task 1 — T&Cs and Privacy Policy Pages (9 June) ✓
+- [x] Create /terms page with Terms & Conditions content
+- [x] Create /privacy page with Privacy Policy content
+- [x] Both pages cover: data collection, Stripe, Klaviyo, Meta pixel, GDPR (UK), user rights, contact hello@6plus1.co.uk
+- [x] Add footer links in registration form (Enter.tsx)
+- [x] Add footer links in app footer / Home page
+- [x] Register /terms and /privacy routes in App.tsx
+
+## Task 2 — Holding Page Ad Popup (9 June)
+- [ ] Detect UTM source = facebook or instagram on holding page
+- [ ] Show popup after 3 seconds for ad traffic only
+- [ ] Popup headline: "You found us."
+- [ ] Popup body: "Sports Day 002. Sheffield. July 11th. Register free and unlock your team for £22."
+- [ ] Popup button: "Register now" → scrolls to registration form
+- [ ] Do not show to organic visitors or already-registered users
+
+## Task 3 — Security Audit (9 June)
+- [ ] Check for exposed API keys or secrets in frontend code
+- [ ] Check authentication vulnerabilities
+- [ ] Check payment security issues
+- [ ] Check data exposure risks
+- [ ] Check GDPR compliance gaps
+- [ ] Report findings before patching

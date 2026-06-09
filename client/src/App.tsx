@@ -16,6 +16,8 @@ import TeamHub from "./pages/TeamHub";
 import PostFeed from "./pages/PostFeed";
 import UnlockReveal from "./pages/UnlockReveal";
 import ShirtConfirm from "./pages/ShirtConfirm";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 function Router() {
   return (
@@ -31,6 +33,8 @@ function Router() {
       <Route path="/shirt-confirm" component={ShirtConfirm} />
       <Route path="/feed" component={PostFeed} />
       <Route path="/r/:code" component={ReferralRedirect} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy" component={Privacy} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

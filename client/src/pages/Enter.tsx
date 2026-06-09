@@ -705,7 +705,10 @@ export default function Enter() {
                   {registerMutation.isPending ? "ENTERING THE SYSTEM..." : "ENTER THE SYSTEM →"}
                 </button>
                 <p className="font-mono text-white/20 text-xs text-center mt-4 tracking-wider">
-                  Submitting means we can contact you about Sports Day 002.
+                  By registering you agree to our{" "}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-[#FF5500]/60 hover:text-[#FF5500] underline transition-colors">Terms &amp; Conditions</a>
+                  {" "}and{" "}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-[#FF5500]/60 hover:text-[#FF5500] underline transition-colors">Privacy Policy</a>.
                 </p>
               </StepCard>
             )}
