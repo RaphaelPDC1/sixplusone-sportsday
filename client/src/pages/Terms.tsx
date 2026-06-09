@@ -72,7 +72,7 @@ export default function Terms() {
           </p>
           <p>
             Participants who do not purchase the Priority Player Pass will have their team revealed
-            automatically on <strong className="text-white/90">11 July 2026 at 8pm BST</strong> — one week before the event.
+            automatically on <strong className="text-white/90">4 July 2026 at 8pm BST</strong> — one week before the event.
             The Priority Player Pass gives you early access ahead of this date.
           </p>
         </Section>

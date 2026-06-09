@@ -14,9 +14,10 @@ export const PROFANITY_BLOCKLIST = [
 export const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
 
 // ─── Sports Day Event Config ──────────────────────────────────────────────────
-// July 11th 2026 at 8pm BST (UTC+1) = 19:00 UTC
+// July 4th 2026 at 8pm BST (UTC+1) = 19:00 UTC
+// Event is July 11th; free users auto-unlock one week before (July 4th 8pm BST)
 // When this timestamp is reached, all registered users get auto-unlocked (PUBLIC_REVEAL)
-export const SPORTS_DAY_PUBLIC_REVEAL_AT = new Date("2026-07-11T19:00:00.000Z").getTime();
+export const SPORTS_DAY_PUBLIC_REVEAL_AT = new Date("2026-07-04T19:00:00.000Z").getTime();
 
 // ─── Meta Pixel & Conversions API ────────────────────────────────────────────
 export const META_PIXEL_ID = '1495386808512228';
