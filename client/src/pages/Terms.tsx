@@ -62,17 +62,18 @@ export default function Terms() {
 
         <Section title="3. Priority Unlock (Paid Access)">
           <p>
-            The Priority Player Pass (£22) grants early access to your team reveal and exclusive
-            benefits. Payment is processed securely by Stripe. By purchasing, you agree to Stripe's
-            Terms of Service.
+            The Priority Player Pass (£22) grants <strong className="text-white/90">early access to your team reveal</strong> before
+            the public reveal date. Once payment is confirmed, your team is revealed immediately.
+            Payment is processed securely by Stripe. By purchasing, you agree to Stripe's Terms of Service.
           </p>
           <p>
             The Priority Player Pass is non-refundable once your team has been revealed. If the event
             is cancelled by us, you will receive a full refund.
           </p>
           <p>
-            All participants — paid and free — will have their team revealed on 11 July 2026 at 8pm BST
-            if they have not already unlocked it.
+            Participants who do not purchase the Priority Player Pass will have their team revealed
+            automatically on <strong className="text-white/90">11 July 2026 at 8pm BST</strong> — one week before the event.
+            The Priority Player Pass gives you early access ahead of this date.
           </p>
         </Section>
 
