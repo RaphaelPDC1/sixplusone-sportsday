@@ -47,7 +47,7 @@ export interface SportsDayDashboard {
 
   // Player identity
   playerName: string;
-  playerEmail: string;
+  // playerEmail removed (SECURITY PATCH 3) — not exposed in public dashboard
   referralCode: string | null;
   referralCount: number;
 
@@ -303,7 +303,7 @@ export async function buildSportsDayDashboard(
     publicRevealAt,
 
     playerName: reg.fullName ?? "",
-    playerEmail: reg.email ?? "",
+    // SECURITY PATCH 3: playerEmail removed from public dashboard response to prevent email enumeration
     referralCode: reg.referralCode ?? null,
     referralCount: reg.referralCount ?? 0,
 

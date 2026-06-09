@@ -581,7 +581,7 @@ export default function Holding() {
   const user = dashboard ? {
     id: userId!,
     fullName: dashboard.playerName ?? "",
-    email: dashboard.playerEmail ?? "",
+    email: "", // playerEmail removed from dashboard (SECURITY PATCH 3)
     profileTagline: dashboard.tagline ?? "",
     sportsDayProfile: dashboard.profile ?? "",
     paymentStatus: dashboard.state === "UNLOCKED_PRIORITY" || dashboard.state === "PUBLIC_REVEAL" ? "paid" : "unpaid",

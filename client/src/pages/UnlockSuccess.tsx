@@ -11,6 +11,8 @@ export default function UnlockSuccess() {
   const params = new URLSearchParams(search);
   const uid = params.get("uid") || localStorage.getItem("sd_user_id");
   const orderId = params.get("ref") || undefined;
+  // SECURITY: paymentIntentId required for Stripe verification
+  const paymentIntentId = params.get("payment_intent") || undefined;
 
   const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
 
@@ -33,7 +35,13 @@ export default function UnlockSuccess() {
       navigate("/enter");
       return;
     }
-    confirmMutation.mutate({ uid, orderId });
+    // Only call confirmPayment if we have a valid Stripe paymentIntentId
+    if (!paymentIntentId || !paymentIntentId.startsWith("pi_")) {
+      // No valid paymentIntentId — redirect to holding page where webhook will have handled it
+      navigate("/holding");
+      return;
+    }
+    confirmMutation.mutate({ uid, paymentIntentId, orderId });
   }, []);
 
   return (

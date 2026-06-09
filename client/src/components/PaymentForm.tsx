@@ -139,6 +139,7 @@ interface PaymentFormProps {
   clientSecret: string;
   amount: number;
   currency: string;
+  paymentIntentId?: string;
   onPaymentSuccess: () => void;
   onCancel: () => void;
 }
@@ -147,6 +148,7 @@ export function PaymentForm({
   clientSecret,
   amount,
   currency,
+  paymentIntentId,
   onPaymentSuccess,
   onCancel,
 }: PaymentFormProps) {
@@ -190,6 +192,7 @@ export function PaymentForm({
       <InnerPaymentForm
         amount={amount}
         currency={currency}
+        paymentIntentId={paymentIntentId}
         onPaymentSuccess={onPaymentSuccess}
         onCancel={onCancel}
       />

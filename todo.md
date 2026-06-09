@@ -493,3 +493,10 @@
 - [x] Popup 2: Registered but not paid on Holding page (UTM facebook/instagram, registered, not paid, 3s delay)
 - [x] Session storage on both so they don't reappear on refresh
 - [x] Do not show Popup 2 to paid users (guarded by LOCKED_UNPAID/RETURNING_UNPAID state check)
+
+## Security Patches (9 June)
+
+- [ ] PATCH 1: Fix confirmPayment bypass — require valid Stripe paymentIntentId verification
+- [ ] PATCH 2: Add rate limiting to checkEmailExists (5 req/min/IP)
+- [ ] PATCH 3: Remove playerEmail from public dashboard response
+- [ ] PATCH 4: GDPR admin deletion procedure + privacy page link

@@ -417,7 +417,11 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
     }),
 
   confirmPayment: publicProcedure
-    .input(z.object({ uid: z.string(), orderId: z.string().optional() }))
+    .input(z.object({
+      uid: z.string(),
+      paymentIntentId: z.string().startsWith("pi_"),  // SECURITY: must be a real Stripe PaymentIntent ID
+      orderId: z.string().optional(),
+    }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -429,8 +433,34 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
         return { success: true, team: reg.team, alreadyPaid: true };
       }
 
-      // In production this would verify with Shopify API
-      // For now we trust the return URL (webhook is source of truth)
+      // SECURITY PATCH 1: Verify paymentIntentId with Stripe before marking as paid
+      const stripeKey = ENV.STRIPE_SECRET_KEY;
+      if (!stripeKey) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Stripe not configured" });
+
+      let paymentIntent: Stripe.PaymentIntent;
+      try {
+        const stripe = new Stripe(stripeKey);
+        paymentIntent = await stripe.paymentIntents.retrieve(input.paymentIntentId);
+      } catch (err) {
+        console.error("[confirmPayment] Stripe verification failed:", err);
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid payment reference" });
+      }
+
+      // Verify the PaymentIntent is actually succeeded
+      if (paymentIntent.status !== "succeeded") {
+        console.warn(`[confirmPayment] PaymentIntent ${input.paymentIntentId} status is '${paymentIntent.status}', not 'succeeded'`);
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Payment not completed" });
+      }
+
+      // Verify the PaymentIntent belongs to this registration (metadata check)
+      const metaRegId = paymentIntent.metadata?.registration_id;
+      if (metaRegId && metaRegId !== input.uid) {
+        console.error(`[confirmPayment] PaymentIntent ${input.paymentIntentId} belongs to registration ${metaRegId}, not ${input.uid}`);
+        throw new TRPCError({ code: "FORBIDDEN", message: "Payment does not match registration" });
+      }
+
+      console.log(`[confirmPayment] Stripe verified: ${input.paymentIntentId} succeeded for registration ${input.uid.substring(0, 8)}...`);
+
       const updatedTags = buildPaymentKlaviyoTags(
         (reg.klaviyoTags as string[]) ?? [],
         reg.team!
@@ -442,6 +472,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
           paymentStatus: "paid",
           accessType: "priority",
           revealStatus: "unlocked",
+          stripePaymentIntentId: input.paymentIntentId,
           shopifyOrderId: input.orderId ?? null,
           paidAt: new Date(),
           klaviyoTags: updatedTags,
@@ -518,6 +549,56 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
       );
     return rows.filter((r) => r.healthNotes && r.healthNotes.trim().length > 0);
   }),
+
+  // ─── GDPR: Admin data deletion (right to erasure) ──────────────────────────
+  adminDeleteUserData: adminProcedure
+    .input(z.object({
+      email: z.string().email(),
+      confirmDelete: z.literal(true), // Safety: must explicitly pass true
+    }))
+    .mutation(async ({ input, ctx }) => {
+      // SECURITY: Audit log all deletion requests
+      console.log(`[GDPR DELETION] Admin ${ctx.user.id} requested deletion for email: ${input.email} at ${new Date().toISOString()}`);
+
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      // Find registration by email
+      const rows = await db
+        .select({ id: sportsDayRegistrations.id, fullName: sportsDayRegistrations.fullName, email: sportsDayRegistrations.email })
+        .from(sportsDayRegistrations)
+        .where(eq(sportsDayRegistrations.email, input.email.toLowerCase()))
+        .limit(1);
+
+      if (rows.length === 0) {
+        return { success: false, message: "No registration found for this email address" };
+      }
+
+      const reg = rows[0];
+
+      // Anonymise personal data (GDPR erasure — soft delete preserving non-PII)
+      await db
+        .update(sportsDayRegistrations)
+        .set({
+          fullName: "[DELETED]",
+          email: `deleted-${reg.id.substring(0, 8)}@deleted.invalid`,
+          instagramHandle: null,
+          healthNotes: null,
+          topName: null,
+          sportsDayProfile: null,
+          profileTagline: null,
+          klaviyoTags: null,
+          referralCode: null,
+        })
+        .where(eq(sportsDayRegistrations.id, reg.id));
+
+      console.log(`[GDPR DELETION] Completed anonymisation for registration ${reg.id.substring(0, 8)}... (was: ${reg.fullName})`);
+
+      return {
+        success: true,
+        message: `Personal data anonymised for registration ${reg.id.substring(0, 8)}. Non-PII records (team, payment status) retained for operational integrity.`,
+      };
+    }),
 
   // ─── Team Hub: get team members + leaderboard + wildcards ─────────────────
   getTeamHub: publicProcedure
@@ -746,7 +827,12 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
 
   checkEmailExists: publicProcedure
     .input(z.object({ email: z.string().email() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      // SECURITY PATCH 2: Rate limit to prevent email enumeration (5 req/min/IP)
+      const ip = ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown";
+      if (!checkRateLimit(`checkEmailExists:${ip}`, 5, 60_000)) {
+        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Too many attempts. Try again in a minute." });
+      }
       const db = await getDb();
       if (!db) return { exists: false, id: null };
       const result = await db
@@ -1222,6 +1308,7 @@ Return ONLY valid JSON with this exact shape:
 
       return {
         clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
         amountPence,
         registrationId: reg.id,
       };

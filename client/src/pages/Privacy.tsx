@@ -205,6 +205,21 @@ export default function Privacy() {
             </a>
             . We will respond within 30 days.
           </p>
+          <div className="border border-[#FF5500]/30 p-4 mt-2">
+            <p className="text-white/90 font-semibold mb-1">Request Data Deletion</p>
+            <p>
+              To request deletion of your personal data under UK GDPR Article 17 (right to erasure),
+              email{" "}
+              <a
+                href="mailto:hello@6plus1.co.uk?subject=Data%20Deletion%20Request%20%E2%80%94%20Sports%20Day%20002"
+                className="text-[#FF5500] hover:underline"
+              >
+                hello@6plus1.co.uk
+              </a>{" "}
+              with the subject line <em>"Data Deletion Request — Sports Day 002"</em>. Include the email
+              address you registered with. We will process your request within 30 days.
+            </p>
+          </div>
           <p>
             You also have the right to lodge a complaint with the UK Information Commissioner's Office
             (ICO) at{" "}
