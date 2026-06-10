@@ -8,14 +8,15 @@ import {
 } from "@/lib/revealJourney";
 
 // ── Team colour palette (mirrors TeamHub) ──────────────────────────────────
-const TEAM_COLORS: Record<string, { hex: string; name: string; glow: string; rgb: string }> = {
-  red:    { hex: "#B80000", name: "TEAM RED",    glow: "rgba(184,0,0,0.6)",    rgb: "184,0,0" },
-  blue:   { hex: "#1A4FE8", name: "TEAM BLUE",   glow: "rgba(26,79,232,0.6)",  rgb: "26,79,232" },
-  pink:   { hex: "#F72B8C", name: "TEAM PINK",   glow: "rgba(247,43,140,0.6)", rgb: "247,43,140" },
-  orange: { hex: "#FF6B00", name: "TEAM ORANGE", glow: "rgba(255,107,0,0.6)",  rgb: "255,107,0" },
+const TEAM_COLORS: Record<string, { hex: string; name: string; glow: string; rgb: string; confettiColors: string[] }> = {
+  red:    { hex: "#B80000", name: "TEAM RED",    glow: "rgba(184,0,0,0.6)",    rgb: "184,0,0",     confettiColors: ["#E8232A", "#FFFFFF", "#FF6666", "#CC0000"] },
+  blue:   { hex: "#1A4FE8", name: "TEAM BLUE",   glow: "rgba(26,79,232,0.6)",  rgb: "26,79,232",   confettiColors: ["#1A4FE8", "#C0C0C0", "#6699FF", "#0033CC"] },
+  pink:   { hex: "#F72B8C", name: "TEAM PINK",   glow: "rgba(247,43,140,0.6)", rgb: "247,43,140",  confettiColors: ["#F72B8C", "#FFD700", "#FF99CC", "#CC0066"] },
+  orange: { hex: "#FF6B00", name: "TEAM ORANGE", glow: "rgba(255,107,0,0.6)",  rgb: "255,107,0",   confettiColors: ["#FF6B00", "#0A0A0A", "#FFAA44", "#CC5500"] },
 };
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
+
 // ── Animation phases ───────────────────────────────────────────────────────
 // 0: black screen
 // 1: team colour flash
@@ -24,6 +25,267 @@ const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 // 4: player name / top name
 // 5: priority copy + CTA
 type Phase = 0 | 1 | 2 | 3 | 4 | 5;
+
+// ── Confetti hook (matches Reveal.tsx pattern) ─────────────────────────────
+function useConfetti(active: boolean, colors: string[]) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    if (!active) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener("resize", resize);
+    const makeParticle = (startY?: number) => ({
+      x: Math.random() * canvas.width,
+      y: startY ?? Math.random() * -canvas.height * 0.5,
+      vx: (Math.random() - 0.5) * 5,
+      vy: Math.random() * 4 + 1.5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      w: Math.random() * 12 + 5,
+      h: Math.random() * 6 + 3,
+      rot: Math.random() * 360,
+      rotV: (Math.random() - 0.5) * 10,
+    });
+    const particles = Array.from({ length: 200 }, () => makeParticle());
+    const GRAVITY = 0.05;
+    const MAX_VY = 9;
+    let frame: number;
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const p of particles) {
+        p.vy = Math.min(p.vy + GRAVITY, MAX_VY);
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.rotV;
+        if (p.y > canvas.height + 30) {
+          const fresh = makeParticle(-20);
+          p.x = fresh.x; p.y = fresh.y;
+          p.vx = fresh.vx; p.vy = fresh.vy;
+          p.rot = fresh.rot; p.rotV = fresh.rotV;
+        }
+        if (p.x < -20) p.x = canvas.width + 20;
+        if (p.x > canvas.width + 20) p.x = -20;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rot * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+      frame = requestAnimationFrame(draw);
+    };
+    frame = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("resize", resize); };
+  }, [active, colors]); // eslint-disable-line react-hooks/exhaustive-deps
+  return canvasRef;
+}
+
+// ── Red: scanline + static noise ──────────────────────────────────────────
+function RedBackground({ phase }: { phase: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const frameRef = useRef<number>(0);
+  useEffect(() => {
+    if (phase < 1) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener("resize", resize);
+    let scanOffset = 0;
+    const draw = () => {
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      for (let i = 0; i < 300; i++) {
+        const nx = Math.random() * w;
+        const ny = Math.random() * h;
+        const alpha = Math.random() * 0.18;
+        ctx.fillStyle = `rgba(232,35,42,${alpha})`;
+        ctx.fillRect(nx, ny, 1, Math.random() > 0.7 ? 2 : 1);
+      }
+      scanOffset = (scanOffset + 0.8) % 4;
+      ctx.strokeStyle = "rgba(232,35,42,0.06)";
+      ctx.lineWidth = 1;
+      for (let y = scanOffset; y < h; y += 4) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+      frameRef.current = requestAnimationFrame(draw);
+    };
+    frameRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(frameRef.current); window.removeEventListener("resize", resize); };
+  }, [phase]);
+  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }} />;
+}
+
+// ── Blue: grid pulse + data stream ────────────────────────────────────────
+function BlueBackground({ phase }: { phase: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const frameRef = useRef<number>(0);
+  useEffect(() => {
+    if (phase < 1) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener("resize", resize);
+    const GRID = 40;
+    let gridOffset = 0;
+    let frameCount = 0;
+    let flashRow = -1;
+    let flashTimer = 0;
+    const streams = Array.from({ length: 20 }, () => ({
+      x: Math.floor(Math.random() * 20) * (canvas.width / 20),
+      y: Math.random() * canvas.height,
+      speed: 2 + Math.random() * 2,
+    }));
+    const draw = () => {
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      frameCount++;
+      gridOffset = (gridOffset + 0.4) % GRID;
+      ctx.strokeStyle = "rgba(26,79,232,0.12)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += GRID) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+      for (let y = gridOffset; y < h; y += GRID) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+      if (frameCount % 90 === 0) { flashRow = Math.floor(Math.random() * Math.ceil(h / GRID)) * GRID; flashTimer = 3; }
+      if (flashTimer > 0) {
+        ctx.fillStyle = "rgba(255,255,255,0.08)";
+        ctx.fillRect(0, flashRow, w, 1);
+        flashTimer--;
+      }
+      for (const s of streams) {
+        s.y += s.speed;
+        if (s.y > h + 20) { s.y = -20; s.x = Math.floor(Math.random() * 20) * (w / 20); }
+        ctx.fillStyle = "rgba(26,79,232,0.7)";
+        ctx.fillRect(s.x, s.y, 2, 6);
+        ctx.fillStyle = "rgba(26,79,232,0.2)";
+        ctx.fillRect(s.x, s.y - 8, 2, 8);
+      }
+      frameRef.current = requestAnimationFrame(draw);
+    };
+    frameRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(frameRef.current); window.removeEventListener("resize", resize); };
+  }, [phase]);
+  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }} />;
+}
+
+// ── Pink: floating hearts + sparkles ─────────────────────────────────────
+function PinkBackground({ phase }: { phase: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const frameRef = useRef<number>(0);
+  useEffect(() => {
+    if (phase < 1) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener("resize", resize);
+    const hearts = Array.from({ length: 15 }, () => ({
+      x: Math.random() * canvas.width,
+      y: canvas.height + Math.random() * canvas.height,
+      speed: 1 + Math.random() * 2,
+      size: 14 + Math.random() * 10,
+      alpha: 0.3 + Math.random() * 0.4,
+    }));
+    const sparkles = Array.from({ length: 30 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: 1.5 + Math.random() * 1.5,
+      phase: Math.random() * Math.PI * 2,
+    }));
+    let t = 0;
+    const draw = () => {
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      t += 0.04;
+      for (const heart of hearts) {
+        heart.y -= heart.speed;
+        if (heart.y < -heart.size) { heart.y = h + heart.size; heart.x = Math.random() * w; }
+        ctx.save();
+        ctx.globalAlpha = heart.alpha;
+        ctx.fillStyle = "#F72B8C";
+        ctx.font = `${heart.size}px serif`;
+        ctx.textAlign = "center";
+        ctx.fillText("♥", heart.x, heart.y);
+        ctx.restore();
+      }
+      for (const sp of sparkles) {
+        const alpha = 0.15 + Math.abs(Math.sin(t + sp.phase)) * 0.3;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = Math.sin(t + sp.phase) > 0 ? "#F72B8C" : "#FFFFFF";
+        ctx.beginPath();
+        ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      frameRef.current = requestAnimationFrame(draw);
+    };
+    frameRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(frameRef.current); window.removeEventListener("resize", resize); };
+  }, [phase]);
+  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }} />;
+}
+
+// ── Orange: chaotic particle burst ───────────────────────────────────────
+function OrangeBackground({ phase }: { phase: number }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const frameRef = useRef<number>(0);
+  useEffect(() => {
+    if (phase < 1) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener("resize", resize);
+    const ORANGE_COLORS = ["#FF6B00", "#FFAA44", "#CC5500", "#FF8C00"];
+    const makeParticle = () => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 4;
+      const life = Math.floor(60 + Math.random() * 80);
+      return {
+        x: canvas.width / 2, y: canvas.height / 2,
+        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+        size: 2 + Math.random() * 3,
+        color: ORANGE_COLORS[Math.floor(Math.random() * ORANGE_COLORS.length)],
+        life,
+        maxLife: life,
+      };
+    };
+    const particles = Array.from({ length: 60 }, makeParticle);
+    const draw = () => {
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      for (const p of particles) {
+        p.life--;
+        if (p.life <= 0) { Object.assign(p, makeParticle()); }
+        p.vx += (Math.random() - 0.5) * 0.3;
+        p.vy += (Math.random() - 0.5) * 0.3;
+        p.x += p.vx; p.y += p.vy;
+        const alpha = (p.life / p.maxLife) * 0.6;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+      frameRef.current = requestAnimationFrame(draw);
+    };
+    frameRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(frameRef.current); window.removeEventListener("resize", resize); };
+  }, [phase]);
+  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }} />;
+}
 
 export default function UnlockReveal() {
   const [, navigate] = useLocation();
@@ -39,9 +301,16 @@ export default function UnlockReveal() {
   // Use the dashboard's registration ID (source of truth) instead of localStorage
   const userId = dashboard?.registrationId ?? userIdFromStorage;
 
+  // Derive team/tc early so hooks below can use them
+  const team = dashboard?.team ?? null;
+  const tc = team ? (TEAM_COLORS[team] ?? TEAM_COLORS.orange) : null;
+
   const [phase, setPhase] = useState<Phase>(0);
   const [ctaVisible, setCtaVisible] = useState(false);
+  const [confettiActive, setConfettiActive] = useState(false);
   const hasStarted = useRef(false);
+
+  const confettiRef = useConfetti(confettiActive, tc?.confettiColors ?? []);
 
   // ── Guard: if not unlocked, redirect appropriately ─────────────────────
   useEffect(() => {
@@ -85,8 +354,8 @@ export default function UnlockReveal() {
     setTimeout(() => setPhase(1), 300);
     // Phase 1 → 2: text appears (1000ms)
     setTimeout(() => setPhase(2), 1000);
-    // Phase 2 → 3: card reveal (2000ms)
-    setTimeout(() => setPhase(3), 2000);
+    // Phase 2 → 3: card reveal + confetti (2000ms)
+    setTimeout(() => { setPhase(3); setConfettiActive(true); }, 2000);
     // Phase 3 → 4: player name (2800ms)
     setTimeout(() => setPhase(4), 2800);
     // Phase 4 → 5: priority copy (3600ms)
@@ -103,8 +372,6 @@ export default function UnlockReveal() {
     navigate("/shirt-confirm", { replace: true });
   }
 
-  const team = dashboard?.team ?? null;
-  const tc = team ? (TEAM_COLORS[team] ?? TEAM_COLORS.orange) : null;
   const playerName = dashboard?.playerName ?? "";
   const topName = dashboard?.topName ?? playerName.split(" ")[0] ?? "";
 
@@ -126,6 +393,15 @@ export default function UnlockReveal() {
         transition: "background 1.2s ease",
       }}
     >
+      {/* ── Team-specific animated background canvas ── */}
+      {team === "red"    && <RedBackground phase={phase} />}
+      {team === "blue"   && <BlueBackground phase={phase} />}
+      {team === "pink"   && <PinkBackground phase={phase} />}
+      {team === "orange" && <OrangeBackground phase={phase} />}
+
+      {/* ── Team-coloured confetti — fires at phase 3 (card reveal) ── */}
+      <canvas ref={confettiRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 5 }} />
+
       {/* ── Full-screen team colour flash overlay ── */}
       <div
         className="absolute inset-0 pointer-events-none"
@@ -133,6 +409,7 @@ export default function UnlockReveal() {
           background: tc ? tc.hex : "transparent",
           opacity: phase === 1 ? 0.18 : 0,
           transition: "opacity 0.6s ease",
+          zIndex: 1,
         }}
       />
 
@@ -144,6 +421,7 @@ export default function UnlockReveal() {
             background: `radial-gradient(ellipse 60% 50% at 50% 50%, ${tc.glow} 0%, transparent 70%)`,
             opacity: phase >= 3 ? 0.7 : 0.3,
             transition: "opacity 1.5s ease",
+            zIndex: 1,
           }}
         />
       )}
@@ -155,6 +433,7 @@ export default function UnlockReveal() {
           opacity: phase >= 2 ? 1 : 0,
           transform: `translateX(-50%) translateY(${phase >= 2 ? 0 : -10}px)`,
           transition: "opacity 0.8s ease, transform 0.8s ease",
+          zIndex: 10,
         }}
       >
         <img src={LOGO_URL} alt="6+1" className="h-8 w-auto" />
@@ -313,6 +592,7 @@ export default function UnlockReveal() {
         style={{
           backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)",
           opacity: 0.6,
+          zIndex: 2,
         }}
       />
     </div>
