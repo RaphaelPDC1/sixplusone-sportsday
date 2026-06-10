@@ -752,12 +752,12 @@ export default function Holding() {
           delay={3000}
         />
       )}
-      {/* Full-page particle text background — fixed behind all content */}
+      {/* Full-page particle text background — fixed behind all content, darkened to not obscure text */}
       <ParticleTextBg
         words={["SPORTS DAY", "002", "GET READY", "YOUR TEAM", "AWAITS", "6+1", "JULY 2026"]}
         interval={3200}
         className="fixed inset-0 w-full h-full pointer-events-none"
-        style={{ zIndex: 0 }}
+        style={{ zIndex: 0, opacity: 0.4 }}
       />
 
       {/* Scanlines */}
@@ -798,18 +798,19 @@ export default function Holding() {
             <p className="font-mono text-[#22c55e] text-[10px] tracking-[0.35em]">REGISTRATION CONFIRMED</p>
           </div>
 
-          {/* Main headline */}
+          {/* Main headline with player name integrated */}
           <h1
             className="font-display text-[#F2F0EB] leading-[0.88] mb-4"
             style={{ fontSize: "clamp(3rem, 16vw, 7rem)" }}
           >
             SPORTS DAY<br />
-            <span className="text-[#FF5500]">002.</span>
+            <span className="text-[#FF5500]">002.</span><br />
+            <span className="text-[#FF5500]" style={{ fontSize: "clamp(2.4rem, 13vw, 5.6rem)" }}>{firstName}.</span>
           </h1>
 
           {/* Event details line */}
           <p className="font-mono text-[#F2F0EB]/50 text-sm tracking-[0.25em] mb-1">
-            FRIDAY 11 JULY 2026
+            SATURDAY 11 JULY 2026
           </p>
           <p className="font-mono text-[#F2F0EB]/30 text-xs tracking-[0.3em]">
             SHEFFIELD
@@ -840,7 +841,7 @@ export default function Holding() {
                 </span>
               </div>
               <span className="font-mono text-[#444] text-[10px] tracking-widest">
-                {firstName}
+                —
               </span>
             </div>
           </div>

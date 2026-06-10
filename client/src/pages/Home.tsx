@@ -19,6 +19,29 @@ function InfoBlock({ number, title, body }: { number: string; title: string; bod
 export default function Home() {
   const [, navigate] = useLocation();
 
+  // Set SEO title and meta description
+  useEffect(() => {
+    document.title = "Sports Day 002 | 6+1 Team Building Event July 2026";
+    
+    // Set meta description
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.setAttribute('name', 'description');
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.setAttribute('content', 'Join Sports Day 002 on July 11th 2026 in Sheffield. Register now to discover your team and compete with 6+1. Early access with Priority Player Pass.');
+    
+    // Set keywords
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    metaKeywords.setAttribute('content', 'sports day, team building, 6+1, Sheffield, July 2026, event, team competition');
+  }, []);
+
   // Shooting star easter egg state
   const logoRef = useRef<HTMLImageElement>(null);
   const [starActive, setStarActive] = useState<{ x: number; y: number } | null>(null);
@@ -121,7 +144,9 @@ export default function Home() {
 
       {/* Below-fold info strip */}
       <div className="bg-[#0A0A0A] border-t border-[#1A1A1A]">
-        <div className="max-w-4xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="max-w-4xl mx-auto px-6 py-16">
+          <h2 className="font-display text-3xl text-white mb-12 tracking-widest">HOW IT WORKS</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <InfoBlock
             number="01"
             title="REGISTER"
@@ -135,8 +160,9 @@ export default function Home() {
           <InfoBlock
             number="03"
             title="SHOW UP"
-            body="Four teams. One day. 11 July 2026. Come ready."
+            body="Four teams. One day. Saturday 11 July 2026. Come ready."
           />
+          </div>
         </div>
 
         {/* Team colour strip */}

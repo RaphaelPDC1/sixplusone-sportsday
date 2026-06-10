@@ -301,7 +301,7 @@
 - [x] Shared Meta Pixel Purchase event handler for both express and card paths
 - [x] Divider "OR PAY WITH CARD" only shown when express options are available
 
-## Team Dashboard Landing Screen (9 June)
+## Team Dashboard Landing Screen (9 June) — REMOVED & FOLDED INTO HOLDING PAGE
 - [x] Create /team-dashboard page — clean, mobile-first, 6+1 brand (black/white/bold)
 - [x] Shows: team name in team colour, identity line, captain candidate, teammates list, event details
 - [x] Single CTA: "ENTER YOUR TEAM HUB →"
@@ -511,3 +511,14 @@
 - [x] PATCH 2: Added rate limiting to checkEmailExists (5 req/min/IP, matching checkEmail)
 - [x] PATCH 3: Removed playerEmail from SportsDayDashboard interface and public dashboard response
 - [x] PATCH 4: Added adminDeleteUserData procedure (GDPR erasure) + prominent deletion request box in Privacy page
+
+
+## /team-dashboard Removal & Holding Page Fix (9 June)
+- [x] Removed /team-dashboard.tsx page (was creating bloat)
+- [x] Reverted revealJourney.ts: both paid and free journeys now end at /team-hub
+- [x] Reverted ShirtConfirm.tsx: redirects to /team-hub after confirmation
+- [x] Reverted Reveal.tsx: routes to /team-hub for free users
+- [x] Reverted UnlockReveal.tsx: redirects stray free users to /team-hub
+- [x] Fixed Holding.tsx CTA: navigates to /team-hub with text "ENTER YOUR TEAM HUB →"
+- [x] Kept all psychological triggers in holding page: ad popups, referral block, funnel copy, urgency messaging
+- [x] TypeScript clean (exit 0)
