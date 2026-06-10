@@ -194,12 +194,12 @@ function RouletteAnimation({ onComplete }: { onComplete: () => void }) {
     const SIZE = 320;
     canvas.width = SIZE; canvas.height = SIZE;
     const cx = SIZE / 2, cy = SIZE / 2;
-    const outerR = 148, innerR = 88, pocketR = 68;
+    const outerR = 148, innerR = 88, pocketR = 105;
     const numbers = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
     const redNums = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
     const segAngle = (Math.PI * 2) / numbers.length;
     const targetIndex = 23; // number 1 = red
-    const targetWheelAngle = 5 * Math.PI * 2 + targetIndex * segAngle;
+    const targetWheelAngle = 5 * Math.PI * 2 - (targetIndex + 0.5) * segAngle;
     const totalBallRot = 14;
     const duration = 5200;
     let startTime: number | null = null;
@@ -240,16 +240,13 @@ function RouletteAnimation({ onComplete }: { onComplete: () => void }) {
       const hubGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 20);
       hubGrad.addColorStop(0, "#FFD700"); hubGrad.addColorStop(1, "#7B3F00");
       ctx.fillStyle = hubGrad; ctx.fill();
-      ctx.beginPath(); ctx.moveTo(cx, cy - outerR - 2);
-      ctx.lineTo(cx - 9, cy - outerR + 16); ctx.lineTo(cx + 9, cy - outerR + 16);
-      ctx.closePath(); ctx.fillStyle = "#FFD700"; ctx.fill();
-      ctx.strokeStyle = "#0A0A0A"; ctx.lineWidth = 1; ctx.stroke();
     };
     const draw = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       const wheelAngle = easeOutCubic(progress) * targetWheelAngle;
-      const ballAngle = -(totalBallRot * Math.PI * 2 * (1 - easeOutQuint(Math.min(progress * 1.1, 1))));
+      const ballFinalAngle = -Math.PI / 2;
+      const ballAngle = ballFinalAngle - totalBallRot * Math.PI * 2 * (1 - easeOutQuint(Math.min(progress * 1.1, 1)));
       const ballRadius = outerR + 4 - (outerR + 4 - pocketR) * Math.pow(Math.min(progress * 1.2, 1), 2.8);
       const ballX = cx + Math.cos(ballAngle) * ballRadius;
       const ballY = cy + Math.sin(ballAngle) * ballRadius;
@@ -272,6 +269,9 @@ function RouletteAnimation({ onComplete }: { onComplete: () => void }) {
       <p className="font-mono text-white/40 text-xs tracking-[0.3em] mb-4">THE WHEEL IS SPINNING...</p>
       <div className="relative">
         <div className="absolute inset-0 rounded-full" style={{ boxShadow: "0 0 60px #E8232A40, 0 0 120px #E8232A20" }} />
+        <div className="absolute left-1/2 -translate-x-1/2 z-10" style={{ top: 0 }}>
+          <div style={{ width: 0, height: 0, borderLeft: "10px solid transparent", borderRight: "10px solid transparent", borderTop: "20px solid #FFD700", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.6))" }} />
+        </div>
         <canvas ref={canvasRef} style={{ width: 300, height: 300 }} />
       </div>
     </div>
@@ -289,7 +289,7 @@ function ClawAnimation({ onComplete }: { onComplete: () => void }) {
       setTimeout(() => setClawY(155), 50);
       t = setTimeout(() => setClawPhase("grab"), 1800);
     } else if (clawPhase === "grab") {
-      setGlowActive(true);
+      setTimeout(() => setGlowActive(true), 30);
       t = setTimeout(() => setClawPhase("ascend"), 900);
     } else if (clawPhase === "ascend") {
       setClawY(0);
@@ -320,20 +320,35 @@ function ClawAnimation({ onComplete }: { onComplete: () => void }) {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-5 h-2 bg-[#1A4FE8]/60 rounded" />
           </div>
           {(clawPhase === "grab" || clawPhase === "ascend" || clawPhase === "done") && (
-            <div className="absolute left-1/2 -translate-x-1/2 top-8 w-12 h-12 rounded-full flex items-center justify-center font-display text-white text-xs tracking-wider transition-all duration-300"
-              style={{ background: "radial-gradient(circle at 35% 35%, #4477FF, #1A4FE8, #0A2080)", boxShadow: glowActive ? "0 0 30px #1A4FE8, 0 0 60px #1A4FE840" : "none" }}>
+            <div className="absolute left-1/2 top-6 w-14 h-14 rounded-full flex items-center justify-center font-display text-white text-sm tracking-wider"
+              style={{
+                background: "radial-gradient(circle at 35% 35%, #6688FF, #1A4FE8, #0A2080)",
+                boxShadow: glowActive ? "0 0 40px #1A4FE8, 0 0 80px #1A4FE840" : "none",
+                opacity: glowActive ? 1 : 0,
+                transform: glowActive ? "translateX(-50%) scale(1)" : "translateX(-50%) scale(0.5)",
+                transition: "opacity 0.35s ease, transform 0.35s ease, box-shadow 0.4s ease",
+              }}>
               BLUE
             </div>
           )}
         </div>
         {clawPhase === "descend" && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3">
-            {[{ c: "#E8232A", l: "R" }, { c: "#1A4FE8", l: "B" }, { c: "#F72B8C", l: "P" }, { c: "#FF6B00", l: "O" }].map(({ c, l }) => (
-              <div key={l} className="w-10 h-10 rounded-full flex items-center justify-center font-display text-white text-xs"
-                style={{ background: `radial-gradient(circle at 35% 35%, ${c}CC, ${c})`, boxShadow: `0 0 12px ${c}60` }}>
-                {l}
-              </div>
-            ))}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 items-center">
+            {[{ c: "#E8232A", l: "R" }, { c: "#1A4FE8", l: "B" }, { c: "#F72B8C", l: "P" }, { c: "#FF6B00", l: "O" }].map(({ c, l }) => {
+              const isBlue = l === "B";
+              return (
+                <div key={l} className="rounded-full flex items-center justify-center font-display text-white"
+                  style={{
+                    width: isBlue ? 52 : 32, height: isBlue ? 52 : 32,
+                    fontSize: isBlue ? "0.8rem" : "0.6rem",
+                    background: `radial-gradient(circle at 35% 35%, ${c}CC, ${c})`,
+                    boxShadow: isBlue ? `0 0 24px ${c}, 0 0 48px ${c}60` : `0 0 6px ${c}30`,
+                    opacity: isBlue ? 1 : 0.35,
+                  }}>
+                  {l}
+                </div>
+              );
+            })}
           </div>
         )}
         <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%)" }} />
@@ -475,7 +490,7 @@ function ChaoticWheelAnimation({ onComplete }: { onComplete: () => void }) {
       { color: "#1A4FE8", label: "BLUE" },
       { color: "#F72B8C", label: "PINK" },
     ];
-    const targetAngle = 10 * Math.PI * 2;
+    const targetAngle = 10 * Math.PI * 2 - Math.PI / 4;
     const duration = 4500;
     let startTime: number | null = null;
     const chaoticEase = (t: number) => {
