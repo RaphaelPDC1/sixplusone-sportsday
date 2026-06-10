@@ -70,6 +70,7 @@ export default function TeamHub() {
   const [activeTab, setActiveTab] = useState<"team" | "events" | "leaderboard" | "wildcards" | "awards" | "recommendations" | "sponsors" | "location">("team");
   const [votingFor, setVotingFor] = useState<AwardCategory | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: hub, isLoading, error: hubError, refetch } = trpc.sportsday.getTeamHub.useQuery(
@@ -369,19 +370,66 @@ export default function TeamHub() {
         {activeTab === "team" && (
           <div className="space-y-4">
             <SectionHeader label="YOUR SQUAD" />
+            
+            {/* Team Captain Hero */}
+            {hub.members.length > 0 && (
+              <div className="mb-6">
+                {(() => {
+                  const captainCandidate = hub.members.find((m) => m.captainVoteInterest === "yes");
+                  if (captainCandidate) {
+                    return (
+                      <div
+                        className="p-6 border-2 cursor-pointer transition-all hover:opacity-80"
+                        style={{
+                          borderColor: tc.hex,
+                          background: `${tc.hex}10`,
+                          boxShadow: `0 0 30px ${tc.glow}`,
+                        }}
+                        onClick={() => setSelectedMember(captainCandidate)}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div
+                            className="w-20 h-20 rounded-full overflow-hidden border-2 flex-shrink-0 flex items-center justify-center"
+                            style={{ borderColor: tc.hex }}
+                          >
+                            {captainCandidate.photoUrl ? (
+                              <img src={captainCandidate.photoUrl} alt={captainCandidate.fullName ?? ""} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-white/5 flex items-center justify-center text-3xl">👤</div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-mono text-xs tracking-widest mb-1" style={{ color: tc.hex }}>CAPTAIN CANDIDATE</div>
+                            <div className="font-display text-2xl tracking-widest" style={{ color: tc.hex }}>
+                              {captainCandidate.fullName}
+                            </div>
+                            {captainCandidate.instagramHandle && (
+                              <p className="font-mono text-white/40 text-sm mt-1">@{captainCandidate.instagramHandle}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            )}
+            
             {hub.members.length === 0 ? (
               <p className="font-mono text-white/30 text-sm text-center py-8">
                 First one in. Your teammates are on their way.
               </p>
             ) : (
               <>
-                {hub.team && <TeamLiveFeatures teamColor={hub.team as "red" | "blue" | "pink" | "orange"} teamName={hub.team} memberCount={hub.members.length} />}
+                {/* TeamLiveFeatures removed per requirements */}
                 <div className="space-y-3 mt-6">
                 {hub.members.map((member) => (
                   <div
                     key={member.id}
-                    className="flex items-center gap-4 p-4 border border-white/10 bg-white/[0.02]"
+                    className="flex items-center gap-4 p-4 border border-white/10 bg-white/[0.02] cursor-pointer transition-all hover:border-white/30"
                     style={member.id === userId ? { borderColor: `${tc.hex}50`, background: `${tc.hex}08` } : {}}
+                    onClick={() => setSelectedMember(member)}
                   >
                     <div
                       className="w-12 h-12 rounded-full overflow-hidden border flex-shrink-0 flex items-center justify-center"
@@ -963,6 +1011,96 @@ export default function TeamHub() {
             </div>
           </div>
         </div>
+        
+        {/* Member Profile Modal */}
+        {selectedMember && (
+          <div
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+            onClick={() => setSelectedMember(null)}
+          >
+            <div
+              className="bg-[#0A0A0A] border-2 rounded-lg p-8 max-w-sm w-full"
+              style={{
+                borderColor: tc.hex,
+                boxShadow: `0 0 40px ${tc.glow}`,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setSelectedMember(null)}
+                className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+              
+              {/* Profile photo */}
+              <div className="flex justify-center mb-6">
+                <div
+                  className="w-32 h-32 rounded-full overflow-hidden border-2 flex items-center justify-center"
+                  style={{ borderColor: tc.hex }}
+                >
+                  {selectedMember.photoUrl ? (
+                    <img src={selectedMember.photoUrl} alt={selectedMember.fullName ?? ""} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-white/5 flex items-center justify-center text-5xl">👤</div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Name */}
+              <div className="text-center mb-2">
+                <div className="font-display text-2xl tracking-widest" style={{ color: tc.hex }}>
+                  {selectedMember.fullName}
+                </div>
+              </div>
+              
+              {/* Instagram handle */}
+              {selectedMember.instagramHandle && (
+                <div className="text-center mb-4">
+                  <p className="font-mono text-white/50 text-sm">@{selectedMember.instagramHandle}</p>
+                </div>
+              )}
+              
+              {/* Tagline */}
+              {selectedMember.profileTagline && (
+                <div className="text-center mb-4 border-t border-white/10 pt-4">
+                  <p className="font-mono text-white/40 text-xs italic">"{selectedMember.profileTagline}"</p>
+                </div>
+              )}
+              
+              {/* Teammate type */}
+              {selectedMember.teammateType && (
+                <div className="text-center mb-4">
+                  <span className="font-mono text-[10px] tracking-widest px-3 py-1 border" style={{ borderColor: tc.hex, color: tc.hex }}>
+                    {selectedMember.teammateType.toUpperCase().replace(/_/g, " ")}
+                  </span>
+                </div>
+              )}
+              
+              {/* Captain candidate badge */}
+              {selectedMember.captainVoteInterest === "yes" && (
+                <div className="text-center mb-4">
+                  <span className="font-mono text-[10px] tracking-widest px-3 py-1 border border-yellow-500/30 text-yellow-500/70">
+                    CAPTAIN CANDIDATE
+                  </span>
+                </div>
+              )}
+              
+              {/* Close button */}
+              <button
+                onClick={() => setSelectedMember(null)}
+                className="w-full mt-6 font-mono text-xs tracking-widest py-2 border transition-colors"
+                style={{
+                  borderColor: tc.hex,
+                  color: tc.hex,
+                }}
+              >
+                CLOSE
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

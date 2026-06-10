@@ -19,7 +19,7 @@ export function TeamLiveFeatures({ teamColor, teamName, memberCount }: TeamLiveF
     { name: "Jordan", action: "just joined", timestamp: Date.now() - 60000 },
     { name: "Casey", action: "posted strategy note", timestamp: Date.now() - 120000 },
   ]);
-  const [chaosMeter, setChaosMeter] = useState(62);
+  // Chaos Meter removed per requirements
   const updateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Simulate live updates for all teams
@@ -69,14 +69,6 @@ export function TeamLiveFeatures({ teamColor, teamName, memberCount }: TeamLiveF
           ]);
         }
       }, 4000);
-    } else if (teamColor === "orange") {
-      // Chaos Meter: unpredictable spikes and drops
-      updateIntervalRef.current = setInterval(() => {
-        setChaosMeter((m) => {
-          const change = (Math.random() - 0.5) * 40;
-          return Math.max(0, Math.min(100, m + change));
-        });
-      }, 2500);
     }
 
     return () => {
@@ -175,30 +167,6 @@ export function TeamLiveFeatures({ teamColor, teamName, memberCount }: TeamLiveF
               </div>
             ))}
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (teamColor === "orange") {
-    return (
-      <div className="space-y-4 mt-6">
-        <div className="border border-[#FF6B00]/30 bg-[#FF6B00]/5 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="font-mono text-xs text-[#FF6B00] tracking-widest">CHAOS METER</span>
-            <span className="font-bebas text-2xl" style={{ color: "#FFFFFF" }}>
-              {Math.round(chaosMeter)}%
-            </span>
-          </div>
-          <div className="w-full h-2 bg-[#FF6B00]/20 overflow-hidden">
-            <div
-              className="h-full bg-[#FF6B00] transition-all duration-300"
-              style={{ width: `${chaosMeter}%` }}
-            />
-          </div>
-          <p className="font-mono text-[10px] mt-2" style={{ color: "rgba(255, 255, 255, 0.4)" }}>
-            Resets every 4–6 hours. Nobody controls this.
-          </p>
         </div>
       </div>
     );
