@@ -1249,6 +1249,35 @@ Return ONLY valid JSON with this exact shape:
     return settings;
   }),
 
+  // ─── Simple Email-Based Login (Case-Insensitive) ────────────────────────────
+  emailLogin: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input, ctx }) => {
+      // Find registration by email (case-insensitive)
+      const reg = await getRegistrationByEmail(input.email.toLowerCase());
+
+      if (!reg) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No registration found for this email. Please register first.",
+        });
+      }
+
+      // Create session
+      const sessionId = crypto.randomBytes(32).toString("hex");
+      
+      // Set session cookie
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, sessionId, {
+        ...cookieOptions,
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+
+      console.log(`[Login] User logged in via email: ${input.email}`);
+
+      return { success: true, registrationId: reg.id, email: reg.email };
+    }),
+
   // ─── Create Stripe PaymentIntent (embedded element) ─────────────────────────
   createPaymentIntent: publicProcedure
     .input(z.object({ registrationId: z.string() }))
