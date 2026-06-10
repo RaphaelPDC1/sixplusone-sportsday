@@ -194,7 +194,7 @@ function RouletteAnimation({ onComplete }: { onComplete: () => void }) {
     const SIZE = 320;
     canvas.width = SIZE; canvas.height = SIZE;
     const cx = SIZE / 2, cy = SIZE / 2;
-    const outerR = 148, innerR = 88, pocketR = 105;
+    const outerR = 148, innerR = 88, pocketR = 130;
     const numbers = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26];
     const redNums = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
     const segAngle = (Math.PI * 2) / numbers.length;
