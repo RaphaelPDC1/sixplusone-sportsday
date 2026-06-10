@@ -159,7 +159,7 @@ export default function StepParticles({ step, className = "" }: StepParticlesPro
     });
 
     animFrameRef.current = requestAnimationFrame(animate);
-  }, []);
+  }, []) // Empty dependency array - animate is self-referential via requestAnimationFrame
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -179,7 +179,7 @@ export default function StepParticles({ step, className = "" }: StepParticlesPro
       cancelAnimationFrame(animFrameRef.current);
       observer.disconnect();
     };
-  }, [animate]);
+  }, []);
 
   return (
     <canvas
