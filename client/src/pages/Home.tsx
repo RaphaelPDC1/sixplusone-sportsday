@@ -3,7 +3,6 @@ import { useLocation } from "wouter";
 import AnimatedShaderHero from "@/components/ui/animated-shader-hero";
 import { ShootingStarCanvas } from "@/components/ui/shooting-star-canvas";
 import { AdPopup } from "@/components/AdPopup";
-import { LoginModal } from "@/components/LoginModal";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -19,7 +18,6 @@ function InfoBlock({ number, title, body }: { number: string; title: string; bod
 
 export default function Home() {
   const [, navigate] = useLocation();
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   // Set SEO title and meta description
   useEffect(() => {
@@ -78,9 +76,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
-      {/* Login Modal */}
-      <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
-
       {/* Ad popup — shown 3s after load to Meta ad traffic who haven't registered */}
       <AdPopup
         variant="new_visitor"
@@ -112,10 +107,18 @@ export default function Home() {
             SPORTS DAY 002
           </span>
           <button
-            onClick={() => setLoginModalOpen(true)}
-            className="font-mono text-white/60 hover:text-[#FF5500] text-xs tracking-[0.2em] transition-colors"
+            onClick={() => navigate("/holding")}
+            title="Already registered? Log in"
+            className="flex items-center gap-2 bg-[#FF5500] hover:bg-[#ff6a1a] active:scale-95 text-white font-mono text-xs tracking-widest uppercase px-4 py-2 rounded font-bold transition-all"
+            style={{ boxShadow: '0 0 18px rgba(255,85,0,0.55), 0 0 6px rgba(255,85,0,0.3)', animation: 'loginPulse 2.5s ease-in-out infinite' }}
+            aria-label="Returning player login"
           >
-            LOG IN
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+              <polyline points="10 17 15 12 10 7" />
+              <line x1="15" y1="12" x2="3" y2="12" />
+            </svg>
+            ALREADY IN? →
           </button>
         </div>
       </nav>
