@@ -393,11 +393,7 @@ function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [focused, setFocused] = useState(false);
-
-  const checkQuery = trpc.sportsday.checkEmailExists.useQuery(
-    { email: email.trim() },
-    { enabled: false }
-  );
+  const emailLoginMutation = trpc.sportsday.emailLogin.useMutation();
 
   const handleSubmit = async () => {
     const trimmed = email.trim();
@@ -408,20 +404,20 @@ function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
     setLoading(true);
     setError("");
     try {
-      const result = await checkQuery.refetch();
-      if (result.data?.exists && result.data?.id) {
-        localStorage.setItem("sd_user_id", result.data.id);
+      const result = await emailLoginMutation.mutateAsync({ email: trimmed });
+      if (result?.registrationId) {
+        localStorage.setItem("sd_user_id", result.registrationId);
         localStorage.setItem("userEmail", trimmed);
         sessionStorage.removeItem("holding_splash_seen");
         sessionStorage.removeItem("reveal_splash_seen");
         sessionStorage.removeItem("teamhub_splash_seen");
         sessionStorage.removeItem("came_from_teamhub");
-        onLogin(result.data.id);
+        onLogin(result.registrationId);
       } else {
         setError("No registration found for that email.");
       }
     } catch {
-      setError("Something went wrong. Try again.");
+      setError("No registration found for that email.");
     } finally {
       setLoading(false);
     }
