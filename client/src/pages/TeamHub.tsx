@@ -11,6 +11,13 @@ import { resetRevealJourneyForReplay } from "@/lib/revealJourney";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
+const TEAM_SHIRT_URLS: Record<string, string> = {
+  red:    "/manus-storage/sportsday002-tee-red_c745a665.png",
+  blue:   "/manus-storage/sportsday002-tee-blue_1d791365.png",
+  pink:   "/manus-storage/sportsday002-tee-pink_7dd53e63.png",
+  orange: "/manus-storage/sportsday002-tee-orange_64940495.png",
+};
+
 const TEAM_COLORS: Record<string, { bg: string; text: string; border: string; glow: string; hex: string }> = {
   red:    { bg: "bg-[#B80000]",   text: "text-[#B80000]",   border: "border-[#B80000]",   glow: "rgba(184,0,0,0.4)",    hex: "#B80000" },
   blue:   { bg: "bg-[#1A4FE8]",   text: "text-[#1A4FE8]",   border: "border-[#1A4FE8]",   glow: "rgba(26,79,232,0.4)",  hex: "#1A4FE8" },
@@ -262,6 +269,20 @@ export default function TeamHub() {
 
           {/* Team identity */}
           <div className="flex items-center gap-4">
+            {/* Team shirt */}
+            {TEAM_SHIRT_URLS[hub.team ?? ""] && (
+              <div
+                className="flex-shrink-0 w-14 h-14 rounded-sm overflow-hidden border"
+                style={{ borderColor: `${tc.hex}55`, background: "#000" }}
+                title={`${(hub.team ?? "").toUpperCase()} team shirt`}
+              >
+                <img
+                  src={TEAM_SHIRT_URLS[hub.team ?? ""]}
+                  alt={`Team ${hub.team} shirt`}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
             {/* Profile photo */}
             <div className="relative flex-shrink-0">
               <div

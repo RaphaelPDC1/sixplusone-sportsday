@@ -17,14 +17,23 @@ const TEAM_COLORS: Record<string, { hex: string; name: string; glow: string; rgb
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
+// ── Team shirt images ─────────────────────────────────────────────────────
+const TEAM_SHIRT_URLS: Record<string, string> = {
+  red:    "/manus-storage/sportsday002-tee-red_c745a665.png",
+  blue:   "/manus-storage/sportsday002-tee-blue_1d791365.png",
+  pink:   "/manus-storage/sportsday002-tee-pink_7dd53e63.png",
+  orange: "/manus-storage/sportsday002-tee-orange_64940495.png",
+};
+
 // ── Animation phases ───────────────────────────────────────────────────────
 // 0: black screen
 // 1: team colour flash
 // 2: "YOUR TEAM IS UNLOCKED" text
 // 3: blurred card becomes visible + team name
 // 4: player name
-// 5: priority copy + CTA
-type Phase = 0 | 1 | 2 | 3 | 4 | 5;
+// 5: team shirt reveal + "Your colour is locked in"
+// 6: priority copy + CTA
+type Phase = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 // ── Confetti hook (matches Reveal.tsx pattern) ─────────────────────────────
 function useConfetti(active: boolean, colors: string[]) {
@@ -357,10 +366,12 @@ export default function UnlockReveal() {
     setTimeout(() => { setPhase(3); setConfettiActive(true); }, 2000);
     // Phase 3 → 4: player name (2800ms)
     setTimeout(() => setPhase(4), 2800);
-    // Phase 4 → 5: priority copy (3600ms)
-    setTimeout(() => setPhase(5), 3600);
-    // CTA appears (4000ms)
-    setTimeout(() => setCtaVisible(true), 4000);
+    // Phase 4 → 5: team shirt reveal (3800ms)
+    setTimeout(() => setPhase(5), 3800);
+    // Phase 5 → 6: priority copy (5000ms)
+    setTimeout(() => setPhase(6), 5000);
+    // CTA appears (5400ms)
+    setTimeout(() => setCtaVisible(true), 5400);
   }
 
   function handleEnterHub() {
@@ -506,12 +517,50 @@ export default function UnlockReveal() {
           </div>
         )}
 
-        {/* Phase 5+: Priority copy */}
+        {/* Phase 5+: Team shirt reveal */}
+        {tc && team && TEAM_SHIRT_URLS[team] && (
+          <div
+            style={{
+              opacity: phase >= 5 ? 1 : 0,
+              transform: `translateY(${phase >= 5 ? 0 : 20}px) scale(${phase >= 5 ? 1 : 0.92})`,
+              transition: "opacity 0.9s ease, transform 0.9s ease",
+            }}
+            className="flex flex-col items-center gap-3 w-full"
+          >
+            <p className="font-mono text-[#F2F0EB]/50 text-[10px] tracking-[0.3em]">
+              YOUR TEAM-COLOUR KIT
+            </p>
+            <div
+              className="relative w-48 h-48 rounded-sm overflow-hidden"
+              style={{
+                boxShadow: `0 0 30px ${tc.glow}, 0 0 60px ${tc.glow}`,
+                border: `1px solid ${tc.hex}`,
+              }}
+            >
+              <img
+                src={TEAM_SHIRT_URLS[team]}
+                alt={`${tc.name} team shirt`}
+                className="w-full h-full object-contain bg-black"
+              />
+            </div>
+            <p
+              className="font-mono font-bold text-sm tracking-[0.2em]"
+              style={{ color: tc.hex }}
+            >
+              YOUR COLOUR IS LOCKED IN.
+            </p>
+            <p className="font-mono text-[#F2F0EB]/40 text-[10px] tracking-[0.15em] text-center">
+              Pre-made team kit · Ready for Sports Day.
+            </p>
+          </div>
+        )}
+
+        {/* Phase 6+: Priority copy */}
         <div
           className="flex flex-col gap-1"
           style={{
-            opacity: phase >= 5 ? 1 : 0,
-            transform: `translateY(${phase >= 5 ? 0 : 10}px)`,
+            opacity: phase >= 6 ? 1 : 0,
+            transform: `translateY(${phase >= 6 ? 0 : 10}px)`,
             transition: "opacity 0.8s ease, transform 0.8s ease",
           }}
         >
