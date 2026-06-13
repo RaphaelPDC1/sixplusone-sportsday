@@ -269,20 +269,7 @@ export default function TeamHub() {
 
           {/* Team identity */}
           <div className="flex items-center gap-4">
-            {/* Team shirt */}
-            {TEAM_SHIRT_URLS[hub.team ?? ""] && (
-              <div
-                className="flex-shrink-0 w-14 h-14 rounded-sm overflow-hidden border"
-                style={{ borderColor: `${tc.hex}55`, background: "#000" }}
-                title={`${(hub.team ?? "").toUpperCase()} team shirt`}
-              >
-                <img
-                  src={TEAM_SHIRT_URLS[hub.team ?? ""]}
-                  alt={`Team ${hub.team} shirt`}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            )}
+
             {/* Profile photo */}
             <div className="relative flex-shrink-0">
               <div
