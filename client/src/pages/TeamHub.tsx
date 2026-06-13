@@ -244,7 +244,6 @@ export default function TeamHub() {
         className="relative z-10 overflow-hidden"
         style={{
           background: "transparent",
-          borderBottom: `1px solid ${tc.hex}33`,
         }}
       >
 
