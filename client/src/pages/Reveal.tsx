@@ -565,10 +565,10 @@ export default function Reveal() {
   const [phase, setPhase] = useState<"tension" | "animation" | "reveal">("tension");
   const [aiIdentity, setAiIdentity] = useState<{ title: string; message: string } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
-  // Canvas-generated share card — shirt drawn onto canvas, output as File for Web Share API
-  const shareCanvasRef = useRef<HTMLCanvasElement>(null);
+  // Canvas-generated share card — shirt drawn onto OffscreenCanvas, output as File for Web Share API
   const shareFileRef = useRef<File | null>(null);
   const [shareReady, setShareReady] = useState(false);
+  const buildingRef = useRef(false);
 
   const { data: user } = trpc.sportsday.getUserStatus.useQuery(
     { id: userId! },
@@ -607,74 +607,113 @@ export default function Reveal() {
   // Shirt image URL for the user's team — used directly for share/download
   const shirtUrl = TEAM_SHIRT_URLS[team] ?? null;
 
-  // Build share card on canvas when reveal phase starts
-  // Shirt is fetched as blob to avoid canvas cross-origin taint (required for toBlob/toDataURL)
+  // Build share card when reveal phase starts AND user team is confirmed
+  // Uses OffscreenCanvas to avoid hidden-canvas browser throttling issues
   useEffect(() => {
     if (phase !== "reveal") return;
-    const canvas = shareCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!user?.team) return; // wait for real team data
+    if (buildingRef.current) return; // prevent duplicate builds
+    buildingRef.current = true;
     setShareReady(false);
 
-    const buildCard = (shirtBlobUrl: string | null) => {
-      canvas.width = 1080; canvas.height = 1920;
-      // Dark background
+    const teamKey = user.team as string;
+    const teamColor = TEAM_CONFIG[teamKey as keyof typeof TEAM_CONFIG]?.color ?? "#FF5500";
+    const teamName = (TEAM_CONFIG[teamKey as keyof typeof TEAM_CONFIG]?.name ?? `TEAM ${teamKey.toUpperCase()}`).replace("TEAM ", "");
+    const shirtSrc = TEAM_SHIRT_URLS[teamKey] ?? null;
+
+    const W = 1080, H = 1920;
+
+    const drawCard = async (shirtImg: HTMLImageElement | null) => {
+      // Use OffscreenCanvas if available (no DOM throttling), else fallback to regular canvas
+      let canvas: OffscreenCanvas | HTMLCanvasElement;
+      let ctx: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D | null;
+      if (typeof OffscreenCanvas !== "undefined") {
+        canvas = new OffscreenCanvas(W, H);
+        ctx = (canvas as OffscreenCanvas).getContext("2d") as OffscreenCanvasRenderingContext2D;
+      } else {
+        canvas = document.createElement("canvas");
+        (canvas as HTMLCanvasElement).width = W;
+        (canvas as HTMLCanvasElement).height = H;
+        ctx = (canvas as HTMLCanvasElement).getContext("2d");
+      }
+      if (!ctx) { buildingRef.current = false; return; }
+
+      // 1. Dark background
       ctx.fillStyle = "#0A0A0A";
-      ctx.fillRect(0, 0, 1080, 1920);
-      // Team colour glow
-      const glow = ctx.createRadialGradient(540, 960, 0, 540, 960, 800);
-      glow.addColorStop(0, `${config.color}40`);
+      ctx.fillRect(0, 0, W, H);
+
+      // 2. Team colour radial glow (stronger — 70% opacity at centre)
+      const glow = ctx.createRadialGradient(W / 2, H * 0.55, 0, W / 2, H * 0.55, 700);
+      glow.addColorStop(0, `${teamColor}B3`); // 70% opacity
+      glow.addColorStop(0.5, `${teamColor}40`);
       glow.addColorStop(1, "transparent");
       ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, 1080, 1920);
+      ctx.fillRect(0, 0, W, H);
 
-      const finish = () => {
-        // Small delay to ensure all draw calls are flushed before toBlob
-        requestAnimationFrame(() => {
-          canvas.toBlob((blob) => {
-            if (blob) {
-              shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
-              setShareReady(true);
-            }
-          }, 'image/png');
-        });
-      };
-
-      if (shirtBlobUrl) {
-        const img = new Image();
-        img.src = shirtBlobUrl;
-        // Use decode() to guarantee the image is fully decoded before drawImage
-        img.decode()
-          .then(() => {
-            const w = 1080, h = (img.height / img.width) * w;
-            ctx.drawImage(img, 0, (1920 - h) / 2, w, h);
-            URL.revokeObjectURL(shirtBlobUrl);
-            finish();
-          })
-          .catch((err) => {
-            console.error("[ShareCard] img.decode() failed:", err);
-            URL.revokeObjectURL(shirtBlobUrl);
-            finish();
-          });
-      } else {
-        finish();
+      // 3. Shirt image centred in middle third
+      if (shirtImg) {
+        const shirtW = W;
+        const shirtH = (shirtImg.naturalHeight / shirtImg.naturalWidth) * shirtW;
+        const shirtY = (H - shirtH) / 2;
+        ctx.drawImage(shirtImg, 0, shirtY, shirtW, shirtH);
       }
+
+      // 4. Top text: "I'M TEAM"
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.font = "bold 72px 'Arial', sans-serif";
+      ctx.letterSpacing = "0.2em";
+      ctx.fillText("I'M TEAM", W / 2, 200);
+
+      // 5. Team name in team colour
+      ctx.fillStyle = teamColor;
+      ctx.font = "bold 200px 'Arial Black', 'Arial', sans-serif";
+      ctx.fillText(teamName, W / 2, 420);
+
+      // 6. Bottom branding
+      ctx.fillStyle = "rgba(255,255,255,0.5)";
+      ctx.font = "bold 52px 'Arial', sans-serif";
+      ctx.fillText("SPORTS DAY 002", W / 2, H - 180);
+      ctx.fillStyle = "rgba(255,255,255,0.3)";
+      ctx.font = "40px 'Arial', sans-serif";
+      ctx.fillText("@6plus1", W / 2, H - 110);
+
+      // 7. Export to File
+      try {
+        let blob: Blob | null = null;
+        if (canvas instanceof OffscreenCanvas) {
+          blob = await canvas.convertToBlob({ type: 'image/png' });
+        } else {
+          blob = await new Promise<Blob | null>(res => (canvas as HTMLCanvasElement).toBlob(res, 'image/png'));
+        }
+        if (blob && blob.size > 5000) { // sanity check — blank canvas is ~1-2KB
+          shareFileRef.current = new File([blob], `team-${teamKey}-sports-day-002.png`, { type: 'image/png' });
+          setShareReady(true);
+          console.log(`[ShareCard] Built successfully: ${blob.size} bytes`);
+        } else {
+          console.error("[ShareCard] Blob too small, likely blank:", blob?.size);
+        }
+      } catch (e) {
+        console.error("[ShareCard] Export failed:", e);
+      }
+      buildingRef.current = false;
     };
 
-    const url = TEAM_SHIRT_URLS[team] ?? null;
-    if (url) {
-      fetch(url, { mode: 'cors' })
+    if (shirtSrc) {
+      fetch(shirtSrc, { mode: 'cors' })
         .then(r => r.blob())
-        .then(b => buildCard(URL.createObjectURL(b)))
-        .catch((err) => {
-          console.error("[ShareCard] Fetch failed:", err);
-          buildCard(null);
-        });
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          const img = new Image();
+          img.src = blobUrl;
+          return img.decode().then(() => { URL.revokeObjectURL(blobUrl); return img; });
+        })
+        .then(img => drawCard(img))
+        .catch(err => { console.error("[ShareCard] Shirt load failed:", err); drawCard(null); });
     } else {
-      buildCard(null);
+      drawCard(null);
     }
-  }, [phase, config.color, team]);
+  }, [phase, user?.team]);
 
   const handleAnimationComplete = useCallback(() => {
     setPhase("reveal");
@@ -741,8 +780,6 @@ export default function Reveal() {
       {showSplash && <EntrySplash onComplete={() => { sessionStorage.setItem("reveal_splash_seen", "true"); setShowSplash(false); }} />}
       {phase !== "reveal" && <RevealBackground teamColor={config.color} />}
       <canvas ref={confettiRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 10 }} />
-      {/* Off-screen canvas for building the share image */}
-      <canvas ref={shareCanvasRef} style={{ position: "absolute", left: "-9999px", top: "-9999px", width: 1, height: 1 }} />
 
 
       {/* Sticky top header — always visible at top of screen */}
