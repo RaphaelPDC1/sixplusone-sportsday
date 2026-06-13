@@ -565,9 +565,10 @@ export default function Reveal() {
   const [phase, setPhase] = useState<"tension" | "animation" | "reveal">("tension");
   const [aiIdentity, setAiIdentity] = useState<{ title: string; message: string } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
-  // Pre-built File ref for synchronous Web Share API on iOS
-  // Must be ready before the button tap — async fetch inside the handler breaks iOS share sheet
+  // Canvas-generated share card — shirt drawn onto canvas, output as File for Web Share API
+  const shareCanvasRef = useRef<HTMLCanvasElement>(null);
   const shareFileRef = useRef<File | null>(null);
+  const [shareReady, setShareReady] = useState(false);
 
   const { data: user } = trpc.sportsday.getUserStatus.useQuery(
     { id: userId! },
@@ -606,16 +607,60 @@ export default function Reveal() {
   // Shirt image URL for the user's team — used directly for share/download
   const shirtUrl = TEAM_SHIRT_URLS[team] ?? null;
 
-  // Pre-fetch shirt as File when reveal phase starts so share is synchronous
+  // Build share card on canvas when reveal phase starts
+  // Shirt is fetched as blob to avoid canvas cross-origin taint (required for toBlob/toDataURL)
   useEffect(() => {
-    if (phase !== "reveal" || !shirtUrl) return;
-    fetch(shirtUrl)
-      .then((r) => r.blob())
-      .then((blob) => {
-        shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
-      })
-      .catch(() => { /* non-fatal — share will fall back */ });
-  }, [phase, shirtUrl, team]);
+    if (phase !== "reveal") return;
+    const canvas = shareCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    setShareReady(false);
+
+    const buildCard = (shirtBlobUrl: string | null) => {
+      canvas.width = 1080; canvas.height = 1920;
+      // Dark background
+      ctx.fillStyle = "#0A0A0A";
+      ctx.fillRect(0, 0, 1080, 1920);
+      // Team colour glow
+      const glow = ctx.createRadialGradient(540, 960, 0, 540, 960, 800);
+      glow.addColorStop(0, `${config.color}40`);
+      glow.addColorStop(1, "transparent");
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, 1080, 1920);
+
+      const finish = () => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
+            setShareReady(true);
+          }
+        }, 'image/png');
+      };
+
+      if (shirtBlobUrl) {
+        const img = new Image();
+        img.onload = () => {
+          // Draw shirt centred, full width
+          const w = 1080, h = (img.height / img.width) * w;
+          ctx.drawImage(img, 0, (1920 - h) / 2, w, h);
+          URL.revokeObjectURL(shirtBlobUrl);
+          finish();
+        };
+        img.onerror = () => { URL.revokeObjectURL(shirtBlobUrl); finish(); };
+        img.src = shirtBlobUrl;
+      } else {
+        finish();
+      }
+    };
+
+    const url = TEAM_SHIRT_URLS[team] ?? null;
+    if (url) {
+      fetch(url).then(r => r.blob()).then(b => buildCard(URL.createObjectURL(b))).catch(() => buildCard(null));
+    } else {
+      buildCard(null);
+    }
+  }, [phase, config.color, team]);
 
   const handleAnimationComplete = useCallback(() => {
     setPhase("reveal");
@@ -628,35 +673,34 @@ export default function Reveal() {
 
 
 
-  // Synchronous share handler — uses pre-fetched File so iOS share sheet is not blocked
+  // Synchronous share handler — canvas File is pre-built so iOS share sheet is not blocked
   const handleShare = () => {
     const file = shareFileRef.current;
+    if (!file) return;
 
     // iOS / Android: native share sheet (shows Instagram, WhatsApp, etc.)
-    if (file && typeof navigator.share === 'function' && navigator.canShare?.({ files: [file] })) {
+    if (typeof navigator.share === 'function' && navigator.canShare?.({ files: [file] })) {
       navigator.share({
         files: [file],
         title: `I'm Team ${team.toUpperCase()} — Sports Day 002`,
         text: "Just found out my team. @6plus1 #SportsDay002",
       }).catch((e: any) => {
-        if (e?.name !== 'AbortError' && shirtUrl) {
-          // Share failed (not user cancel) — save image to camera roll
-          _downloadShirt();
+        if (e?.name !== 'AbortError') {
+          // Share failed — fall back to download
+          const url = URL.createObjectURL(file);
+          const a = document.createElement('a');
+          a.download = file.name; a.href = url; a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
         }
       });
       return;
     }
 
-    // Fallback: download the image (user can share from camera roll)
-    _downloadShirt();
-  };
-
-  const _downloadShirt = () => {
-    if (!shirtUrl) return;
-    const link = document.createElement('a');
-    link.download = `team-${team}-sports-day-002.png`;
-    link.href = shirtUrl;
-    link.click();
+    // Desktop / unsupported: download
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.download = file.name; a.href = url; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   };
 
   if (!user) {
@@ -683,6 +727,8 @@ export default function Reveal() {
       {showSplash && <EntrySplash onComplete={() => { sessionStorage.setItem("reveal_splash_seen", "true"); setShowSplash(false); }} />}
       {phase !== "reveal" && <RevealBackground teamColor={config.color} />}
       <canvas ref={confettiRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 10 }} />
+      {/* Off-screen canvas for building the share image */}
+      <canvas ref={shareCanvasRef} style={{ position: "absolute", left: "-9999px", top: "-9999px", width: 1, height: 1 }} />
 
 
       {/* Sticky top header — always visible at top of screen */}
@@ -752,7 +798,7 @@ export default function Reveal() {
             )}
           </div>
 
-          {/* Shirt image — shown directly */}
+          {/* Shirt image preview */}
           {shirtUrl && (
             <div className="w-full mb-4">
               <p className="font-mono text-white/40 text-[10px] tracking-[0.3em] mb-2 text-left">YOUR TEAM KIT</p>
@@ -768,19 +814,20 @@ export default function Reveal() {
           {/* Action buttons */}
           <div className="flex flex-col gap-3 w-full">
             <button onClick={handleShare}
-              disabled={!shirtUrl}
+              disabled={!shareReady}
               className="w-full bg-white text-black font-display text-xl tracking-widest py-5 hover:bg-black hover:text-white transition-colors active:scale-[0.98] disabled:opacity-50">
-              SHARE TO STORY →
+              {shareReady ? "SHARE TO STORY →" : "PREPARING..."}
             </button>
             <button
               onClick={() => {
-                if (!shirtUrl) return;
-                const link = document.createElement("a");
-                link.download = `team-${team}-sports-day-002.png`;
-                link.href = shirtUrl;
-                link.click();
+                const file = shareFileRef.current;
+                if (!file) return;
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.download = file.name; a.href = url; a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 5000);
               }}
-              disabled={!shirtUrl}
+              disabled={!shareReady}
               className="w-full border border-white/30 text-white/60 font-mono text-xs tracking-widest py-3 hover:border-white/60 hover:text-white/80 transition-colors active:scale-[0.98] disabled:opacity-40">
               ↓ DOWNLOAD KIT IMAGE
             </button>
