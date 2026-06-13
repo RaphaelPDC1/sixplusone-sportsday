@@ -864,7 +864,7 @@ export default function Reveal() {
                 const regId = localStorage.getItem("sd_user_id") ?? "";
                 markTeamRevealSeen(regId);
                 // Route based on access type:
-                // Paid (priority) → /unlock-reveal (player pack animation)
+                // Paid (priority) → /unlock-reveal (unlock animation) → /team-hub
                 // Free → /team-hub
                 const isPaid = user.accessType === "priority";
                 navigate(isPaid ? "/unlock-reveal" : "/team-hub");

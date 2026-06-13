@@ -249,7 +249,7 @@ export default function TeamHub() {
               label="REPLAY REVEAL"
               onBeforeNavigate={() => {
                 // Reset reveal journey flags so the full sequence replays from the start
-                // Paid: /reveal → /unlock-reveal → /shirt-confirm → /team-hub
+                // Paid: /reveal → /unlock-reveal → /team-hub
                 // Free: /reveal → /team-hub
                 const regId = localStorage.getItem("sd_user_id") ?? "";
                 resetRevealJourneyForReplay(regId, hub?.accessType);

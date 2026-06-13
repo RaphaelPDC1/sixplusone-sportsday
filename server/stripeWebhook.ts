@@ -34,7 +34,6 @@ async function unlockRegistration(
   checkoutSessionId: string | null,
   paymentEmail: string | null,
   matchStatus: "matched_by_token" | "matched_by_id" | "matched_by_email",
-  topName: string | null,
 ) {
   if (!db) return;
   const updatePayload = {
@@ -48,8 +47,6 @@ async function unlockRegistration(
     stripeCheckoutSessionId: checkoutSessionId ?? undefined,
     paymentEmail: paymentEmail ?? undefined,
     paymentMatchStatus: matchStatus,
-    // Top name — only overwrite if provided in metadata
-    ...(topName ? { topName, topNameLastEditedAt: new Date() } : {}),
   };
 
   await db
@@ -57,7 +54,7 @@ async function unlockRegistration(
     .set(updatePayload)
     .where(eq(sportsDayRegistrations.id, registrationId));
 
-  log("UNLOCKED", { registrationId, paymentIntentId, matchStatus, topName, fields: Object.keys(updatePayload) });
+  log("UNLOCKED", { registrationId, paymentIntentId, matchStatus, fields: Object.keys(updatePayload) });
 }
 
 async function createUnmatchedPayment(
@@ -80,7 +77,6 @@ async function createUnmatchedPayment(
     metaRegistrationId: metadata.registration_id ?? metadata.registrationId ?? undefined,
     metaRegisteredEmail: metadata.registered_email ?? metadata.registeredEmail ?? undefined,
     metaPlayerName: metadata.player_name ?? metadata.playerName ?? undefined,
-    metaTopName: metadata.top_name ?? metadata.topName ?? undefined,
     createdAt: new Date(),
   });
   log("UNMATCHED_PAYMENT_CREATED", { paymentIntentId, paymentEmail, metadata });
@@ -102,14 +98,11 @@ async function handlePaymentSucceeded(
   const unlockToken = metadata.unlock_token ?? metadata.unlockToken ?? null;
   const registrationId = metadata.registration_id ?? metadata.registrationId ?? null;
   const registeredEmail = metadata.registered_email ?? metadata.registeredEmail ?? null;
-  const topName = metadata.top_name ?? metadata.topName ?? null;
-
   log("PAYMENT_RECEIVED", {
     paymentIntentId, checkoutSessionId, paymentEmail,
     unlockToken: unlockToken ? `${unlockToken.substring(0, 8)}...` : null,
     registrationId: registrationId ? `${registrationId.substring(0, 8)}...` : null,
     registeredEmail,
-    topName,
     metadataKeys: Object.keys(metadata),
   });
 
@@ -139,7 +132,7 @@ async function handlePaymentSucceeded(
         log("ALREADY_UNLOCKED", { registrationId: reg.id, paymentIntentId });
         return;
       }
-      await unlockRegistration(db, reg.id, paymentIntentId, checkoutSessionId, paymentEmail, "matched_by_token", topName);
+      await unlockRegistration(db, reg.id, paymentIntentId, checkoutSessionId, paymentEmail, "matched_by_token");
       log("DB_UPDATE_SUCCESS", { registrationId: reg.id, method: "matched_by_token" });
       // Sync to Klaviyo (non-blocking)
       handleSportsDayPayment(reg.email, reg.team).catch((err) => {
@@ -171,7 +164,7 @@ async function handlePaymentSucceeded(
         log("ALREADY_UNLOCKED", { registrationId: reg.id, paymentIntentId });
         return;
       }
-      await unlockRegistration(db, reg.id, paymentIntentId, checkoutSessionId, paymentEmail, "matched_by_id", topName);
+      await unlockRegistration(db, reg.id, paymentIntentId, checkoutSessionId, paymentEmail, "matched_by_id");
       log("DB_UPDATE_SUCCESS", { registrationId: reg.id, method: "matched_by_id" });
       // Sync to Klaviyo (non-blocking)
       handleSportsDayPayment(reg.email, reg.team).catch((err) => {
@@ -204,7 +197,7 @@ async function handlePaymentSucceeded(
         log("ALREADY_UNLOCKED", { registrationId: reg.id, paymentIntentId });
         return;
       }
-      await unlockRegistration(db, reg.id, paymentIntentId, checkoutSessionId, paymentEmail, "matched_by_email", topName);
+      await unlockRegistration(db, reg.id, paymentIntentId, checkoutSessionId, paymentEmail, "matched_by_email");
       log("DB_UPDATE_SUCCESS", { registrationId: reg.id, method: "matched_by_email" });
       // Sync to Klaviyo (non-blocking)
       handleSportsDayPayment(reg.email, reg.team).catch((err) => {

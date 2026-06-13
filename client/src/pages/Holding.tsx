@@ -6,7 +6,6 @@ import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
 import { ParticleTextBg } from "@/components/ui/particle-text-bg";
 import { ScratchCardGrid } from "@/components/ui/scratch-card";
-import { TopNameEditor } from "@/components/TopNameEditor";
 import { PaymentForm } from "@/components/PaymentForm";
 import { FunnelPopup } from "@/components/FunnelPopup";
 import { AdPopup } from "@/components/AdPopup";
@@ -526,7 +525,6 @@ export default function Holding() {
   const paymentSectionRef = useRef<HTMLDivElement>(null);
 
   const scrollToPayment = () => {
-    setUnlockStep("topname");
     setTimeout(() => {
       paymentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
@@ -552,7 +550,7 @@ export default function Holding() {
   const paymentCancelled = searchParams.get("cancelled") === "true";
 
   // ── Payment UI state ──
-  const [unlockStep, setUnlockStep] = useState<"idle" | "topname" | "payment" | "confirming">("idle");
+  const [unlockStep, setUnlockStep] = useState<"idle" | "payment" | "confirming">("idle");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number>(1500);
@@ -584,7 +582,6 @@ export default function Holding() {
     referralCode: dashboard.referralCode ?? "",
     referralCount: dashboard.referralCount ?? 0,
     referralRewardUnlocked: false,
-    topName: dashboard.topName ?? "",
   } : null;
 
   const createPaymentIntent = trpc.sportsday.createPaymentIntent.useMutation();
@@ -642,7 +639,7 @@ export default function Holding() {
       setUnlockStep("idle");
       console.log("[Holding] Unlock confirmed — redirecting to /reveal (team reveal first)");
       // Always go to /reveal first after a fresh payment confirmation — team reveal is the big moment
-      // The reveal journey manager will route through /unlock-reveal → /shirt-confirm → /team-hub
+      // The reveal journey manager will route through /unlock-reveal → /team-hub
       navigateRef.current("/reveal");
     }
   }, [dashboard?.state, unlockStep]);
@@ -675,14 +672,8 @@ export default function Holding() {
     }
   };
 
-  const handleStartUnlock = () => {
-    setUnlockStep("topname");
-  };
-
-  const handleTopNameConfirmed = async (topName: string) => {
+  const handleStartUnlock = async () => {
     try {
-      // topName is already saved by TopNameEditor via saveTopName mutation
-      // createPaymentIntent only needs registrationId
       const result = await createPaymentIntent.mutateAsync({
         registrationId: userId!,
       });
@@ -856,7 +847,7 @@ export default function Holding() {
           {paymentCancelled && unlockStep === "idle" && (
             <div className="mb-4 border border-white/8 bg-black/20 px-5 py-4">
               <p className="font-mono text-[#F2F0EB]/60 text-xs tracking-wider leading-relaxed">
-                No worries — your registration is still saved. Your Player Pack is still locked.
+                No worries — your registration is still saved. Your team is still locked.
               </p>
             </div>
           )}
@@ -897,17 +888,6 @@ export default function Holding() {
             </div>
           )}
 
-          {/* ── TopName editor step ── */}
-          {unlockStep === "topname" && userId && (
-            <TopNameEditor
-              registrationId={userId}
-              playerName={user?.fullName ?? ""}
-              initialTopName={user?.topName || undefined}
-              onConfirmed={handleTopNameConfirmed}
-              onCancel={() => setUnlockStep("idle")}
-            />
-          )}
-
           {/* ── Embedded payment form step ── */}
           {unlockStep === "payment" && clientSecret && (
             <PaymentForm
@@ -930,13 +910,26 @@ export default function Holding() {
                   <p className="font-mono text-[#FF5500] text-[10px] tracking-[0.25em]">YOU CAME BACK. EARLY ACCESS STILL OPEN.</p>
                 </div>
               )}
+              {/* Unlock copy */}
+              <div className="mb-3 space-y-1">
+                <p className="font-mono text-[#F2F0EB]/70 text-xs tracking-[0.2em]">
+                  Unlock your team colour instantly.
+                </p>
+                <p className="font-mono text-[#F2F0EB]/40 text-[10px] tracking-[0.15em]">
+                  Your team-colour kit is pre-made and ready for the day.
+                </p>
+                <p className="font-mono text-[#F2F0EB]/40 text-[10px] tracking-[0.15em]">
+                  Normally £22 — app unlock price {price}.
+                </p>
+              </div>
               {/* Main unlock CTA */}
               <button
                 onClick={handleStartUnlock}
-                className="w-full bg-[#FF5500] text-[#0A0A0A] font-display tracking-widest py-5 hover:bg-[#F2F0EB] transition-all active:scale-[0.98]"
+                disabled={createPaymentIntent.isPending}
+                className="w-full bg-[#FF5500] text-[#0A0A0A] font-display tracking-widest py-5 hover:bg-[#F2F0EB] transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ fontSize: "clamp(1.1rem, 5vw, 1.4rem)" }}
               >
-                UNLOCK YOUR TEAM — {price}
+                {createPaymentIntent.isPending ? "LOADING..." : `UNLOCK YOUR TEAM — ${price}`}
               </button>
               {/* Trust micro-copy */}
               <div className="flex items-center justify-center gap-5">

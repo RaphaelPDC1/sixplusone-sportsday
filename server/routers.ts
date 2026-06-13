@@ -1317,7 +1317,6 @@ Return ONLY valid JSON with this exact shape:
           unlock_token: reg.unlockToken ?? "",
           registered_email: reg.email,
           player_name: reg.fullName,
-          top_name: reg.topName ?? reg.fullName.split(" ")[0].toUpperCase(),
           product_type: "sports_day_team_unlock",
           event_id: "sports_day_002",
           test_mode: isTestMode ? "true" : "false",

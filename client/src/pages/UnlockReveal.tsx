@@ -20,9 +20,9 @@ const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 // ── Animation phases ───────────────────────────────────────────────────────
 // 0: black screen
 // 1: team colour flash
-// 2: "YOUR PLAYER PACK IS UNLOCKED" text
+// 2: "YOUR TEAM IS UNLOCKED" text
 // 3: blurred card becomes visible + team name
-// 4: player name / top name
+// 4: player name
 // 5: priority copy + CTA
 type Phase = 0 | 1 | 2 | 3 | 4 | 5;
 
@@ -320,7 +320,7 @@ export default function UnlockReveal() {
     if (hasStarted.current) return;
     const regId = userId ?? "";
 
-    // PAID-ONLY PAGE: Free users (PUBLIC_REVEAL) should never see the player pack animation
+    // PAID-ONLY PAGE: Free users (PUBLIC_REVEAL) should never see the unlock animation
     // Redirect free users to team-hub directly
     if (dashboard.state === "PUBLIC_REVEAL" || dashboard.accessType !== "priority") {
       // Only allow if user is UNLOCKED_PRIORITY (paid)
@@ -330,11 +330,10 @@ export default function UnlockReveal() {
       }
     }
 
-    // If already seen unlock reveal, skip to shirt confirm (paid users only)
-    // Use dashboard registration ID as source of truth
+    // If already seen unlock reveal, go straight to team-hub
     const dashboardRegId = dashboard?.registrationId ?? regId;
     if (hasSeenUnlockReveal(dashboardRegId)) {
-      navigate("/shirt-confirm", { replace: true });
+      navigate("/team-hub", { replace: true });
       return;
     }
 
@@ -367,13 +366,13 @@ export default function UnlockReveal() {
   function handleEnterHub() {
     // Use dashboard registration ID as source of truth
     const regId = dashboard?.registrationId ?? userId ?? "";
-    // Mark unlock reveal as seen, then proceed to shirt confirmation
+    // Mark unlock reveal as seen, then go straight to team hub
     markUnlockRevealSeen(regId);
-    navigate("/shirt-confirm", { replace: true });
+    navigate("/team-hub", { replace: true });
   }
 
   const playerName = dashboard?.playerName ?? "";
-  const topName = dashboard?.topName ?? playerName.split(" ")[0] ?? "";
+  const topName = playerName.split(" ")[0] ?? "";
 
   if (isLoading) {
     return (
@@ -501,19 +500,7 @@ export default function UnlockReveal() {
                 <p className="font-mono font-bold text-[#F2F0EB] text-lg tracking-[0.2em]">
                   {playerName.toUpperCase()}
                 </p>
-                {topName && topName.toUpperCase() !== playerName.toUpperCase() && (
-                  <>
-                    <p className="font-mono text-[#F2F0EB]/50 text-[10px] tracking-[0.25em] mt-2 mb-1">
-                      KIT NAME
-                    </p>
-                    <p
-                      className="font-mono font-bold text-base tracking-[0.25em]"
-                      style={{ color: tc.hex }}
-                    >
-                      {topName.toUpperCase()}
-                    </p>
-                  </>
-                )}
+
               </div>
             </div>
           </div>
@@ -577,7 +564,7 @@ export default function UnlockReveal() {
             onClick={() => {
               const regId = userId ?? "";
               markUnlockRevealSeen(regId);
-              navigate("/shirt-confirm", { replace: true });
+              navigate("/team-hub", { replace: true });
             }}
             className="font-mono text-[#F2F0EB]/20 text-[10px] tracking-[0.2em] hover:text-[#F2F0EB]/50 transition-colors mt-2"
           >
