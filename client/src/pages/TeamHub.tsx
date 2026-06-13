@@ -61,12 +61,7 @@ const AWARD_CATEGORIES = [
 
 type AwardCategory = typeof AWARD_CATEGORIES[number]["id"];
 
-const LOCATION = {
-  name: "HACKNEY MARSHES",
-  address: "Homerton Rd, London E9 5PF",
-  mapUrl: "https://maps.google.com/?q=Hackney+Marshes+London",
-  details: ["Gates open 9:30AM", "Events start 10:00AM sharp", "Bring water + trainers", "No studs"],
-};
+// Location data is now served from hub.event (getTeamHub backend)
 
 export default function TeamHub() {
   const [, navigate] = useLocation();
@@ -948,11 +943,12 @@ export default function TeamHub() {
                 className="font-display text-4xl tracking-widest mb-1"
                 style={{ color: tc.hex }}
               >
-                {LOCATION.name}
+                {hub?.event?.location?.toUpperCase() ?? "ENDCLIFFE PARK"}
               </div>
-              <p className="font-mono text-white/40 text-sm">{LOCATION.address}</p>
+              <p className="font-mono text-white/40 text-sm">{hub?.event?.fullAddress ?? "Endcliffe Park, Sheffield, S11 7AB"}</p>
+              <p className="font-mono text-white/40 text-sm mt-1">{hub?.event?.date ?? "Saturday 11 July 2026"}</p>
               <a
-                href={LOCATION.mapUrl}
+                href={hub?.event?.mapsUrl ?? "https://maps.google.com/?q=Endcliffe+Park+Sheffield+S11+7AB"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block mt-4 font-mono text-xs tracking-widest underline underline-offset-4 transition-opacity hover:opacity-70"
@@ -963,7 +959,7 @@ export default function TeamHub() {
             </div>
 
             <div className="space-y-2">
-              {LOCATION.details.map((detail) => (
+              {["Gates open 9:30AM", "Events start 10:00AM sharp", "Bring water + trainers", "Wear your team colour"].map((detail) => (
                 <div
                   key={detail}
                   className="flex items-center gap-3 p-4 border border-white/10"
@@ -984,7 +980,7 @@ export default function TeamHub() {
             >
               <iframe
                 title="Venue map"
-                src="https://maps.google.com/maps?q=Hackney+Marshes+London&output=embed"
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(hub?.event?.fullAddress ?? "Endcliffe Park Sheffield S11 7AB")}&output=embed`}
                 className="w-full h-full"
                 style={{ filter: "grayscale(1) invert(1) brightness(0.8)" }}
                 loading="lazy"
