@@ -7,6 +7,14 @@ import { markTeamRevealSeen } from "@/lib/revealJourney";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
+// ── Team shirt images (transparent-background) ────────────────────────────────
+const TEAM_SHIRT_URLS: Record<string, string> = {
+  red:    "/manus-storage/sportsday002-red-front-transparent_e8d4b455.png",
+  blue:   "/manus-storage/sportsday002-blue-front-transparent_25cf7b1a.png",
+  pink:   "/manus-storage/sportsday002-pink-front-transparent_1062bfd0.png",
+  orange: "/manus-storage/sportsday002-orange-front-transparent_44d55917.png",
+};
+
 const TEAM_CONFIG = {
   red: { color: "#E8232A", name: "TEAM RED", confettiColors: ["#E8232A", "#FFFFFF", "#FF6666", "#CC0000"] },
   blue: { color: "#1A4FE8", name: "TEAM BLUE", confettiColors: ["#1A4FE8", "#C0C0C0", "#6699FF", "#0033CC"] },
@@ -613,71 +621,77 @@ export default function Reveal() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const drawCard = (headingFont: string) => {
+    const drawCard = (headingFont: string, shirtBlobUrl: string | null) => {
       canvas.width = 1080; canvas.height = 1920;
-      // Background
-      ctx.fillStyle = config.color;
+      // Dark background
+      ctx.fillStyle = "#0A0A0A";
+      ctx.fillRect(0, 0, 1080, 1920);
+      // Subtle team-colour glow in centre
+      const glow = ctx.createRadialGradient(540, 960, 0, 540, 960, 700);
+      glow.addColorStop(0, `${config.color}30`);
+      glow.addColorStop(1, "transparent");
+      ctx.fillStyle = glow;
       ctx.fillRect(0, 0, 1080, 1920);
       // Subtle grid
-      ctx.strokeStyle = "rgba(0,0,0,0.10)"; ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(255,255,255,0.04)"; ctx.lineWidth = 1;
       for (let i = 0; i < 1080; i += 60) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 1920); ctx.stroke(); }
       for (let i = 0; i < 1920; i += 60) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1080, i); ctx.stroke(); }
-      // Header band
-      ctx.fillStyle = "rgba(0,0,0,0.35)"; ctx.fillRect(0, 0, 1080, 280);
-      // Bottom band
-      ctx.fillStyle = "rgba(0,0,0,0.25)"; ctx.fillRect(0, 1780, 1080, 140);
-      // Main copy — exact spec: "I'M TEAM [COLOUR]"
-      ctx.fillStyle = "#FFFFFF"; ctx.textAlign = "center";
-      ctx.font = `180px ${headingFont}`;
-      ctx.fillText("I'M TEAM", 540, 1020);
-      ctx.font = `260px ${headingFont}`;
-      ctx.fillText(team.toUpperCase(), 540, 1320);
-      // Tagline
-      ctx.font = "bold 68px monospace"; ctx.fillStyle = "rgba(255,255,255,0.7)";
-      ctx.fillText("SPORTS DAY 002", 540, 1480);
-      // Handle
-      ctx.font = "bold 52px monospace"; ctx.fillStyle = "rgba(255,255,255,0.5)";
-      ctx.fillText("@6plus1", 540, 1860);
-    };
-
-    const drawWithLogo = (headingFont: string, logoBlobUrl: string | null) => {
-      drawCard(headingFont);
-      if (!logoBlobUrl) {
-        // No logo — capture card as-is
-        canvas.toBlob((blob) => {
-          if (blob) shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
-          setShareCardDataUrl(canvas.toDataURL("image/png"));
-        }, 'image/png');
-        return;
+      // "I'M TEAM" label at top
+      ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.textAlign = "center";
+      ctx.font = `110px ${headingFont}`;
+      ctx.fillText("I'M TEAM", 540, 280);
+      // Team colour name — large
+      ctx.fillStyle = config.color;
+      ctx.font = `220px ${headingFont}`;
+      ctx.fillText(team.toUpperCase(), 540, 490);
+      // Shirt image — centred in the middle third
+      if (shirtBlobUrl) {
+        const shirtImg = new Image();
+        shirtImg.onload = () => {
+          // Draw shirt centred, taking up most of the card width
+          const shirtW = 960;
+          const shirtH = (shirtImg.height / shirtImg.width) * shirtW;
+          const shirtX = (1080 - shirtW) / 2;
+          const shirtY = 540;
+          ctx.drawImage(shirtImg, shirtX, shirtY, shirtW, shirtH);
+          URL.revokeObjectURL(shirtBlobUrl);
+          // After shirt drawn, add bottom copy
+          _drawBottomCopy(headingFont);
+          canvas.toBlob((blob) => {
+            if (blob) shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
+            setShareCardDataUrl(canvas.toDataURL("image/png"));
+          }, 'image/png');
+        };
+        shirtImg.onerror = () => {
+          URL.revokeObjectURL(shirtBlobUrl);
+          _drawBottomCopy(headingFont);
+          canvas.toBlob((blob) => {
+            if (blob) shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
+            setShareCardDataUrl(canvas.toDataURL("image/png"));
+          }, 'image/png');
+        };
+        shirtImg.src = shirtBlobUrl;
+      } else {
+        _drawBottomCopy(headingFont);
       }
-      const logoImg = new Image();
-      logoImg.onload = () => {
-        ctx.save(); ctx.filter = "brightness(0) invert(1)";
-        const logoH = 150, logoW = (logoImg.width / logoImg.height) * logoH;
-        ctx.drawImage(logoImg, (1080 - logoW) / 2, 65, logoW, logoH);
-        ctx.restore();
-        URL.revokeObjectURL(logoBlobUrl);
-        // Capture as data URL — no cross-origin taint because we used a blob URL
-        canvas.toBlob((blob) => {
-          if (blob) shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
-          setShareCardDataUrl(canvas.toDataURL("image/png"));
-        }, 'image/png');
-      };
-      logoImg.onerror = () => {
-        URL.revokeObjectURL(logoBlobUrl);
-        canvas.toBlob((blob) => {
-          if (blob) shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
-          setShareCardDataUrl(canvas.toDataURL("image/png"));
-        }, 'image/png');
-      };
-      logoImg.src = logoBlobUrl;
     };
 
-    // Fetch logo as blob to avoid canvas cross-origin taint, then load font
-    const fetchLogo = fetch(LOGO_URL)
-      .then((r) => r.blob())
-      .then((b) => URL.createObjectURL(b))
-      .catch(() => null);
+    const _drawBottomCopy = (headingFont: string) => {
+      // Bottom band
+      ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0, 1700, 1080, 220);
+      // Tagline
+      ctx.font = `bold 64px ${headingFont}`; ctx.fillStyle = "rgba(255,255,255,0.75)"; ctx.textAlign = "center";
+      ctx.fillText("SPORTS DAY 002", 540, 1800);
+      // Handle
+      ctx.font = "bold 48px monospace"; ctx.fillStyle = "rgba(255,255,255,0.45)";
+      ctx.fillText("@6plus1", 540, 1880);
+    };
+
+    // Fetch shirt image as blob to avoid canvas cross-origin taint
+    const shirtUrl = TEAM_SHIRT_URLS[team] ?? null;
+    const fetchShirt = shirtUrl
+      ? fetch(shirtUrl).then((r) => r.blob()).then((b) => URL.createObjectURL(b)).catch(() => null)
+      : Promise.resolve(null);
 
     // Load Bebas Neue via FontFace API for crisp canvas text
     const fontLoad = new FontFace(
@@ -686,8 +700,8 @@ export default function Reveal() {
     ).load().then((loaded) => { document.fonts.add(loaded); return "'Bebas Neue'"; })
      .catch(() => "'Arial Narrow', Arial, sans-serif");
 
-    Promise.all([fontLoad, fetchLogo]).then(([headingFont, logoBlobUrl]) => {
-      drawWithLogo(headingFont, logoBlobUrl);
+    Promise.all([fontLoad, fetchShirt]).then(([headingFont, shirtBlobUrl]) => {
+      drawCard(headingFont, shirtBlobUrl);
     });
   }, [phase, config.color, team]);
 
