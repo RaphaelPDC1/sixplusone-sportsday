@@ -565,6 +565,9 @@ export default function Reveal() {
   const [phase, setPhase] = useState<"tension" | "animation" | "reveal">("tension");
   const [aiIdentity, setAiIdentity] = useState<{ title: string; message: string } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  // Pre-built File ref for synchronous Web Share API on iOS
+  // Must be ready before the button tap — async fetch inside the handler breaks iOS share sheet
+  const shareFileRef = useRef<File | null>(null);
 
   const { data: user } = trpc.sportsday.getUserStatus.useQuery(
     { id: userId! },
@@ -603,6 +606,17 @@ export default function Reveal() {
   // Shirt image URL for the user's team — used directly for share/download
   const shirtUrl = TEAM_SHIRT_URLS[team] ?? null;
 
+  // Pre-fetch shirt as File when reveal phase starts so share is synchronous
+  useEffect(() => {
+    if (phase !== "reveal" || !shirtUrl) return;
+    fetch(shirtUrl)
+      .then((r) => r.blob())
+      .then((blob) => {
+        shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
+      })
+      .catch(() => { /* non-fatal — share will fall back */ });
+  }, [phase, shirtUrl, team]);
+
   const handleAnimationComplete = useCallback(() => {
     setPhase("reveal");
     if (userId) {
@@ -614,25 +628,35 @@ export default function Reveal() {
 
 
 
-  const handleShare = async () => {
-    if (!shirtUrl) return;
-    try {
-      // Fetch shirt as blob so we can share as a File (required for iOS Web Share API)
-      const blob = await fetch(shirtUrl).then((r) => r.blob());
-      const file = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
-      if (typeof navigator.share === 'function' && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: `I'm Team ${team.toUpperCase()} — Sports Day 002`,
-          text: "Just found out my team. @6plus1 #SportsDay002",
-        });
-        return;
-      }
-    } catch (e: any) {
-      if (e?.name === 'AbortError') return; // user cancelled
+  // Synchronous share handler — uses pre-fetched File so iOS share sheet is not blocked
+  const handleShare = () => {
+    const file = shareFileRef.current;
+
+    // iOS / Android: native share sheet (shows Instagram, WhatsApp, etc.)
+    if (file && typeof navigator.share === 'function' && navigator.canShare?.({ files: [file] })) {
+      navigator.share({
+        files: [file],
+        title: `I'm Team ${team.toUpperCase()} — Sports Day 002`,
+        text: "Just found out my team. @6plus1 #SportsDay002",
+      }).catch((e: any) => {
+        if (e?.name !== 'AbortError' && shirtUrl) {
+          // Share failed (not user cancel) — save image to camera roll
+          _downloadShirt();
+        }
+      });
+      return;
     }
-    // Fallback: open image in new tab (user can long-press to save on mobile)
-    window.open(shirtUrl, '_blank');
+
+    // Fallback: download the image (user can share from camera roll)
+    _downloadShirt();
+  };
+
+  const _downloadShirt = () => {
+    if (!shirtUrl) return;
+    const link = document.createElement('a');
+    link.download = `team-${team}-sports-day-002.png`;
+    link.href = shirtUrl;
+    link.click();
   };
 
   if (!user) {
