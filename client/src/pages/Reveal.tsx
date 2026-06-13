@@ -630,16 +630,21 @@ export default function Reveal() {
       ctx.fillRect(0, 0, 1080, 1920);
 
       const finish = () => {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
-            setShareReady(true);
-          }
-        }, 'image/png');
+        // Small delay to ensure all draw calls are flushed before toBlob
+        requestAnimationFrame(() => {
+          canvas.toBlob((blob) => {
+            if (blob) {
+              shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
+              setShareReady(true);
+            }
+          }, 'image/png');
+        });
       };
 
       if (shirtBlobUrl) {
         const img = new Image();
+        // crossOrigin must be set before src for blob URLs too
+        img.crossOrigin = "anonymous";
         img.onload = () => {
           // Draw shirt centred, full width
           const w = 1080, h = (img.height / img.width) * w;
@@ -647,7 +652,11 @@ export default function Reveal() {
           URL.revokeObjectURL(shirtBlobUrl);
           finish();
         };
-        img.onerror = () => { URL.revokeObjectURL(shirtBlobUrl); finish(); };
+        img.onerror = () => {
+          console.error("[ShareCard] Shirt image failed to load");
+          URL.revokeObjectURL(shirtBlobUrl);
+          finish();
+        };
         img.src = shirtBlobUrl;
       } else {
         finish();
@@ -656,7 +665,13 @@ export default function Reveal() {
 
     const url = TEAM_SHIRT_URLS[team] ?? null;
     if (url) {
-      fetch(url).then(r => r.blob()).then(b => buildCard(URL.createObjectURL(b))).catch(() => buildCard(null));
+      fetch(url, { mode: 'cors' })
+        .then(r => r.blob())
+        .then(b => buildCard(URL.createObjectURL(b)))
+        .catch((err) => {
+          console.error("[ShareCard] Fetch failed:", err);
+          buildCard(null);
+        });
     } else {
       buildCard(null);
     }
