@@ -565,9 +565,6 @@ export default function Reveal() {
   const [phase, setPhase] = useState<"tension" | "animation" | "reveal">("tension");
   const [aiIdentity, setAiIdentity] = useState<{ title: string; message: string } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
-  const shareCanvasRef = useRef<HTMLCanvasElement>(null);
-  const [shareCardDataUrl, setShareCardDataUrl] = useState<string | null>(null);
-  const shareFileRef = useRef<File | null>(null); // Pre-built File for synchronous Web Share API on iOS
 
   const { data: user } = trpc.sportsday.getUserStatus.useQuery(
     { id: userId! },
@@ -603,6 +600,8 @@ export default function Reveal() {
   const team = (user?.team ?? "red") as Team;
   const config = TEAM_CONFIG[team];
   const confettiRef = useConfetti(phase === "reveal", config.confettiColors);
+  // Shirt image URL for the user's team — used directly for share/download
+  const shirtUrl = TEAM_SHIRT_URLS[team] ?? null;
 
   const handleAnimationComplete = useCallback(() => {
     setPhase("reveal");
@@ -613,129 +612,27 @@ export default function Reveal() {
     }
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Generate share card — loads Bebas Neue via FontFace API before drawing
-  useEffect(() => {
-    if (phase !== "reveal") return;
-    const canvas = shareCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
 
-    const drawCard = (headingFont: string, shirtBlobUrl: string | null) => {
-      canvas.width = 1080; canvas.height = 1920;
-      // Dark background
-      ctx.fillStyle = "#0A0A0A";
-      ctx.fillRect(0, 0, 1080, 1920);
-      // Subtle team-colour glow in centre
-      const glow = ctx.createRadialGradient(540, 960, 0, 540, 960, 700);
-      glow.addColorStop(0, `${config.color}30`);
-      glow.addColorStop(1, "transparent");
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, 1080, 1920);
-      // Subtle grid
-      ctx.strokeStyle = "rgba(255,255,255,0.04)"; ctx.lineWidth = 1;
-      for (let i = 0; i < 1080; i += 60) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 1920); ctx.stroke(); }
-      for (let i = 0; i < 1920; i += 60) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1080, i); ctx.stroke(); }
-      // "I'M TEAM" label at top
-      ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.textAlign = "center";
-      ctx.font = `110px ${headingFont}`;
-      ctx.fillText("I'M TEAM", 540, 280);
-      // Team colour name — large
-      ctx.fillStyle = config.color;
-      ctx.font = `220px ${headingFont}`;
-      ctx.fillText(team.toUpperCase(), 540, 490);
-      // Shirt image — centred in the middle third
-      if (shirtBlobUrl) {
-        const shirtImg = new Image();
-        shirtImg.onload = () => {
-          // Draw shirt centred, taking up most of the card width
-          const shirtW = 960;
-          const shirtH = (shirtImg.height / shirtImg.width) * shirtW;
-          const shirtX = (1080 - shirtW) / 2;
-          const shirtY = 540;
-          ctx.drawImage(shirtImg, shirtX, shirtY, shirtW, shirtH);
-          URL.revokeObjectURL(shirtBlobUrl);
-          // After shirt drawn, add bottom copy
-          _drawBottomCopy(headingFont);
-          canvas.toBlob((blob) => {
-            if (blob) shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
-            setShareCardDataUrl(canvas.toDataURL("image/png"));
-          }, 'image/png');
-        };
-        shirtImg.onerror = () => {
-          URL.revokeObjectURL(shirtBlobUrl);
-          _drawBottomCopy(headingFont);
-          canvas.toBlob((blob) => {
-            if (blob) shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
-            setShareCardDataUrl(canvas.toDataURL("image/png"));
-          }, 'image/png');
-        };
-        shirtImg.src = shirtBlobUrl;
-      } else {
-        _drawBottomCopy(headingFont);
+
+  const handleShare = async () => {
+    if (!shirtUrl) return;
+    try {
+      // Fetch shirt as blob so we can share as a File (required for iOS Web Share API)
+      const blob = await fetch(shirtUrl).then((r) => r.blob());
+      const file = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
+      if (typeof navigator.share === 'function' && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `I'm Team ${team.toUpperCase()} — Sports Day 002`,
+          text: "Just found out my team. @6plus1 #SportsDay002",
+        });
+        return;
       }
-    };
-
-    const _drawBottomCopy = (headingFont: string) => {
-      // Bottom band
-      ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0, 1700, 1080, 220);
-      // Tagline
-      ctx.font = `bold 64px ${headingFont}`; ctx.fillStyle = "rgba(255,255,255,0.75)"; ctx.textAlign = "center";
-      ctx.fillText("SPORTS DAY 002", 540, 1800);
-      // Handle
-      ctx.font = "bold 48px monospace"; ctx.fillStyle = "rgba(255,255,255,0.45)";
-      ctx.fillText("@6plus1", 540, 1880);
-    };
-
-    // Fetch shirt image as blob to avoid canvas cross-origin taint
-    const shirtUrl = TEAM_SHIRT_URLS[team] ?? null;
-    const fetchShirt = shirtUrl
-      ? fetch(shirtUrl).then((r) => r.blob()).then((b) => URL.createObjectURL(b)).catch(() => null)
-      : Promise.resolve(null);
-
-    // Load Bebas Neue via FontFace API for crisp canvas text
-    const fontLoad = new FontFace(
-      "Bebas Neue",
-      "url(https://fonts.gstatic.com/s/bebasneuepro/v1/CNz9x_HTkHBMRBBqBBbMgMBBFBBnAA.woff2)"
-    ).load().then((loaded) => { document.fonts.add(loaded); return "'Bebas Neue'"; })
-     .catch(() => "'Arial Narrow', Arial, sans-serif");
-
-    Promise.all([fontLoad, fetchShirt]).then(([headingFont, shirtBlobUrl]) => {
-      drawCard(headingFont, shirtBlobUrl);
-    });
-  }, [phase, config.color, team]);
-
-  const handleShare = () => {
-    // Use the pre-built File ref — avoids async/await so iOS Safari doesn't block the share sheet
-    const file = shareFileRef.current;
-    const dataUrl = shareCardDataUrl;
-    if (!file && !dataUrl) return;
-
-    // iOS Safari: Web Share API with files must be called synchronously in user gesture
-    if (file && typeof navigator.share === 'function' && navigator.canShare?.({ files: [file] })) {
-      navigator.share({
-        files: [file],
-        title: `I'm Team ${team.toUpperCase()} — Sports Day 002`,
-        text: "Just found out my team. @6plus1 #SportsDay002",
-      }).catch((e: any) => {
-        // AbortError = user cancelled; anything else = fall through to download
-        if (e?.name !== 'AbortError' && dataUrl) {
-          const link = document.createElement('a');
-          link.download = `team-${team}-sports-day-002.png`;
-          link.href = dataUrl;
-          link.click();
-        }
-      });
-      return;
+    } catch (e: any) {
+      if (e?.name === 'AbortError') return; // user cancelled
     }
-
-    // Non-iOS fallback: direct download
-    if (dataUrl) {
-      const link = document.createElement('a');
-      link.download = `team-${team}-sports-day-002.png`;
-      link.href = dataUrl;
-      link.click();
-    }
+    // Fallback: open image in new tab (user can long-press to save on mobile)
+    window.open(shirtUrl, '_blank');
   };
 
   if (!user) {
@@ -762,8 +659,7 @@ export default function Reveal() {
       {showSplash && <EntrySplash onComplete={() => { sessionStorage.setItem("reveal_splash_seen", "true"); setShowSplash(false); }} />}
       {phase !== "reveal" && <RevealBackground teamColor={config.color} />}
       <canvas ref={confettiRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 10 }} />
-      {/* Hidden off-screen canvas used only for drawing — output captured to shareCardDataUrl state */}
-      <canvas ref={shareCanvasRef} style={{ position: "absolute", left: "-9999px", top: "-9999px", width: 1, height: 1 }} />
+
 
       {/* Sticky top header — always visible at top of screen */}
       <header className="relative z-30 w-full flex items-center justify-between px-6 pt-safe pt-4 pb-3">
@@ -832,47 +728,37 @@ export default function Reveal() {
             )}
           </div>
 
-          {/* Share card preview — rendered from canvas data URL */}
-          <div className="w-full mb-4">
-            <p className="font-mono text-white/40 text-[10px] tracking-[0.3em] mb-2 text-left">YOUR STORY CARD</p>
-            {shareCardDataUrl ? (
+          {/* Shirt image — shown directly */}
+          {shirtUrl && (
+            <div className="w-full mb-4">
+              <p className="font-mono text-white/40 text-[10px] tracking-[0.3em] mb-2 text-left">YOUR TEAM KIT</p>
               <img
-                src={shareCardDataUrl}
-                alt={`I'm Team ${team.toUpperCase()} — Sports Day 002`}
+                src={shirtUrl}
+                alt={`Team ${team.toUpperCase()} kit — Sports Day 002`}
                 className="w-full rounded-sm"
-                style={{
-                  display: "block",
-                  aspectRatio: "9/16",
-                  objectFit: "contain",
-                  border: "1px solid rgba(255,255,255,0.15)",
-                }}
+                style={{ display: "block", objectFit: "contain", border: "1px solid rgba(255,255,255,0.15)" }}
               />
-            ) : (
-              <div
-                className="w-full rounded-sm animate-pulse"
-                style={{ aspectRatio: "9/16", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}
-              />
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Action buttons */}
           <div className="flex flex-col gap-3 w-full">
             <button onClick={handleShare}
-              disabled={!shareCardDataUrl}
+              disabled={!shirtUrl}
               className="w-full bg-white text-black font-display text-xl tracking-widest py-5 hover:bg-black hover:text-white transition-colors active:scale-[0.98] disabled:opacity-50">
-              {shareCardDataUrl ? "SHARE TO STORY →" : "GENERATING CARD..."}
+              SHARE TO STORY →
             </button>
             <button
               onClick={() => {
-                if (!shareCardDataUrl) return;
+                if (!shirtUrl) return;
                 const link = document.createElement("a");
                 link.download = `team-${team}-sports-day-002.png`;
-                link.href = shareCardDataUrl;
+                link.href = shirtUrl;
                 link.click();
               }}
-              disabled={!shareCardDataUrl}
+              disabled={!shirtUrl}
               className="w-full border border-white/30 text-white/60 font-mono text-xs tracking-widest py-3 hover:border-white/60 hover:text-white/80 transition-colors active:scale-[0.98] disabled:opacity-40">
-              ↓ DOWNLOAD STORY CARD
+              ↓ DOWNLOAD KIT IMAGE
             </button>
             <button onClick={() => {
                 const regId = localStorage.getItem("sd_user_id") ?? "";
