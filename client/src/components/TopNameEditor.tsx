@@ -76,11 +76,10 @@ export function TopNameEditor({
           YOUR TEAM KIT
         </div>
         <h2 className="text-[#F2F0EB] font-display text-2xl font-bold leading-tight">
-          What name goes on your top?
+          Your team-colour kit
         </h2>
         <p className="text-[#F2F0EB]/60 text-sm mt-2">
-          This is the name on your team-colour kit.
-          You can still change this before the event.
+          Pre-made team kit. Your colour is locked in.
         </p>
       </div>
 

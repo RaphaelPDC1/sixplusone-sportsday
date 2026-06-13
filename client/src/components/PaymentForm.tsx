@@ -70,7 +70,7 @@ function InnerPaymentForm({ amount, currency, paymentIntentId, onPaymentSuccess,
     if (typeof window !== "undefined" && (window as any).fbq) {
       (window as any).fbq("track", "Purchase", {
         currency: "GBP",
-        value: 15,
+        value: amount / 100,
         eventID: paymentIntentId,
       });
     }

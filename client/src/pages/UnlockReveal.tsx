@@ -383,8 +383,6 @@ export default function UnlockReveal() {
   }
 
   const playerName = dashboard?.playerName ?? "";
-  const topName = playerName.split(" ")[0] ?? "";
-
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center">

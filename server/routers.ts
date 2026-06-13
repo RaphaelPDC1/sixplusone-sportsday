@@ -681,6 +681,16 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
         wildcardCounts,
         myWildcardVotes,
         totalMembers: members.length,
+        event: {
+          name: "6+1 Sports Day 002",
+          date: "Saturday 11 July 2026",
+          dateIso: "2026-07-11",
+          location: "Endcliffe Park",
+          city: "Sheffield",
+          postcode: "S11 7AB",
+          fullAddress: "Endcliffe Park, Sheffield, S11 7AB",
+          mapsUrl: "https://maps.google.com/?q=Endcliffe+Park+Sheffield+S11+7AB",
+        },
       };
     }),
 
@@ -744,6 +754,77 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
         .where(eq(awardsVotes.voterId, input.registrationId));
       const allVotes = await db.select().from(awardsVotes);
       return { myVotes, allVotes };
+    }),
+
+  // ─── Awards: all competitors across all teams (for cross-team voting) ────────
+  getAllCompetitors: publicProcedure
+    .input(z.object({ registrationId: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const reg = await getRegistrationById(input.registrationId);
+      if (!reg) throw new TRPCError({ code: "NOT_FOUND", message: "Registration not found" });
+
+      // Only accessible to unlocked users (or during public reveal)
+      const { buildSportsDayDashboard } = await import("./sportsday.dashboard");
+      const dashboard = await buildSportsDayDashboard(input.registrationId);
+      const isPublicReveal = dashboard?.state === "PUBLIC_REVEAL";
+      if (reg.revealStatus !== "unlocked" && !isPublicReveal) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Team not unlocked" });
+      }
+
+      const TEAM_HEX: Record<string, string> = {
+        red: "#B80000",
+        blue: "#0057FF",
+        pink: "#FF3EC9",
+        orange: "#FF6B00",
+      };
+
+      // Before public reveal: only unlocked competitors; after: everyone
+      const whereClause = isPublicReveal
+        ? undefined
+        : eq(sportsDayRegistrations.revealStatus, "unlocked");
+
+      const rows = whereClause
+        ? await db.select({
+            id: sportsDayRegistrations.id,
+            fullName: sportsDayRegistrations.fullName,
+            instagramHandle: sportsDayRegistrations.instagramHandle,
+            team: sportsDayRegistrations.team,
+            sportsDayProfile: sportsDayRegistrations.sportsDayProfile,
+          }).from(sportsDayRegistrations).where(whereClause)
+        : await db.select({
+            id: sportsDayRegistrations.id,
+            fullName: sportsDayRegistrations.fullName,
+            instagramHandle: sportsDayRegistrations.instagramHandle,
+            team: sportsDayRegistrations.team,
+            sportsDayProfile: sportsDayRegistrations.sportsDayProfile,
+          }).from(sportsDayRegistrations);
+
+      // Profile photos
+      const photos = await db.select().from(profilePhotos);
+      const photoMap = new Map(photos.map((p) => [p.registrationId, p.url]));
+
+      // Group by team for easy UI rendering
+      const byTeam: Record<string, typeof competitors> = {};
+      const competitors = rows
+        .filter((r) => r.id !== input.registrationId) // exclude self
+        .map((r) => ({
+          id: r.id,
+          playerName: r.fullName ?? "Unknown",
+          team: r.team ?? "unknown",
+          teamColour: TEAM_HEX[r.team ?? ""] ?? "#888888",
+          instagramHandle: r.instagramHandle ?? null,
+          photoUrl: photoMap.get(r.id) ?? null,
+          profile: r.sportsDayProfile ?? null,
+        }));
+
+      competitors.forEach((c) => {
+        if (!byTeam[c.team]) byTeam[c.team] = [];
+        byTeam[c.team].push(c);
+      });
+
+      return { competitors, byTeam };
     }),
 
   // ─── Wildcard voting ──────────────────────────────────────────────────────
