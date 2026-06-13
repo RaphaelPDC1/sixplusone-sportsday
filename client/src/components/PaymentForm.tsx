@@ -70,7 +70,7 @@ function InnerPaymentForm({ amount, currency, paymentIntentId, onPaymentSuccess,
     if (typeof window !== "undefined" && (window as any).fbq) {
       (window as any).fbq("track", "Purchase", {
         currency: "GBP",
-        value: 22,
+        value: 15,
         eventID: paymentIntentId,
       });
     }
@@ -195,7 +195,7 @@ function InnerPaymentForm({ amount, currency, paymentIntentId, onPaymentSuccess,
           disabled={processing || !stripe || !elements}
           className="w-full bg-[#FF5500] hover:bg-[#FF5500]/90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-mono text-sm tracking-widest uppercase py-4 transition-all"
         >
-          {processing ? "PROCESSING…" : `PAY ${formattedAmount} — UNLOCK MY PLAYER PACK`}
+          {processing ? "PROCESSING…" : `PAY ${formattedAmount} — UNLOCK MY TEAM`}
         </button>
 
         <button

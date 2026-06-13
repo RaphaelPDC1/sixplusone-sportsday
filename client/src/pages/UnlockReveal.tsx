@@ -454,7 +454,7 @@ export default function UnlockReveal() {
             SPORTS DAY 002
           </p>
           <h1 className="font-mono font-bold text-[#F2F0EB] text-2xl tracking-[0.15em] leading-tight">
-            YOUR PLAYER PACK<br />IS UNLOCKED.
+            YOUR TEAM<br />IS UNLOCKED.
           </h1>
         </div>
 
@@ -504,7 +504,7 @@ export default function UnlockReveal() {
                 {topName && topName.toUpperCase() !== playerName.toUpperCase() && (
                   <>
                     <p className="font-mono text-[#F2F0EB]/50 text-[10px] tracking-[0.25em] mt-2 mb-1">
-                      TOP NAME
+                      KIT NAME
                     </p>
                     <p
                       className="font-mono font-bold text-base tracking-[0.25em]"

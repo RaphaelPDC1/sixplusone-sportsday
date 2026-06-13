@@ -94,7 +94,7 @@ function buildPriceState(settings: typeof sportsDaySettings.$inferSelect | null)
   const now = Date.now();
 
   // Price comes from database settings
-  const earlyPricePence = settings?.earlyPrice ?? 2200; // £22.00 default
+  const earlyPricePence = settings?.earlyPrice ?? 1500; // £15.00 default
   const futurePricePence = settings?.futurePrice ?? 3500; // £35.00 default
   
   // If no priceIncreaseAt is set, default to 1 week from now
@@ -227,8 +227,8 @@ export async function buildSportsDayDashboard(
           if (!isPublicReveal && !teammateUnlocked) {
             return {
               displayName: "Teammate Locked",
-              status: "locked",
-              message: "This player has not unlocked their Priority Player Pack yet.",
+          status: "locked",
+            message: "This player hasn't unlocked their team reveal yet.",
             };
           }
 
@@ -258,20 +258,20 @@ export async function buildSportsDayDashboard(
     case "LOCKED_UNPAID":
       headline = "Your team has been picked.";
       subheadline =
-        "Unlock your Priority Player Pack to reveal your team, your personalised top, and your player profile.";
-      ctaLabel = `Unlock My Player Pack — ${priceLabel}`;
+        `Unlock your team reveal for ${priceLabel} — app-only price.`;
+      ctaLabel = `Unlock My Team — ${priceLabel}`;
       ctaNote = priceState.countdownMs !== null
-        ? `Price may increase to ${futureLabel} once personalised tops move closer to production.`
+        ? `Price may increase to ${futureLabel} later.`
         : null;
       break;
 
     case "RETURNING_UNPAID":
       headline = "Your team is still waiting.";
       subheadline =
-        "Your registration is saved. Unlock before the price changes to reveal your team and secure your personalised top.";
+        `Your registration is saved. Unlock your team reveal for ${priceLabel} — app-only price.`;
       ctaLabel = priceState.isEarlyPrice
         ? `Unlock Before Price Changes — ${priceLabel}`
-        : `Unlock My Player Pack — ${priceLabel}`;
+        : `Unlock My Team — ${priceLabel}`;
       ctaNote = priceState.countdownMs !== null
         ? `Price increases to ${futureLabel} in ${formatCountdown(priceState.countdownMs)}.`
         : null;
@@ -279,7 +279,7 @@ export async function buildSportsDayDashboard(
 
     case "UNLOCKED_PRIORITY":
       headline = "You're in.";
-      subheadline = `Team ${reg.team ? reg.team.charAt(0).toUpperCase() + reg.team.slice(1) : ""} — your personalised top is reserved.`;
+      subheadline = `Team ${reg.team ? reg.team.charAt(0).toUpperCase() + reg.team.slice(1) : ""} — your team-colour kit is ready for the day.`;
       ctaLabel = "View My Team Hub";
       ctaNote = null;
       break;

@@ -2,7 +2,7 @@
  * TopNameEditor
  *
  * Shown before the payment form. Lets the user confirm or edit the name
- * that will be printed on their personalised team-colour top.
+ * for their team-colour kit.
  *
  * - Saves topName to the registration record BEFORE payment is created
  * - Converts preview to uppercase
@@ -73,14 +73,14 @@ export function TopNameEditor({
       {/* Header */}
       <div>
         <div className="text-[#FF5500] font-mono text-xs tracking-widest uppercase mb-2">
-          ONE-OF-ONE TOP
+          YOUR TEAM KIT
         </div>
         <h2 className="text-[#F2F0EB] font-display text-2xl font-bold leading-tight">
           What name goes on your top?
         </h2>
         <p className="text-[#F2F0EB]/60 text-sm mt-2">
-          This is what will be printed on your personalised team-colour top.
-          You can still edit this before production starts.
+          This is the name on your team-colour kit.
+          You can still change this before the event.
         </p>
       </div>
 
@@ -146,7 +146,7 @@ export function TopNameEditor({
       </div>
 
       <p className="text-[#F2F0EB]/30 text-xs text-center">
-        You can still change this after payment, until production starts.
+        You can still change this after payment, before the event.
       </p>
     </div>
   );

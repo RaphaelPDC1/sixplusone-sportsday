@@ -555,7 +555,7 @@ export default function Holding() {
   const [unlockStep, setUnlockStep] = useState<"idle" | "topname" | "payment" | "confirming">("idle");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState<number>(2200);
+  const [paymentAmount, setPaymentAmount] = useState<number>(1500);
   const [confirmingStartedAt, setConfirmingStartedAt] = useState<number | null>(null);
   const [confirmingTimedOut, setConfirmingTimedOut] = useState(false);
 
@@ -727,7 +727,7 @@ export default function Holding() {
   // Derived state for simplified UI
   const isUnlocked = dashboard.state === "UNLOCKED_PRIORITY" || dashboard.state === "PUBLIC_REVEAL";
   const isLocked = dashboard.state === "LOCKED_UNPAID" || dashboard.state === "RETURNING_UNPAID";
-  const price = dashboard?.priceState ? `£${(dashboard.priceState.currentPricePence / 100).toFixed(0)}` : "£22";
+  const price = dashboard?.priceState ? `£${(dashboard.priceState.currentPricePence / 100).toFixed(0)}` : "£15";
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden">

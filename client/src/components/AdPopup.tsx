@@ -87,14 +87,14 @@ export function AdPopup({ variant, onCtaClick, delay = 3000 }: AdPopupProps) {
       ? {
           label: "SPORTS DAY 002 · SHEFFIELD",
           headline: "Your team is waiting.",
-          body: "Sports Day 002. Sheffield. July 11th. Register free — your team gets revealed when you unlock for £22.",
+          body: "Sports Day 002. Sheffield. July 11th. Register free — unlock your team reveal for £15 (normally £22).",
           cta: "REGISTER NOW →",
-          footer: "Free to register · Priority unlock £22 · One-time event",
+          footer: "Free to register · App unlock price £15 · One-time event",
         }
       : {
           label: "YOU'RE ALREADY IN",
           headline: "Still thinking about it?",
-          body: "Your team is assigned. Your teammates know each other. Unlock for £22 and find out where you stand before July 11th.",
+          body: "Your team is assigned. Your teammates know each other. Unlock for £15 (normally £22) and find out where you stand before July 11th.",
           cta: "UNLOCK MY TEAM →",
           footer: "One-time payment · Team revealed instantly",
         };

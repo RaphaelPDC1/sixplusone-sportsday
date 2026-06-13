@@ -38,7 +38,7 @@ export default function ShirtConfirm() {
   }, [dashboard?.shirtSize, dashboard?.shirtFit]);
 
   // Guard: PAID-ONLY PAGE — only UNLOCKED_PRIORITY (paid) users can confirm shirt
-  // Free users (PUBLIC_REVEAL) do not get a personalised top, redirect them to team-hub
+  // Free users (PUBLIC_REVEAL) do not have a kit to confirm, redirect them to team-hub
   useEffect(() => {
     if (isLoading) return;
     if (!dashboard) return;
@@ -96,14 +96,14 @@ export default function ShirtConfirm() {
             FINAL STEP
           </p>
           <h1 className="font-mono font-bold text-[#F2F0EB] text-2xl tracking-[0.15em] leading-tight">
-            CONFIRM YOUR<br />TOP SELECTION.
+            CONFIRM YOUR<br />KIT SIZE.
           </h1>
         </div>
 
         {/* Shirt preview card */}
         <div className="border border-[#FF5500]/40 rounded-sm p-6 bg-gradient-to-br from-[#FF5500]/10 to-transparent">
           <p className="font-mono text-[#F2F0EB]/50 text-[10px] tracking-[0.25em] mb-4">
-            YOUR PERSONALISED TOP
+            YOUR TEAM-COLOUR KIT
           </p>
 
           {/* Size and Fit display */}
@@ -200,7 +200,7 @@ export default function ShirtConfirm() {
         {/* Copy */}
         <div className="text-center space-y-2">
           <p className="font-mono text-[#F2F0EB]/60 text-xs leading-relaxed">
-            Your personalised top will be printed and posted to you after the event.
+            Your team-colour kit will be ready for you on the day. Make sure your size is correct.
           </p>
           <p className="font-mono text-[#F2F0EB]/40 text-[10px] tracking-[0.2em]">
             This selection cannot be changed after confirmation.

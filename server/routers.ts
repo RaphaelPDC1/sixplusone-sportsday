@@ -1138,7 +1138,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
       const firstName = reg.fullName.split(" ")[0];
       const tagline = reg.profileTagline ?? "";
 
-      const prompt = `You are writing ultra-short, punchy marketing copy for a one-day sports event called "6+1 Sports Day 002" on 11 July 2026. The event is free to attend. There is an optional premium kit (a personalised team-colour top, one-of-a-kind, never re-made after the event). The copy must feel personal, urgent, and premium — not generic.
+      const prompt = `You are writing ultra-short, punchy marketing copy for a one-day sports event called "6+1 Sports Day 002" on 11 July 2026. The event is free to attend. There is an optional early team reveal for £15 (normally £22). The copy must feel personal, urgent, and premium — not generic.
 
 Player profile:
 - First name: ${firstName}
@@ -1299,7 +1299,7 @@ Return ONLY valid JSON with this exact shape:
       // Price always comes from database settings
       const amountPence = isPriceIncreased
         ? (settings?.futurePrice ?? 3500)
-        : (settings?.earlyPrice ?? 2200);
+        : (settings?.earlyPrice ?? 1500);
       
       const isTestMode = false;
 
@@ -1318,7 +1318,7 @@ Return ONLY valid JSON with this exact shape:
           registered_email: reg.email,
           player_name: reg.fullName,
           top_name: reg.topName ?? reg.fullName.split(" ")[0].toUpperCase(),
-          product_type: "sports_day_priority_player_pack",
+          product_type: "sports_day_team_unlock",
           event_id: "sports_day_002",
           test_mode: isTestMode ? "true" : "false",
         },

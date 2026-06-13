@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, earlyPrice, futurePrice FROM sports_day_settings;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT id, earlyPrice, futurePrice FROM sports_day_settings;",
+  "rows": [
+    {
+      "id": "1",
+      "earlyPrice": "1500",
+      "futurePrice": "3500"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tearlyPrice\tfuturePrice\n1\t1500\t3500\n",
+  "stderr": "",
+  "execution_time_ms": 260
+}

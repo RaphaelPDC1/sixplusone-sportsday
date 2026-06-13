@@ -239,7 +239,7 @@ export const sportsDaySettings = mysqlTable("sports_day_settings", {
   id: int("id").autoincrement().primaryKey(),
 
   // Pricing (in pence)
-  earlyPrice: int("earlyPrice").default(2200).notNull(),   // £22.00
+  earlyPrice: int("earlyPrice").default(1500).notNull(),   // £15.00
   futurePrice: int("futurePrice").default(3500).notNull(), // £35.00
 
   // Dates (UTC timestamps in ms)
