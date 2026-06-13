@@ -643,21 +643,20 @@ export default function Reveal() {
 
       if (shirtBlobUrl) {
         const img = new Image();
-        // crossOrigin must be set before src for blob URLs too
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          // Draw shirt centred, full width
-          const w = 1080, h = (img.height / img.width) * w;
-          ctx.drawImage(img, 0, (1920 - h) / 2, w, h);
-          URL.revokeObjectURL(shirtBlobUrl);
-          finish();
-        };
-        img.onerror = () => {
-          console.error("[ShareCard] Shirt image failed to load");
-          URL.revokeObjectURL(shirtBlobUrl);
-          finish();
-        };
         img.src = shirtBlobUrl;
+        // Use decode() to guarantee the image is fully decoded before drawImage
+        img.decode()
+          .then(() => {
+            const w = 1080, h = (img.height / img.width) * w;
+            ctx.drawImage(img, 0, (1920 - h) / 2, w, h);
+            URL.revokeObjectURL(shirtBlobUrl);
+            finish();
+          })
+          .catch((err) => {
+            console.error("[ShareCard] img.decode() failed:", err);
+            URL.revokeObjectURL(shirtBlobUrl);
+            finish();
+          });
       } else {
         finish();
       }
