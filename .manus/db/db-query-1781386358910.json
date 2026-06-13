@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as remaining FROM sports_day_registrations WHERE aiTeamIdentity LIKE '%**%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT COUNT(*) as remaining FROM sports_day_registrations WHERE aiTeamIdentity LIKE '%**%';",
+  "rows": [
+    {
+      "remaining": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "remaining\n0\n",
+  "stderr": "",
+  "execution_time_ms": 389
+}

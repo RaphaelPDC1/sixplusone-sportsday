@@ -1,0 +1,41 @@
+{
+  "query": "SELECT id, team, aiTeamIdentity FROM sports_day_registrations WHERE aiTeamIdentity LIKE '%**%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT id, team, aiTeamIdentity FROM sports_day_registrations WHERE aiTeamIdentity LIKE '%**%' LIMIT 10;",
+  "rows": [
+    {
+      "id": "4ce4a880-3c0c-4449-beea-1c9cc194b8dc",
+      "team": "blue",
+      "aiTeamIdentity": "**BLUE BLUR STRATEGIST**"
+    },
+    {
+      "id": "7f9570aa-5418-439e-847d-91804f9dac10",
+      "team": "red",
+      "aiTeamIdentity": "**RED'S SILENT SPEED DEMON**"
+    },
+    {
+      "id": "a5739416-a67d-4851-a0d0-b652832610a4",
+      "team": "red",
+      "aiTeamIdentity": "**RED'S VIBE-WINNING WILDCARD**"
+    },
+    {
+      "id": "bff0f695-d377-4b8c-b57f-3ba7c00ebc0b",
+      "team": "red",
+      "aiTeamIdentity": "**RED'S FEARLESS POWERHOUSE**"
+    },
+    {
+      "id": "f55b6da9-fa30-4817-91cd-6bb714612089",
+      "team": "orange",
+      "aiTeamIdentity": "**ORANGE VIBES, UNSTOPPABLE GRACIE**"
+    }
+  ],
+  "messages": [
+    "Fearless, fast, and always winning, Kwabs is the returning strategist Team Blue needs.",
+    "Cher Flames is a silent, winning blur, driven by speed and a fierce refusal to let Team Red down.",
+    "Sen is the returning, winning wildcard who will captain Team Red with unbeatable vibes.",
+    "Returning winner, Selasi brings pure strength and energy, ready to lead Team Red to glory.",
+    "Returning motivator, Gracie brings the vibes and zero fear, fueled by Vitacoco and ready to lead."
+  ],
+  "stdout": "id\tteam\taiTeamIdentity\n4ce4a880-3c0c-4449-beea-1c9cc194b8dc\tblue\t**BLUE BLUR STRATEGIST**\nFearless, fast, and always winning, Kwabs is the returning strategist Team Blue needs.\n7f9570aa-5418-439e-847d-91804f9dac10\tred\t**RED'S SILENT SPEED DEMON**\nCher Flames is a silent, winning blur, driven by speed and a fierce refusal to let Team Red down.\na5739416-a67d-4851-a0d0-b652832610a4\tred\t**RED'S VIBE-WINNING WILDCARD**\nSen is the returning, winning wildcard who will captain Team Red with unbeatable vibes.\nbff0f695-d377-4b8c-b57f-3ba7c00ebc0b\tred\t**RED'S FEARLESS POWERHOUSE**\nReturning winner, Selasi brings pure strength and energy, ready to lead Team Red to glory.\nf55b6da9-fa30-4817-91cd-6bb714612089\torange\t**ORANGE VIBES, UNSTOPPABLE GRACIE**\nReturning motivator, Gracie brings the vibes and zero fear, fueled by Vitacoco and ready to lead.\n",
+  "stderr": "",
+  "execution_time_ms": 298
+}

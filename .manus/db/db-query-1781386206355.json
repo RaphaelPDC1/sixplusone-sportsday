@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, profileTagline FROM sports_day_registrations WHERE profileTagline IS NOT NULL LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT id, profileTagline FROM sports_day_registrations WHERE profileTagline IS NOT NULL LIMIT 20;",
+  "rows": [
+    {
+      "id": "050e6aa9-29b3-4ae0-9e98-a21a2b411e8e",
+      "profileTagline": "You keep everyone guessing. That's the plan."
+    },
+    {
+      "id": "06213384-3f82-433a-8bb5-fa217a114dfa",
+      "profileTagline": "You came to win. The team will feel that."
+    },
+    {
+      "id": "06bd958a-81b7-43d3-93d0-d54230f38e6a",
+      "profileTagline": "You came to win. The team will feel that."
+    },
+    {
+      "id": "0bd2d347-9fea-44e3-8b3c-a79766ab8c31",
+      "profileTagline": "Unpredictable. That's your superpower."
+    },
+    {
+      "id": "0bf65cb2-f5da-4149-868f-03252f9aab0d",
+      "profileTagline": "Measured. Precise. Always two steps ahead."
+    },
+    {
+      "id": "0dde2065-9180-491d-92e1-b6662066dd0c",
+      "profileTagline": "Chaotic. Dangerous. Exactly what we need."
+    },
+    {
+      "id": "105f72e5-afb8-4422-9e2a-838546b4ecb1",
+      "profileTagline": "You bring the spark. The team brings the fire."
+    },
+    {
+      "id": "1070a09a-aabd-4de7-aa79-ad3c1cb8bb70",
+      "profileTagline": "The glue. Every team needs one."
+    },
+    {
+      "id": "11ccba87-4431-4ba6-97c4-048675676127",
+      "profileTagline": "The glue. Every team needs one."
+    },
+    {
+      "id": "123c99f4-d471-4553-ace1-ce0c33bec98d",
+      "profileTagline": "Calm under pressure. The team leans on you."
+    },
+    {
+      "id": "14c4bd9c-8102-4db0-a052-c325541dbcdd",
+      "profileTagline": "The silent threat. Your team won't know what hit them."
+    },
+    {
+      "id": "14ed2829-e354-4d58-ae24-0c5060fb68e2",
+      "profileTagline": "All that energy, pointed at victory. Dangerous."
+    },
+    {
+      "id": "156b4e25-3237-4efa-86bd-6caebf111c11",
+      "profileTagline": "You're looking like a calculated threat."
+    },
+    {
+      "id": "159baa30-f3c5-41b8-ab08-52c08ce4f6cc",
+      "profileTagline": "The glue. Every team needs one."
+    },
+    {
+      "id": "18707c83-9200-4ff8-b117-1dcd6fa763e9",
+      "profileTagline": "You came to win. The team will feel that."
+    },
+    {
+      "id": "1a9b3dca-a105-4d30-8792-5215536b8850",
+      "profileTagline": "You don't need to say much. Your results speak."
+    },
+    {
+      "id": "1a9c098e-83a8-4bb9-9446-7289c9c19391",
+      "profileTagline": "Measured. Precise. Always two steps ahead."
+    },
+    {
+      "id": "1c21231d-7046-4105-9cdf-dd91e2312d5f",
+      "profileTagline": "The glue. Every team needs one."
+    },
+    {
+      "id": "2107e252-52ef-444f-bd63-4717405baa93",
+      "profileTagline": "You keep everyone guessing. That's the plan."
+    },
+    {
+      "id": "22e32408-bd55-482e-8675-550dfb0e14d3",
+      "profileTagline": "All that energy, pointed at victory. Dangerous."
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tprofileTagline\n050e6aa9-29b3-4ae0-9e98-a21a2b411e8e\tYou keep everyone guessing. That's the plan.\n06213384-3f82-433a-8bb5-fa217a114dfa\tYou came to win. The team will feel that.\n06bd958a-81b7-43d3-93d0-d54230f38e6a\tYou came to win. The team will feel that.\n0bd2d347-9fea-44e3-8b3c-a79766ab8c31\tUnpredictable. That's your superpower.\n0bf65cb2-f5da-4149-868f-03252f9aab0d\tMeasured. Precise. Always two steps ahead.\n0dde2065-9180-491d-92e1-b6662066dd0c\tChaotic. Dangerous. Exactly what we need.\n105f72e5-afb8-4422-9e2a-838546b4ecb1\tYou bring the spark. The team brings the fire.\n1070a09a-aabd-4de7-aa79-ad3c1cb8bb70\tThe glue. Every team needs one.\n11ccba87-4431-4ba6-97c4-048675676127\tThe glue. Every team needs one.\n123c99f4-d471-4553-ace1-ce0c33bec98d\tCalm under pressure. The team leans on you.\n14c4bd9c-8102-4db0-a052-c325541dbcdd\tThe silent threat. Your team won't know what hit them.\n14ed2829-e354-4d58-ae24-0c5060fb68e2\tAll that energy, pointed at victory. Dangerous.\n156b4e25-3237-4efa-86bd-6caebf111c11\tYou're looking like a calculated threat.\n159baa30-f3c5-41b8-ab08-52c08ce4f6cc\tThe glue. Every team needs one.\n18707c83-9200-4ff8-b117-1dcd6fa763e9\tYou came to win. The team will feel that.\n1a9b3dca-a105-4d30-8792-5215536b8850\tYou don't need to say much. Your results speak.\n1a9c098e-83a8-4bb9-9446-7289c9c19391\tMeasured. Precise. Always two steps ahead.\n1c21231d-7046-4105-9cdf-dd91e2312d5f\tThe glue. Every team needs one.\n2107e252-52ef-444f-bd63-4717405baa93\tYou keep everyone guessing. That's the plan.\n22e32408-bd55-482e-8675-550dfb0e14d3\tAll that energy, pointed at victory. Dangerous.\n",
+  "stderr": "",
+  "execution_time_ms": 394
+}

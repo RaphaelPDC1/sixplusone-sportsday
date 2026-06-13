@@ -308,13 +308,13 @@ Here is everything we know about them:
 - Attended before: ${reg.attendedBefore ? "Yes, returning" : "No, first time"}
 
 Generate a SHORT, punchy, personalised sports day identity for this person on TEAM ${teamName.toUpperCase()}.
-Format: One bold title (max 5 words, ALL CAPS) on the first line, then a single sentence (max 20 words) that captures their specific personality and team role.
+Format: One plain-text title (max 5 words, ALL CAPS) on the first line, then a single sentence (max 20 words) that captures their specific personality and team role.
 Make it feel earned, specific to their answers, and hype them up. No generic platitudes.
 Example format:
 THE SILENT WEAPON OF TEAM BLUE
 You don't talk about it. You just show up and make everyone else look slow.
 
-Return ONLY the two lines. No extra text, no quotes, no explanation.`;
+Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown, no asterisks.`;
       let aiTeamIdentity = "";
       try {
         const response = await invokeLLM({
@@ -328,7 +328,9 @@ Return ONLY the two lines. No extra text, no quotes, no explanation.`;
         // Validate: must have at least two non-empty lines
         const lines = candidate.split("\n").map((l: string) => l.trim()).filter(Boolean);
         if (lines.length >= 2 && lines[0].length > 0) {
-          aiTeamIdentity = lines.slice(0, 2).join("\n");
+          // Strip any markdown bold markers the LLM may have added
+          const cleaned = lines.slice(0, 2).map((l: string) => l.replace(/\*\*/g, "").trim());
+          aiTeamIdentity = cleaned.join("\n");
         } else {
           // Fallback to deterministic profile
           aiTeamIdentity = `${reg.sportsDayProfile ?? "THE COMPETITOR"} OF TEAM ${teamName.toUpperCase()}\n${reg.profileTagline ?? "You were built for this."}`;
