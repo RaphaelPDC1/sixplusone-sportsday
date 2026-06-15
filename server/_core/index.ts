@@ -4,7 +4,7 @@ import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
-import { registerStorageProxy } from "./storageProxy";
+import { registerStorageProxy, registerImageProxy } from "./storageProxy";
 import { registerShopifyWebhook } from "../shopifyWebhook";
 import { stripeWebhookHandler } from "../stripeWebhook";
 import { appRouter } from "../routers";
@@ -63,6 +63,7 @@ async function startServer() {
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ limit: "10mb", extended: true }));
   registerStorageProxy(app);
+  registerImageProxy(app);
   registerOAuthRoutes(app);
   registerShopifyWebhook(app);
   // tRPC API

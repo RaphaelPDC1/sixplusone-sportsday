@@ -607,75 +607,95 @@ export default function Reveal() {
   // Shirt image URL for the user's team — used directly for share/download
   const shirtUrl = TEAM_SHIRT_URLS[team] ?? null;
 
-  // Build share card on canvas when reveal phase starts
-  // Shirt is fetched as blob to avoid canvas cross-origin taint (required for toBlob/toDataURL)
+  // Build share card on canvas when reveal phase starts.
+  // Shirt is fetched via /api/image-proxy (server-side fetch, returns bytes with CORS headers)
+  // so canvas drawImage() works without taint and toBlob() produces a valid image.
   useEffect(() => {
     if (phase !== "reveal") return;
+    if (!user?.team) return; // wait for confirmed team
     const canvas = shareCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     setShareReady(false);
 
-    const buildCard = (shirtBlobUrl: string | null) => {
-      canvas.width = 1080; canvas.height = 1920;
-      // Dark background
+    const teamKey = user.team as string;
+    const teamColor = TEAM_CONFIG[teamKey as Team]?.color ?? "#FF5500";
+    const teamLabel = teamKey.toUpperCase(); // e.g. "RED"
+
+    const W = 1080, H = 1920;
+    canvas.width = W; canvas.height = H;
+
+    const drawCard = async (shirtImg: HTMLImageElement | null) => {
+      // 1. Dark background
       ctx.fillStyle = "#0A0A0A";
-      ctx.fillRect(0, 0, 1080, 1920);
-      // Team colour glow
-      const glow = ctx.createRadialGradient(540, 960, 0, 540, 960, 800);
-      glow.addColorStop(0, `${config.color}40`);
+      ctx.fillRect(0, 0, W, H);
+
+      // 2. Team colour radial glow (stronger — 70% opacity at centre)
+      const glow = ctx.createRadialGradient(W / 2, H * 0.55, 0, W / 2, H * 0.55, 750);
+      glow.addColorStop(0, `${teamColor}B3`);
+      glow.addColorStop(0.5, `${teamColor}40`);
       glow.addColorStop(1, "transparent");
       ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, 1080, 1920);
+      ctx.fillRect(0, 0, W, H);
 
-      const finish = () => {
-        // Small delay to ensure all draw calls are flushed before toBlob
-        requestAnimationFrame(() => {
-          canvas.toBlob((blob) => {
-            if (blob) {
-              shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
-              setShareReady(true);
-            }
-          }, 'image/png');
-        });
-      };
-
-      if (shirtBlobUrl) {
-        const img = new Image();
-        // crossOrigin must be set before src for blob URLs too
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          // Draw shirt centred, full width
-          const w = 1080, h = (img.height / img.width) * w;
-          ctx.drawImage(img, 0, (1920 - h) / 2, w, h);
-          URL.revokeObjectURL(shirtBlobUrl);
-          finish();
-        };
-        img.onerror = () => {
-          console.error("[ShareCard] Shirt image failed to load");
-          URL.revokeObjectURL(shirtBlobUrl);
-          finish();
-        };
-        img.src = shirtBlobUrl;
-      } else {
-        finish();
+      // 3. Shirt image centred
+      if (shirtImg) {
+        const shirtW = W;
+        const shirtH = (shirtImg.naturalHeight / shirtImg.naturalWidth) * shirtW;
+        ctx.drawImage(shirtImg, 0, (H - shirtH) / 2, shirtW, shirtH);
       }
+
+      // 4. "I'M TEAM" label
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(255,255,255,0.75)";
+      ctx.font = "bold 72px Arial, sans-serif";
+      ctx.fillText("I'M TEAM", W / 2, 200);
+
+      // 5. Team name in team colour
+      ctx.fillStyle = teamColor;
+      ctx.font = "bold 220px Arial, sans-serif";
+      ctx.fillText(teamLabel, W / 2, 430);
+
+      // 6. Bottom branding
+      ctx.fillStyle = "rgba(255,255,255,0.55)";
+      ctx.font = "bold 54px Arial, sans-serif";
+      ctx.fillText("SPORTS DAY 002", W / 2, H - 200);
+      ctx.fillStyle = "rgba(255,255,255,0.35)";
+      ctx.font = "42px Arial, sans-serif";
+      ctx.fillText("@6plus1", W / 2, H - 130);
+
+      // 7. Export
+      canvas.toBlob((blob) => {
+        if (blob && blob.size > 5000) {
+          shareFileRef.current = new File([blob], `team-${teamKey}-sports-day-002.png`, { type: 'image/png' });
+          setShareReady(true);
+        } else {
+          console.error("[ShareCard] Blob too small or null:", blob?.size);
+        }
+      }, 'image/png');
     };
 
-    const url = TEAM_SHIRT_URLS[team] ?? null;
-    if (url) {
-      fetch(url, { mode: 'cors' })
-        .then(r => r.blob())
-        .then(b => buildCard(URL.createObjectURL(b)))
-        .catch((err) => {
-          console.error("[ShareCard] Fetch failed:", err);
-          buildCard(null);
-        });
+    // Extract storage key from the /manus-storage/<key> URL
+    const shirtStorageUrl = TEAM_SHIRT_URLS[teamKey] ?? null;
+    const storageKey = shirtStorageUrl?.replace("/manus-storage/", "") ?? null;
+
+    if (storageKey) {
+      // Fetch via server-side proxy — returns raw bytes with CORS headers, no redirect taint
+      fetch(`/api/image-proxy?key=${encodeURIComponent(storageKey)}`)
+        .then(r => { if (!r.ok) throw new Error(`proxy ${r.status}`); return r.blob(); })
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          const img = new Image();
+          img.src = blobUrl;
+          return img.decode().then(() => { URL.revokeObjectURL(blobUrl); return img; });
+        })
+        .then(img => drawCard(img))
+        .catch(err => { console.error("[ShareCard] Shirt load failed:", err); drawCard(null); });
     } else {
-      buildCard(null);
+      drawCard(null);
     }
-  }, [phase, config.color, team]);
+  }, [phase, user?.team]);
 
   const handleAnimationComplete = useCallback(() => {
     setPhase("reveal");
