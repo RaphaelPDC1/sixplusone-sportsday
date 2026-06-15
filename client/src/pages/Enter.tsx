@@ -30,7 +30,6 @@ type FormData = {
   healthNotes: string;
   contentConsent: "yes" | "no" | "ask" | null;
   marketingConsent: boolean;
-  captainVoteInterest: "yes" | "no" | "maybe" | null;
   eventMotivation: string;
 };
 
@@ -93,7 +92,6 @@ export default function Enter() {
     healthNotes: "",
     contentConsent: null,
     marketingConsent: false,
-    captainVoteInterest: null,
     eventMotivation: "",
   });
 
@@ -206,7 +204,6 @@ export default function Enter() {
       strongestEvent: form.strongestEvent ?? undefined,
       fear: form.fear ?? undefined,
       eventMotivation: form.eventMotivation || undefined,
-      captainVoteInterest: form.captainVoteInterest ?? undefined,
       shirtSize: form.shirtSize ?? undefined,
       shirtFit: form.shirtFit ?? undefined,
       healthNotes: form.healthNotes || undefined,
@@ -657,31 +654,7 @@ export default function Enter() {
                       </span>
                     </label>
                   </div>
-                  {/* Captain vote interest */}
-                  <div>
-                    <p className="font-mono text-white/40 text-xs tracking-widest mb-3">
-                      Would you vote for team captains?
-                    </p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { val: "yes" as const, label: "YES" },
-                        { val: "no" as const, label: "NO" },
-                        { val: "maybe" as const, label: "MAYBE" },
-                      ].map(({ val, label }) => (
-                        <button
-                          key={val}
-                          onClick={() => set("captainVoteInterest", val)}
-                          className={`py-4 border font-display text-lg tracking-widest transition-all active:scale-95 ${
-                            form.captainVoteInterest === val
-                              ? "border-[#FF5500] text-[#FF5500] bg-[#FF5500]/10"
-                              : "border-white/20 text-[#F2F0EB] hover:border-white/40"
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+
                 </div>
                 <NextBtn onClick={handleNext} className="mt-6" />
               </StepCard>

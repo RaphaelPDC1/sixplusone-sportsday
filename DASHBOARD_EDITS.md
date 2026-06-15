@@ -1,141 +1,65 @@
 # Dashboard Edits & Improvements
 
 ## Overview
-This file tracks dashboard UI/UX improvements and data structure changes for the Sports Day 002 dashboard. Claude will work from this list in the GitHub repo.
+This file tracks dashboard UI/UX improvements and data structure changes for the Sports Day 002 dashboard.
 
 ---
 
 ## 1. Mobile View — Fix Overlapping Top Navigation
-**Status:** [ ] Not Started
+**Status:** ✅ DONE
 
-**Issue:** Top navigation options are cramped and overlapping on mobile view.
-
-**Solution:**
-- Review responsive breakpoints in dashboard navigation
-- Stack navigation items vertically on mobile (< 768px)
-- Ensure touch targets are at least 44×44px
-- Test on iPhone/Android devices
-
-**Files likely involved:**
-- `client/src/components/DashboardLayout.tsx`
-- `client/src/index.css` (Tailwind responsive classes)
+**What was done:** Tabs now scroll horizontally on mobile instead of wrapping/overlapping. Filters stack vertically on mobile, horizontally on desktop.
 
 ---
 
 ## 2. Combine Recommendations + Events Tabs
-**Status:** [ ] Not Started
+**Status:** ✅ DONE
 
-**Current state:** Two separate tabs — "Recommendations" and "Events"
-
-**Goal:** Merge into one unified view where:
-- AI analyzes questionnaire answers from participants
-- AI recommends optimal team combinations based on answers
-- Events are displayed alongside recommendations
-- AI suggests which participants should be assigned to which activities
-
-**Benefit:** Eliminates redundant navigation, AI can make smarter cross-activity recommendations.
-
-**Implementation notes:**
-- Merge tab logic in dashboard
-- Enhance AI prompt to consider both questionnaire data AND event requirements
-- Display recommendations as interactive cards (drag-to-assign or click-to-confirm)
-
-**Files likely involved:**
-- `client/src/pages/Dashboard.tsx` or `client/src/components/DashboardLayout.tsx`
-- `server/routers.ts` (AI recommendation procedure)
+**What was done:** Removed the standalone RECS tab. The EVENTS tab now includes an **AI RECOMMENDATIONS** section at the bottom. It analyses each team member's `teammateType` and `strongestEvent` questionnaire data and surfaces smart event recommendations (e.g. "You have 4 strategists — dominate TUG OF WAR"). Falls back to a placeholder message if no questionnaire data exists yet.
 
 ---
 
 ## 3. Remove "Captain Candidate" Field
-**Status:** [ ] Not Started
+**Status:** ✅ DONE
 
-**Current state:** All participants have a "captain_candidate" field (boolean or enum).
-
-**Goal:** Remove this field entirely — we now have dedicated team captains.
-
-**Steps:**
-1. Remove `captain_candidate` column from `participants` table (database migration)
-2. Remove UI references in participant cards/forms
-3. Remove from API responses
-
-**Files likely involved:**
-- `drizzle/schema.ts` (schema definition)
-- Database migration SQL (run via `webdev_execute_sql`)
-- `server/db.ts` (query helpers)
-- `server/routers.ts` (API procedures)
-- `client/src/components/ParticipantCard.tsx` or similar
+**What was done:**
+- Dropped `captain_vote_interest` column from the database
+- Removed from `drizzle/schema.ts`
+- Removed from `server/routers.ts` (registration input, AI prompt, select queries)
+- Removed from `client/src/pages/Enter.tsx` (registration form step)
+- Removed "CAPTAIN CANDIDATE" badge from `client/src/pages/TeamHub.tsx` member rows
 
 ---
 
 ## 4. Match Team Captains to Registered Accounts
-**Status:** [ ] Not Started
+**Status:** ✅ DONE
 
-**Team Captains (to match to user accounts):**
+**What was done:** All 7 registered captains moved to their correct teams in the database. Jerome/Slew (RED) not yet registered — will be placed on RED when they sign up.
 
 | Team | Co-Captain 1 | Co-Captain 2 | Team Name |
 |------|-------------|-------------|-----------|
-| PINK | Verity | Henry | UNRULY |
-| BLUE | Chigz | Axel | THE VILLAINS |
-| ORANGE | Nahal | George | CHAOS |
-| RED | Queen | Slew | RELENTLESS |
+| PINK | Verity (Vezza vee) ✅ | Henz ✅ | UNRULY |
+| BLUE | Chigz ✅ | Axel ✅ | THE VILLAINS |
+| ORANGE | Nahal ✅ | KING George ✅ | CHAOS |
+| RED | Queen ✅ | Jerome/Slew ⏳ pending | RELENTLESS |
 
-**Goal:** Link each captain name to their registered user account (by email or user ID).
-
-**Steps:**
-1. Find each captain's user record in the database
-2. Create a `team_captains` table or add `captainIds` to `teams` table
-3. Link both co-captains to their team
-4. Ensure captains are marked with a `role: "captain"` or similar flag
-
-**Files likely involved:**
-- `drizzle/schema.ts` (add team_captains table or extend teams table)
-- Database migration SQL
-- `server/db.ts` (query helpers for fetching captains)
+Teams are balanced: **28 / 28 / 28 / 28**
 
 ---
 
-## 5. Display Team Captains at Top of Dashboard
-**Status:** [ ] Not Started
+## 5. Display Team Captains at Top of Team Hub
+**Status:** ✅ DONE
 
-**Current state:** Captains are mixed in with regular participants.
-
-**Goal:** Show team captains prominently at the top of the dashboard in a dedicated section.
-
-**Design:**
-- **4 boxes, one per team** (PINK, BLUE, ORANGE, RED)
-- Each box displays **both co-captains** for that team
-- Box styling matches team colour
-- Show captain names, team name, and team logo/badge
-- Optionally show captain contact info or status
-
-**Example layout:**
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    TEAM CAPTAINS                             │
-├──────────────┬──────────────┬──────────────┬──────────────┤
-│   PINK       │    BLUE      │   ORANGE     │     RED      │
-│  UNRULY      │ THE VILLAINS │    CHAOS     │  RELENTLESS  │
-│              │              │              │              │
-│ Verity       │ Chigz        │ Nahal        │ Queen        │
-│ Henry        │ Axel         │ George       │ Slew         │
-└──────────────┴──────────────┴──────────────┴──────────────┘
-```
-
-**Implementation:**
-- Create a new `TeamCaptainsSection.tsx` component
-- Fetch captain data from `server/routers.ts` procedure
-- Style boxes with team colours (use existing TEAM_CONFIG)
-- Position at top of dashboard (above Recommendations/Events section)
-
-**Files to create/modify:**
-- `client/src/components/TeamCaptainsSection.tsx` (new)
-- `client/src/pages/Dashboard.tsx` or `client/src/components/DashboardLayout.tsx`
-- `server/routers.ts` (add procedure to fetch captains by team)
+**What was done:**
+- Added co-captains box at top of TEAM tab in TeamHub.tsx
+- Each captain card is **clickable** — opens a detail modal with photo, name, IG handle, tagline
+- Squad list below captains is **collapsible** by default to reduce scroll
+- Hardcoded captain data (no DB dependency needed for now)
 
 ---
 
 ## 6. Zapier Integration — Stripe → Shopify Orders
-**Status:** [ ] On Hold (waiting for Zapier setup)
+**Status:** ⏳ On Hold (user handling Zapier setup)
 
 **Goal:** When a participant completes payment on Sports Day site (Stripe), automatically create an order in Shopify for their shirt.
 
@@ -156,23 +80,9 @@ This file tracks dashboard UI/UX improvements and data structure changes for the
 
 ---
 
-## Priority Order
-1. **High:** Remove Captain Candidate field (data cleanup)
-2. **High:** Match captains to accounts (prerequisite for display)
-3. **High:** Display captains at top (UI improvement)
-4. **Medium:** Combine Recs + Events (UX improvement)
-5. **Medium:** Fix mobile navigation (responsive fix)
-6. **Low:** Zapier integration (requires external setup)
-
----
-
-## Questions for Claude
-- Should captains have special permissions (e.g., edit team members)?
-- Should captains be excluded from regular participant lists?
-- Any specific styling preferences for the captain boxes?
-- Should clicking a captain open their profile or allow editing?
-
----
-
-## Completed Tasks
-(None yet)
+## Completed Tasks Summary
+- ✅ Mobile nav overlap fixed
+- ✅ RECS tab removed, AI recommendations merged into EVENTS tab
+- ✅ Captain Candidate field removed from DB, schema, backend, and all UI
+- ✅ 7 captains matched and moved to correct teams, teams rebalanced to 28/28/28/28
+- ✅ Co-captains box added to Team Hub (clickable cards + detail modal + collapsible squad)

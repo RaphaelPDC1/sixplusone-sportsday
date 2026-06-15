@@ -87,7 +87,6 @@ const sportsDayRouter = router({
           .enum(["sprinting", "team_events", "letting_team_down", "looking_unfit", "nothing"])
           .optional(),
         eventMotivation: z.string().optional(),
-        captainVoteInterest: z.enum(["yes", "no", "maybe"]).optional(),
         shirtSize: z.enum(["XS", "S", "M", "L", "XL", "XXL"]).optional(),
         shirtFit: z.enum(["regular", "oversized"]).optional(),
         healthNotes: z.string().optional(),
@@ -177,7 +176,6 @@ const sportsDayRouter = router({
         strongestEvent: input.strongestEvent ?? null,
         fear: input.fear ?? null,
         eventMotivation: input.eventMotivation?.trim() || null,
-        captainVoteInterest: input.captainVoteInterest ?? null,
         sportsDayProfile: profile,
         profileTagline: tagline,
         shirtSize: input.shirtSize ?? null,
@@ -303,7 +301,6 @@ Here is everything we know about them:
 - Teammate type: ${reg.teammateType?.replace(/_/g, " ") ?? "motivator"}
 - Strongest event: ${reg.strongestEvent ?? "unknown"}
 - Biggest fear: ${reg.fear?.replace(/_/g, " ") ?? "unknown"}
-- Captain vote interest: ${reg.captainVoteInterest ?? "maybe"}
 - Event motivation: ${reg.eventMotivation ?? "not provided"}
 - Attended before: ${reg.attendedBefore ? "Yes, returning" : "No, first time"}
 
@@ -633,7 +630,6 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
             profileTagline: sportsDayRegistrations.profileTagline,
             teammateType: sportsDayRegistrations.teammateType,
             strongestEvent: sportsDayRegistrations.strongestEvent,
-            captainVoteInterest: sportsDayRegistrations.captainVoteInterest,
           })
           .from(sportsDayRegistrations)
           .where(eq(sportsDayRegistrations.team, team as "red" | "blue" | "pink" | "orange"))
@@ -645,7 +641,6 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
             profileTagline: sportsDayRegistrations.profileTagline,
             teammateType: sportsDayRegistrations.teammateType,
             strongestEvent: sportsDayRegistrations.strongestEvent,
-            captainVoteInterest: sportsDayRegistrations.captainVoteInterest,
           })
           .from(sportsDayRegistrations)
           .where(

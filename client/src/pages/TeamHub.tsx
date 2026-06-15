@@ -77,7 +77,7 @@ export default function TeamHub() {
     () => sessionStorage.getItem("teamhub_splash_seen") !== "true"
   );
   const userId = typeof window !== "undefined" ? localStorage.getItem("sd_user_id") ?? "" : "";
-  const [activeTab, setActiveTab] = useState<"team" | "events" | "leaderboard" | "wildcards" | "awards" | "recommendations" | "sponsors" | "location">("team");
+  const [activeTab, setActiveTab] = useState<"team" | "events" | "leaderboard" | "wildcards" | "awards" | "sponsors" | "location">("team");
   const [votingFor, setVotingFor] = useState<AwardCategory | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
@@ -225,7 +225,6 @@ export default function TeamHub() {
     { id: "leaderboard" as const,    label: "LEADERBOARD",    icon: "📊" },
     { id: "wildcards" as const,      label: "WILDCARDS",      icon: "⚡" },
     { id: "awards" as const,         label: "AWARDS",         icon: "🏆" },
-    { id: "recommendations" as const, label: "RECS",           icon: "👍" },
     { id: "sponsors" as const,       label: "SPONSORS",       icon: "🤟" },
     { id: "location" as const,       label: "LOCATION",       icon: "📍" },
   ];
@@ -613,6 +612,122 @@ export default function TeamHub() {
                 );
               })}
             </div>
+
+            {/* ─── AI RECOMMENDATIONS ─── */}
+            {(() => {
+              // Derive smart recommendations from member questionnaire data
+              const members = hub.members;
+              const teammateTypes: string[] = members.map((m) => m.teammateType).filter((x) => x != null) as string[];
+              const strongestEvents: string[] = members.map((m) => m.strongestEvent).filter((x) => x != null) as string[];
+
+              const countOf = (arr: string[], val: string) => arr.filter((x) => x === val).length;
+
+              const recs: { icon: string; title: string; insight: string; eventId?: string }[] = [];
+
+              // Speed-based rec
+              const speedCount = countOf(strongestEvents, "sprint") + countOf(strongestEvents, "relay");
+              if (speedCount >= 3) {
+                recs.push({
+                  icon: "💨",
+                  title: "PUSH HARD ON SPEED EVENTS",
+                  insight: `${speedCount} of your teammates are strongest in sprint/relay. Go all-in on the 100M SPRINT and 4×100 RELAY.`,
+                  eventId: "sprint",
+                });
+              }
+
+              // Strategist-heavy team
+              const strategistCount = countOf(teammateTypes, "strategist");
+              if (strategistCount >= 3) {
+                recs.push({
+                  icon: "🧠",
+                  title: "DOMINATE TUG OF WAR",
+                  insight: `You have ${strategistCount} strategists. Tug of War rewards coordination and planning — your team should own this.`,
+                  eventId: "tug_of_war",
+                });
+              }
+
+              // Wildcard-heavy team
+              const wildcardCount = countOf(teammateTypes, "wildcard");
+              if (wildcardCount >= 3) {
+                recs.push({
+                  icon: "🃏",
+                  title: "EMBRACE THE OBSTACLE COURSE",
+                  insight: `${wildcardCount} wildcards in your squad. Unpredictable players thrive in chaos — the Obstacle Course is your event.`,
+                  eventId: "obstacle",
+                });
+              }
+
+              // Motivator-heavy team
+              const motivatorCount = countOf(teammateTypes, "motivator");
+              if (motivatorCount >= 3) {
+                recs.push({
+                  icon: "📣",
+                  title: "ENERGY IS YOUR WEAPON",
+                  insight: `${motivatorCount} motivators on your team. Use that crowd energy in the Relay — momentum is contagious.`,
+                  eventId: "relay",
+                });
+              }
+
+              // Long jump rec
+              const jumpCount = countOf(strongestEvents, "long_jump");
+              if (jumpCount >= 2) {
+                recs.push({
+                  icon: "🦘",
+                  title: "LONG JUMP IS YOURS",
+                  insight: `${jumpCount} teammates listed Long Jump as their strongest event. Coordinate your best jumpers for maximum points.`,
+                  eventId: "long_jump",
+                });
+              }
+
+              // Default rec if no data
+              if (recs.length === 0) {
+                recs.push({
+                  icon: "⚡",
+                  title: "PLAY TO YOUR STRENGTHS",
+                  insight: "Once your squad fills their profiles, AI-powered event recommendations will appear here based on your team's strengths.",
+                });
+              }
+
+              return (
+                <div className="mt-8">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-px flex-1 bg-white/10" />
+                    <span className="font-mono text-xs tracking-[0.3em]" style={{ color: tc.hex }}>AI RECOMMENDATIONS</span>
+                    <div className="h-px flex-1 bg-white/10" />
+                  </div>
+                  <p className="font-mono text-white/25 text-[10px] tracking-wider mb-4">
+                    Based on your squad's questionnaire data.
+                  </p>
+                  <div className="space-y-3">
+                    {recs.map((rec, i) => (
+                      <div
+                        key={i}
+                        className="p-4 border"
+                        style={{
+                          borderColor: `${tc.hex}30`,
+                          background: `${tc.hex}06`,
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="text-2xl flex-shrink-0">{rec.icon}</span>
+                          <div>
+                            <div
+                              className="font-display text-base tracking-widest mb-1"
+                              style={{ color: tc.hex }}
+                            >
+                              {rec.title}
+                            </div>
+                            <div className="font-mono text-white/40 text-xs leading-relaxed">
+                              {rec.insight}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -904,39 +1019,7 @@ export default function TeamHub() {
           </div>
         )}
 
-        {/* ─── RECOMMENDATIONS TAB ─── */}
-        {activeTab === "recommendations" && (
-          <div className="space-y-4">
-            <SectionHeader label="RECOMMENDED EVENTS" />
-            <p className="font-mono text-white/30 text-xs tracking-wider">
-              Based on how your team is doing.
-            </p>
-            <div className="space-y-3">
-              {EVENTS.slice(0, 3).map((event) => (
-                <div
-                  key={event.id}
-                  className="p-4 border border-white/10 bg-white/[0.02]"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{event.icon}</span>
-                      <div>
-                        <div className="font-display text-lg tracking-widest">{event.name}</div>
-                        <div className="font-mono text-white/30 text-xs mt-0.5">{event.desc}</div>
-                      </div>
-                    </div>
-                    <div
-                      className="px-3 py-1 rounded text-xs font-mono tracking-wider flex-shrink-0"
-                      style={{ background: `${tc.hex}20`, color: tc.hex }}
-                    >
-                      TRY IT
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         {/* ─── SPONSORS TAB ─── */}
         {activeTab === "sponsors" && (
@@ -1124,14 +1207,7 @@ export default function TeamHub() {
                 </div>
               )}
               
-              {/* Captain candidate badge */}
-              {selectedMember.captainVoteInterest === "yes" && (
-                <div className="text-center mb-4">
-                  <span className="font-mono text-[10px] tracking-widest px-3 py-1 border border-yellow-500/30 text-yellow-500/70">
-                    CAPTAIN CANDIDATE
-                  </span>
-                </div>
-              )}
+
               
               {/* Close button */}
               <button

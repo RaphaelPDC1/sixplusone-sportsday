@@ -62,7 +62,6 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
     "nothing",
   ]),
   eventMotivation: text("eventMotivation"),
-  captainVoteInterest: mysqlEnum("captainVoteInterest", ["yes", "no", "maybe"]),
 
   // Generated identity
   sportsDayProfile: varchar("sportsDayProfile", { length: 50 }),
