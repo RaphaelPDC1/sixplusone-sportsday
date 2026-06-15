@@ -91,6 +91,11 @@ export default function TeamHub() {
     { enabled: !!userId, retry: false }
   );
 
+  const { data: rosterData } = trpc.sportsday.getTeamRoster.useQuery(
+    { registrationId: userId },
+    { enabled: !!userId, retry: false, throwOnError: false }
+  );
+
   const { data: awardData, refetch: refetchAwards } = trpc.sportsday.getAwardVotes.useQuery(
     { registrationId: userId },
     { enabled: !!userId }
@@ -473,6 +478,50 @@ export default function TeamHub() {
 
                 {squadExpanded && (
                 <div className="space-y-3 mt-2">
+                {/* Captain Roster View (if user is captain) */}
+                {rosterData && (
+                  <div className="mb-4 p-3 border border-white/20 bg-white/[0.03]">
+                    <div className="font-mono text-[9px] tracking-[0.25em] text-white/40 mb-2">FULL ROSTER ({rosterData.unlockedCount}/{rosterData.totalMembers} UNLOCKED)</div>
+                    <div className="space-y-2">
+                      {rosterData.members.map((member) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center gap-2 p-2 border border-white/10 transition-all"
+                          style={{
+                            opacity: member.isLocked ? 0.4 : 1,
+                            borderColor: member.isLocked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.15)",
+                            background: member.isLocked ? "rgba(255,255,255,0.01)" : "rgba(255,255,255,0.02)",
+                          }}
+                        >
+                          <div
+                            className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center border"
+                            style={{ borderColor: member.isLocked ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.2)" }}
+                          >
+                            {member.photoUrl ? (
+                              <img src={member.photoUrl} alt={member.fullName ?? ""} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-xs">
+                                {member.teammateType === "motivator" ? "📣"
+                                  : member.teammateType === "strategist" ? "🧠"
+                                  : member.teammateType === "wildcard" ? "🃏"
+                                  : member.teammateType === "silent_assassin" ? "🎯"
+                                  : "⚡"}
+                              </span>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-mono text-xs tracking-wider" style={{ color: member.isLocked ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.8)" }}>
+                              {member.fullName}
+                            </div>
+                            {member.isLocked && (
+                              <div className="font-mono text-[8px] text-white/30">🔒 Locked</div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {hub.members.map((member) => (
                   <div
                     key={member.id}

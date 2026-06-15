@@ -76,6 +76,7 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
 
   // Team
   team: mysqlEnum("team", ["red", "blue", "pink", "orange"]),
+  isCaptain: boolean("isCaptain").default(false), // true if this person is the team captain
   revealStatus: mysqlEnum("revealStatus", ["locked", "unlocked"]).default("locked"),
   revealSeen: boolean("revealSeen").default(false), // true once they've watched the animation
 
