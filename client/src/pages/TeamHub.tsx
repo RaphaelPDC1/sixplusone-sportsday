@@ -724,25 +724,9 @@ export default function TeamHub() {
                 <span className="text-base">⚡</span>
                 <span className="font-display text-sm tracking-widest" style={{ color: tc.hex }}>AI TEAM INTEL</span>
               </div>
-              <p className="font-mono text-white/35 text-[10px] leading-relaxed mb-3">
-                Based on your squad's questionnaire — tap any event to see your team's AI-powered strategy.
+              <p className="font-mono text-white/35 text-[10px] leading-relaxed">
+                Based on your squad's questionnaire — tap any event below to see your team's AI-powered strategy and best-fit players.
               </p>
-              <div className="flex flex-wrap gap-2">
-                {topRecs.map((e) => (
-                  <button
-                    key={e.id}
-                    onClick={() => setExpandedEvent(expandedEvent === e.id ? null : e.id)}
-                    className="font-mono text-[10px] tracking-wider px-2 py-1 border transition-all"
-                    style={{
-                      borderColor: `${tc.hex}50`,
-                      background: expandedEvent === e.id ? `${tc.hex}20` : "transparent",
-                      color: expandedEvent === e.id ? tc.hex : "rgba(255,255,255,0.4)",
-                    }}
-                  >
-                    {e.icon} {e.name}
-                  </button>
-                ))}
-              </div>
             </div>
 
             <SectionHeader label="THE EVENTS" />
