@@ -33,6 +33,14 @@ const TEAM_TINT: Record<string, { r: number; g: number; b: number }> = {
   orange: { r: 255, g: 107, b: 0   },
 };
 
+// Hardcoded co-captains per team (2 captains each)
+const TEAM_CAPTAINS: Record<string, { squadName: string; captains: string[] }> = {
+  red:    { squadName: "RELENTLESS",   captains: ["Queen", "Slew"] },
+  blue:   { squadName: "THE VILLAINS", captains: ["Chigz", "Axel"] },
+  pink:   { squadName: "UNRULY",       captains: ["Verity", "Henry"] },
+  orange: { squadName: "CHAOS",        captains: ["Nahal", "George"] },
+};
+
 const EVENTS = [
   { id: "sprint",        name: "100M SPRINT",          icon: "💨", desc: "Pure speed. No excuses." },
   { id: "relay",         name: "4×100 RELAY",           icon: "🏃", desc: "Team timing is everything." },
@@ -373,50 +381,61 @@ export default function TeamHub() {
           <div className="space-y-4">
             <SectionHeader label="YOUR SQUAD" />
             
-            {/* Team Captain Hero */}
-            {hub.members.length > 0 && (
-              <div className="mb-6">
-                {(() => {
-                  const captainCandidate = hub.members.find((m) => m.captainVoteInterest === "yes");
-                  if (captainCandidate) {
-                    return (
-                      <div
-                        className="p-6 border-2 cursor-pointer transition-all hover:opacity-80"
-                        style={{
-                          borderColor: tc.hex,
-                          background: `${tc.hex}10`,
-                          boxShadow: `0 0 30px ${tc.glow}`,
-                        }}
-                        onClick={() => setSelectedMember(captainCandidate)}
-                      >
-                        <div className="flex items-center gap-4">
+            {/* Team Co-Captains */}
+            {(() => {
+              const teamKey = hub.team ?? "red";
+              const capData = TEAM_CAPTAINS[teamKey] ?? TEAM_CAPTAINS.red;
+              return (
+                <div className="mb-6">
+                  <div
+                    className="relative p-6 border-2 overflow-hidden"
+                    style={{
+                      borderColor: tc.hex,
+                      background: `linear-gradient(135deg, ${tc.hex}1A 0%, transparent 70%)`,
+                      boxShadow: `0 0 40px ${tc.glow}`,
+                    }}
+                  >
+                    {/* top accent bar */}
+                    <div className="absolute top-0 left-0 right-0 h-1" style={{ background: tc.hex }} />
+
+                    <div className="flex items-center justify-between mb-5">
+                      <span className="font-mono text-xs tracking-[0.3em]" style={{ color: tc.hex }}>
+                        TEAM CAPTAINS
+                      </span>
+                      <span className="font-display text-sm tracking-widest text-white/40">
+                        {capData.squadName}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {capData.captains.map((cap) => (
+                        <div
+                          key={cap}
+                          className="flex flex-col items-center text-center p-4 border"
+                          style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
+                        >
                           <div
-                            className="w-20 h-20 rounded-full overflow-hidden border-2 flex-shrink-0 flex items-center justify-center"
-                            style={{ borderColor: tc.hex }}
+                            className="w-14 h-14 rounded-full border-2 flex items-center justify-center mb-3"
+                            style={{ borderColor: tc.hex, boxShadow: `0 0 16px ${tc.glow}` }}
                           >
-                            {captainCandidate.photoUrl ? (
-                              <img src={captainCandidate.photoUrl} alt={captainCandidate.fullName ?? ""} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full bg-white/5 flex items-center justify-center text-3xl">👤</div>
-                            )}
+                            <span className="text-2xl">©️</span>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="font-mono text-xs tracking-widest mb-1" style={{ color: tc.hex }}>CAPTAIN CANDIDATE</div>
-                            <div className="font-display text-2xl tracking-widest" style={{ color: tc.hex }}>
-                              {captainCandidate.fullName}
-                            </div>
-                            {captainCandidate.instagramHandle && (
-                              <p className="font-mono text-white/40 text-sm mt-1">@{captainCandidate.instagramHandle}</p>
-                            )}
+                          <div
+                            className="font-display text-2xl tracking-widest leading-none"
+                            style={{ color: tc.hex, textShadow: `0 0 20px ${tc.glow}` }}
+                          >
+                            {cap.toUpperCase()}
+                          </div>
+                          <div className="font-mono text-[10px] tracking-[0.25em] text-white/40 mt-2">
+                            CO-CAPTAIN
                           </div>
                         </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-              </div>
-            )}
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
             
             {hub.members.length === 0 ? (
               <p className="font-mono text-white/30 text-sm text-center py-8">
@@ -472,11 +491,6 @@ export default function TeamHub() {
                         <p className="font-mono text-white/40 text-xs mt-0.5 truncate italic">
                           "{member.profileTagline}"
                         </p>
-                      )}
-                      {member.captainVoteInterest === "yes" && (
-                        <span className="inline-block font-mono text-[9px] tracking-wider px-1.5 py-0.5 mt-1 border border-yellow-500/30 text-yellow-500/70">
-                          CAPTAIN CANDIDATE
-                        </span>
                       )}
                     </div>
                     <div className="text-right flex-shrink-0">
