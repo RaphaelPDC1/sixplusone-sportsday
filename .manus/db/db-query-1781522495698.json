@@ -1,0 +1,52 @@
+{
+  "query": "SELECT id, fullName, instagramHandle, team, paymentStatus FROM sports_day_registrations\nWHERE fullName LIKE '%Queen%' OR fullName LIKE '%Slew%'\n   OR fullName LIKE '%Chigz%' OR fullName LIKE '%Axel%'\n   OR fullName LIKE '%Verity%' OR fullName LIKE '%Henry%'\n   OR fullName LIKE '%Nahal%' OR fullName LIKE '%George%'\nORDER BY fullName;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT id, fullName, instagramHandle, team, paymentStatus FROM sports_day_registrations\nWHERE fullName LIKE '%Queen%' OR fullName LIKE '%Slew%'\n   OR fullName LIKE '%Chigz%' OR fullName LIKE '%Axel%'\n   OR fullName LIKE '%Verity%' OR fullName LIKE '%Henry%'\n   OR fullName LIKE '%Nahal%' OR fullName LIKE '%George%'\nORDER BY fullName;",
+  "rows": [
+    {
+      "id": "4e13dcc6-4503-4be4-b8ee-68aa9a49bb20",
+      "fullName": "Axel",
+      "instagramHandle": "Justaxel1",
+      "team": "red",
+      "paymentStatus": "unpaid"
+    },
+    {
+      "id": "e46adb3b-4102-456b-83a2-854958da1d15",
+      "fullName": "Chigz",
+      "instagramHandle": "_chig.z",
+      "team": "orange",
+      "paymentStatus": "unpaid"
+    },
+    {
+      "id": "fb1c28d3-fae8-487e-9602-47b652b38611",
+      "fullName": "Henry",
+      "instagramHandle": "henry.w.chester",
+      "team": "red",
+      "paymentStatus": "unpaid"
+    },
+    {
+      "id": "2f2904b6-d668-42c0-a7a3-4de2ac01c601",
+      "fullName": "KING George",
+      "instagramHandle": "_g_anderson",
+      "team": "blue",
+      "paymentStatus": "unpaid"
+    },
+    {
+      "id": "371676c0-4ed2-4622-be60-679f7aab875c",
+      "fullName": "Nahal",
+      "instagramHandle": "nahal_fitns",
+      "team": "pink",
+      "paymentStatus": "unpaid"
+    },
+    {
+      "id": "3b50689e-f5fe-470d-b782-4553c5dd9f20",
+      "fullName": "Queen",
+      "instagramHandle": "Thelifeofqu",
+      "team": "orange",
+      "paymentStatus": "unpaid"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfullName\tinstagramHandle\tteam\tpaymentStatus\n4e13dcc6-4503-4be4-b8ee-68aa9a49bb20\tAxel\tJustaxel1\tred\tunpaid\ne46adb3b-4102-456b-83a2-854958da1d15\tChigz\t_chig.z\torange\tunpaid\nfb1c28d3-fae8-487e-9602-47b652b38611\tHenry\thenry.w.chester\tred\tunpaid\n2f2904b6-d668-42c0-a7a3-4de2ac01c601\tKING George\t_g_anderson\tblue\tunpaid\n371676c0-4ed2-4622-be60-679f7aab875c\tNahal\tnahal_fitns\tpink\tunpaid\n3b50689e-f5fe-470d-b782-4553c5dd9f20\tQueen\tThelifeofqu\torange\tunpaid\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}

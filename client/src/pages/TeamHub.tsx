@@ -81,6 +81,8 @@ export default function TeamHub() {
   const [votingFor, setVotingFor] = useState<AwardCategory | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
+  const [selectedCaptain, setSelectedCaptain] = useState<string | null>(null);
+  const [squadExpanded, setSquadExpanded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: hub, isLoading, error: hubError, refetch } = trpc.sportsday.getTeamHub.useQuery(
@@ -408,29 +410,42 @@ export default function TeamHub() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                      {capData.captains.map((cap) => (
-                        <div
-                          key={cap}
-                          className="flex flex-col items-center text-center p-4 border"
-                          style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
-                        >
-                          <div
-                            className="w-14 h-14 rounded-full border-2 flex items-center justify-center mb-3"
-                            style={{ borderColor: tc.hex, boxShadow: `0 0 16px ${tc.glow}` }}
+                      {capData.captains.map((cap) => {
+                        const capMember = hub.members.find(
+                          (m) => m.fullName?.toLowerCase().includes(cap.toLowerCase())
+                        );
+                        return (
+                          <button
+                            key={cap}
+                            onClick={() => setSelectedCaptain(cap)}
+                            className="flex flex-col items-center text-center p-4 border transition-all active:scale-95 hover:opacity-80 w-full"
+                            style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
                           >
-                            <span className="text-2xl">©️</span>
-                          </div>
-                          <div
-                            className="font-display text-2xl tracking-widest leading-none"
-                            style={{ color: tc.hex, textShadow: `0 0 20px ${tc.glow}` }}
-                          >
-                            {cap.toUpperCase()}
-                          </div>
-                          <div className="font-mono text-[10px] tracking-[0.25em] text-white/40 mt-2">
-                            CO-CAPTAIN
-                          </div>
-                        </div>
-                      ))}
+                            <div
+                              className="w-14 h-14 rounded-full border-2 overflow-hidden flex-shrink-0 flex items-center justify-center mb-3"
+                              style={{ borderColor: tc.hex, boxShadow: `0 0 16px ${tc.glow}` }}
+                            >
+                              {capMember?.photoUrl ? (
+                                <img src={capMember.photoUrl} alt={cap} className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-2xl font-display" style={{ color: tc.hex }}>C</span>
+                              )}
+                            </div>
+                            <div
+                              className="font-display text-2xl tracking-widest leading-none"
+                              style={{ color: tc.hex, textShadow: `0 0 20px ${tc.glow}` }}
+                            >
+                              {cap.toUpperCase()}
+                            </div>
+                            <div className="font-mono text-[10px] tracking-[0.25em] text-white/40 mt-2">
+                              CO-CAPTAIN
+                            </div>
+                            <div className="font-mono text-[9px] tracking-widest text-white/20 mt-1">
+                              TAP TO VIEW →
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -443,8 +458,21 @@ export default function TeamHub() {
               </p>
             ) : (
               <>
-                {/* TeamLiveFeatures removed per requirements */}
-                <div className="space-y-3 mt-6">
+                {/* Collapsible squad header */}
+                <button
+                  onClick={() => setSquadExpanded((v) => !v)}
+                  className="w-full flex items-center justify-between py-3 px-4 border border-white/10 bg-white/[0.02] transition-all hover:border-white/20 mt-2"
+                >
+                  <span className="font-mono text-xs tracking-[0.25em] text-white/50">
+                    {hub.members.length} TEAMMATES
+                  </span>
+                  <span className="font-mono text-xs tracking-widest" style={{ color: tc.hex }}>
+                    {squadExpanded ? "COLLAPSE ▲" : "VIEW SQUAD ▼"}
+                  </span>
+                </button>
+
+                {squadExpanded && (
+                <div className="space-y-3 mt-2">
                 {hub.members.map((member) => (
                   <div
                     key={member.id}
@@ -501,6 +529,7 @@ export default function TeamHub() {
                      </div>
                 ))}
               </div>
+                )}
             </>
             )}
             {/* Photo upload prompt if no photo */}
@@ -1118,6 +1147,91 @@ export default function TeamHub() {
             </div>
           </div>
         )}
+
+        {/* Captain Detail Modal */}
+        {selectedCaptain && (() => {
+          const teamKey = hub?.team ?? "red";
+          const capData = TEAM_CAPTAINS[teamKey] ?? TEAM_CAPTAINS.red;
+          const capMember = hub?.members.find(
+            (m) => m.fullName?.toLowerCase().includes(selectedCaptain.toLowerCase())
+          );
+          return (
+            <div
+              className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+              onClick={() => setSelectedCaptain(null)}
+            >
+              <div
+                className="relative bg-[#0A0A0A] border-2 rounded-lg p-8 max-w-sm w-full"
+                style={{ borderColor: tc.hex, boxShadow: `0 0 40px ${tc.glow}` }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Top accent bar */}
+                <div className="absolute top-0 left-0 right-0 h-1 rounded-t-lg" style={{ background: tc.hex }} />
+
+                {/* Close */}
+                <button
+                  onClick={() => setSelectedCaptain(null)}
+                  className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors"
+                >
+                  ✕
+                </button>
+
+                {/* Photo */}
+                <div className="flex justify-center mb-6 mt-2">
+                  <div
+                    className="w-32 h-32 rounded-full overflow-hidden border-2 flex items-center justify-center"
+                    style={{ borderColor: tc.hex, boxShadow: `0 0 24px ${tc.glow}` }}
+                  >
+                    {capMember?.photoUrl ? (
+                      <img src={capMember.photoUrl} alt={selectedCaptain} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-white/5 flex items-center justify-center">
+                        <span className="font-display text-4xl" style={{ color: tc.hex }}>C</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Name */}
+                <div className="text-center mb-1">
+                  <div className="font-display text-3xl tracking-widest" style={{ color: tc.hex, textShadow: `0 0 20px ${tc.glow}` }}>
+                    {selectedCaptain.toUpperCase()}
+                  </div>
+                </div>
+
+                {/* CO-CAPTAIN badge */}
+                <div className="flex justify-center mb-3">
+                  <span className="font-mono text-[10px] tracking-[0.3em] px-3 py-1 border" style={{ borderColor: tc.hex, color: tc.hex }}>
+                    CO-CAPTAIN · {capData.squadName}
+                  </span>
+                </div>
+
+                {/* IG handle if found */}
+                {capMember?.instagramHandle && (
+                  <div className="text-center mb-4">
+                    <p className="font-mono text-white/50 text-sm">@{capMember.instagramHandle}</p>
+                  </div>
+                )}
+
+                {/* Tagline if found */}
+                {capMember?.profileTagline && (
+                  <div className="text-center mb-4 border-t border-white/10 pt-4">
+                    <p className="font-mono text-white/40 text-xs italic">"{capMember.profileTagline}"</p>
+                  </div>
+                )}
+
+                {/* Close */}
+                <button
+                  onClick={() => setSelectedCaptain(null)}
+                  className="w-full mt-6 font-mono text-xs tracking-widest py-2 border transition-colors hover:opacity-80"
+                  style={{ borderColor: tc.hex, color: tc.hex }}
+                >
+                  CLOSE
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

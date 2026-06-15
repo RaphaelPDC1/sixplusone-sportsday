@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, full_name, instagram_handle, team, payment_status FROM sports_day_registrations\nWHERE full_name LIKE '%Queen%' OR full_name LIKE '%Slew%'\n   OR full_name LIKE '%Chigz%' OR full_name LIKE '%Axel%'\n   OR full_name LIKE '%Verity%' OR full_name LIKE '%Henry%'\n   OR full_name LIKE '%Nahal%' OR full_name LIKE '%George%'\nORDER BY full_name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT id, full_name, instagram_handle, team, payment_status FROM sports_day_registrations\nWHERE full_name LIKE '%Queen%' OR full_name LIKE '%Slew%'\n   OR full_name LIKE '%Chigz%' OR full_name LIKE '%Axel%'\n   OR full_name LIKE '%Verity%' OR full_name LIKE '%Henry%'\n   OR full_name LIKE '%Nahal%' OR full_name LIKE '%George%'\nORDER BY full_name;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'full_name' in 'where clause'"
+  ]
+}

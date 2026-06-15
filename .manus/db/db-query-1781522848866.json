@@ -1,0 +1,35 @@
+{
+  "query": "SELECT team, COUNT(*) as cnt FROM sports_day_registrations GROUP BY team ORDER BY team;\nSELECT fullName, instagramHandle, team FROM sports_day_registrations\nWHERE id IN ('3b50689e-f5fe-470d-b782-4553c5dd9f20','7f13c96d-9e3c-480b-9068-2157828ad582','90419902-8a28-467b-86d8-6ec1a129a987','4e13dcc6-4503-4be4-b8ee-68aa9a49bb20','e46adb3b-4102-456b-83a2-854958da1d15','371676c0-4ed2-4622-be60-679f7aab875c','2f2904b6-d668-42c0-a7a3-4de2ac01c601')\nORDER BY team, fullName;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT team, COUNT(*) as cnt FROM sports_day_registrations GROUP BY team ORDER BY team;\nSELECT fullName, instagramHandle, team FROM sports_day_registrations\nWHERE id IN ('3b50689e-f5fe-470d-b782-4553c5dd9f20','7f13c96d-9e3c-480b-9068-2157828ad582','90419902-8a28-467b-86d8-6ec1a129a987','4e13dcc6-4503-4be4-b8ee-68aa9a49bb20','e46adb3b-4102-456b-83a2-854958da1d15','371676c0-4ed2-4622-be60-679f7aab875c','2f2904b6-d668-42c0-a7a3-4de2ac01c601')\nORDER BY team, fullName;",
+  "rows": [
+    {
+      "team": "red",
+      "cnt": "28"
+    },
+    {
+      "team": "blue",
+      "cnt": "28"
+    },
+    {
+      "team": "pink",
+      "cnt": "28"
+    },
+    {
+      "team": "orange",
+      "cnt": "28"
+    }
+  ],
+  "messages": [
+    "fullName\tinstagramHandle\tteam",
+    "Queen\tThelifeofqu\tred",
+    "Axel\tJustaxel1\tblue",
+    "Chigz\t_chig.z\tblue",
+    "Henz\t_henryzemah\tpink",
+    "Vezza vee\tVerityarcher\tpink",
+    "KING George\t_g_anderson\torange",
+    "Nahal\tnahal_fitns\torange"
+  ],
+  "stdout": "team\tcnt\nred\t28\nblue\t28\npink\t28\norange\t28\nfullName\tinstagramHandle\tteam\nQueen\tThelifeofqu\tred\nAxel\tJustaxel1\tblue\nChigz\t_chig.z\tblue\nHenz\t_henryzemah\tpink\nVezza vee\tVerityarcher\tpink\nKING George\t_g_anderson\torange\nNahal\tnahal_fitns\torange\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}

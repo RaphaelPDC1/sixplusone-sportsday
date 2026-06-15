@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, fullName, instagramHandle, team, paymentStatus FROM sports_day_registrations\nWHERE team = 'pink' AND paymentStatus = 'unpaid'\n  AND id NOT IN ('371676c0-4ed2-4622-be60-679f7aab875c')\nORDER BY createdAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT id, fullName, instagramHandle, team, paymentStatus FROM sports_day_registrations\nWHERE team = 'pink' AND paymentStatus = 'unpaid'\n  AND id NOT IN ('371676c0-4ed2-4622-be60-679f7aab875c')\nORDER BY createdAt DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "b279dd3e-63e5-4ea6-86ba-36967e5ea51d",
+      "fullName": "Whitney",
+      "instagramHandle": "_whitneydsa",
+      "team": "pink",
+      "paymentStatus": "unpaid"
+    },
+    {
+      "id": "74c3cfbe-eed7-4ee5-b400-edb646414912",
+      "fullName": "sonya",
+      "instagramHandle": "itssonya98",
+      "team": "pink",
+      "paymentStatus": "unpaid"
+    },
+    {
+      "id": "159baa30-f3c5-41b8-ab08-52c08ce4f6cc",
+      "fullName": "Anna",
+      "instagramHandle": "annanebula_",
+      "team": "pink",
+      "paymentStatus": "unpaid"
+    },
+    {
+      "id": "1c21231d-7046-4105-9cdf-dd91e2312d5f",
+      "fullName": "Kirsty",
+      "instagramHandle": "_kirsty_w",
+      "team": "pink",
+      "paymentStatus": "unpaid"
+    },
+    {
+      "id": "4aed1565-0d84-4714-b784-c9ff27e29656",
+      "fullName": "Huss",
+      "instagramHandle": "Huss.inftd",
+      "team": "pink",
+      "paymentStatus": "unpaid"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfullName\tinstagramHandle\tteam\tpaymentStatus\nb279dd3e-63e5-4ea6-86ba-36967e5ea51d\tWhitney\t_whitneydsa\tpink\tunpaid\n74c3cfbe-eed7-4ee5-b400-edb646414912\tsonya\titssonya98\tpink\tunpaid\n159baa30-f3c5-41b8-ab08-52c08ce4f6cc\tAnna\tannanebula_\tpink\tunpaid\n1c21231d-7046-4105-9cdf-dd91e2312d5f\tKirsty\t_kirsty_w\tpink\tunpaid\n4aed1565-0d84-4714-b784-c9ff27e29656\tHuss\tHuss.inftd\tpink\tunpaid\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}

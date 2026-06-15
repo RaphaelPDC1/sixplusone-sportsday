@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, fullName, instagramHandle, team, paymentStatus FROM sports_day_registrations\nWHERE fullName LIKE '%Vezza%' OR fullName LIKE '%Vee%' OR instagramHandle LIKE '%vezza%' OR instagramHandle LIKE '%verity%'\nORDER BY fullName;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT id, fullName, instagramHandle, team, paymentStatus FROM sports_day_registrations\nWHERE fullName LIKE '%Vezza%' OR fullName LIKE '%Vee%' OR instagramHandle LIKE '%vezza%' OR instagramHandle LIKE '%verity%'\nORDER BY fullName;",
+  "rows": [
+    {
+      "id": "90419902-8a28-467b-86d8-6ec1a129a987",
+      "fullName": "Vezza vee",
+      "instagramHandle": "Verityarcher",
+      "team": "blue",
+      "paymentStatus": "unpaid"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfullName\tinstagramHandle\tteam\tpaymentStatus\n90419902-8a28-467b-86d8-6ec1a129a987\tVezza vee\tVerityarcher\tblue\tunpaid\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}
