@@ -7,22 +7,12 @@ import { markTeamRevealSeen } from "@/lib/revealJourney";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
-// ── Team shirt images (transparent-background, for page preview) ─────────────
+// ── Team shirt images (transparent-background) ────────────────────────────────
 const TEAM_SHIRT_URLS: Record<string, string> = {
   red:    "/manus-storage/sportsday002-red-front-transparent_e8d4b455.png",
   blue:   "/manus-storage/sportsday002-blue-front-transparent_25cf7b1a.png",
   pink:   "/manus-storage/sportsday002-pink-front-transparent_1062bfd0.png",
-  orange: "/manus-storage/sportsday002-orange-front-transparent_44d55117.png",
-};
-
-// ── Pre-generated story card images (1080×1920, ready to share) ───────────────
-// Generated server-side with Pillow: dark bg + team glow + shirt + branding text
-// No canvas, no CORS issues — just fetch as blob and share directly.
-const TEAM_STORY_CARD_URLS: Record<string, string> = {
-  red:    "/manus-storage/story-card-red_05a11ba8.png",
-  blue:   "/manus-storage/story-card-blue_94304669.png",
-  pink:   "/manus-storage/story-card-pink_8a83a3a7.png",
-  orange: "/manus-storage/story-card-orange_902a79fb.png",
+  orange: "/manus-storage/sportsday002-orange-front-transparent_44d55917.png",
 };
 
 const TEAM_CONFIG = {
@@ -575,7 +565,8 @@ export default function Reveal() {
   const [phase, setPhase] = useState<"tension" | "animation" | "reveal">("tension");
   const [aiIdentity, setAiIdentity] = useState<{ title: string; message: string } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
-  // Pre-fetched static story card File — ready to share with no canvas/CORS issues
+  // Canvas-generated share card — shirt drawn onto canvas, output as File for Web Share API
+  const shareCanvasRef = useRef<HTMLCanvasElement>(null);
   const shareFileRef = useRef<File | null>(null);
   const [shareReady, setShareReady] = useState(false);
 
@@ -616,24 +607,75 @@ export default function Reveal() {
   // Shirt image URL for the user's team — used directly for share/download
   const shirtUrl = TEAM_SHIRT_URLS[team] ?? null;
 
-  // Pre-fetch the static story card as a File when reveal phase starts + user team confirmed.
-  // Static PNGs are pre-generated (dark bg + glow + shirt + text) — no canvas, no CORS taint.
-  // Fetching as a blob means the share handler is synchronous (required by iOS Safari).
+  // Build share card on canvas when reveal phase starts
+  // Shirt is fetched as blob to avoid canvas cross-origin taint (required for toBlob/toDataURL)
   useEffect(() => {
     if (phase !== "reveal") return;
-    if (!user?.team) return;
-    const teamKey = user.team as string;
-    const cardUrl = TEAM_STORY_CARD_URLS[teamKey];
-    if (!cardUrl) return;
+    const canvas = shareCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
     setShareReady(false);
-    fetch(cardUrl)
-      .then(r => r.blob())
-      .then(blob => {
-        shareFileRef.current = new File([blob], `team-${teamKey}-sports-day-002.png`, { type: 'image/png' });
-        setShareReady(true);
-      })
-      .catch(err => console.error("[Share] Card pre-fetch failed:", err));
-  }, [phase, user?.team]);
+
+    const buildCard = (shirtBlobUrl: string | null) => {
+      canvas.width = 1080; canvas.height = 1920;
+      // Dark background
+      ctx.fillStyle = "#0A0A0A";
+      ctx.fillRect(0, 0, 1080, 1920);
+      // Team colour glow
+      const glow = ctx.createRadialGradient(540, 960, 0, 540, 960, 800);
+      glow.addColorStop(0, `${config.color}40`);
+      glow.addColorStop(1, "transparent");
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, 1080, 1920);
+
+      const finish = () => {
+        // Small delay to ensure all draw calls are flushed before toBlob
+        requestAnimationFrame(() => {
+          canvas.toBlob((blob) => {
+            if (blob) {
+              shareFileRef.current = new File([blob], `team-${team}-sports-day-002.png`, { type: 'image/png' });
+              setShareReady(true);
+            }
+          }, 'image/png');
+        });
+      };
+
+      if (shirtBlobUrl) {
+        const img = new Image();
+        // crossOrigin must be set before src for blob URLs too
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          // Draw shirt centred, full width
+          const w = 1080, h = (img.height / img.width) * w;
+          ctx.drawImage(img, 0, (1920 - h) / 2, w, h);
+          URL.revokeObjectURL(shirtBlobUrl);
+          finish();
+        };
+        img.onerror = () => {
+          console.error("[ShareCard] Shirt image failed to load");
+          URL.revokeObjectURL(shirtBlobUrl);
+          finish();
+        };
+        img.src = shirtBlobUrl;
+      } else {
+        finish();
+      }
+    };
+
+    const url = TEAM_SHIRT_URLS[team] ?? null;
+    if (url) {
+      fetch(url, { mode: 'cors' })
+        .then(r => r.blob())
+        .then(b => buildCard(URL.createObjectURL(b)))
+        .catch((err) => {
+          console.error("[ShareCard] Fetch failed:", err);
+          buildCard(null);
+        });
+    } else {
+      buildCard(null);
+    }
+  }, [phase, config.color, team]);
 
   const handleAnimationComplete = useCallback(() => {
     setPhase("reveal");
@@ -700,6 +742,8 @@ export default function Reveal() {
       {showSplash && <EntrySplash onComplete={() => { sessionStorage.setItem("reveal_splash_seen", "true"); setShowSplash(false); }} />}
       {phase !== "reveal" && <RevealBackground teamColor={config.color} />}
       <canvas ref={confettiRef} className="fixed inset-0 pointer-events-none" style={{ zIndex: 10 }} />
+      {/* Off-screen canvas for building the share image */}
+      <canvas ref={shareCanvasRef} style={{ position: "absolute", left: "-9999px", top: "-9999px", width: 1, height: 1 }} />
 
 
       {/* Sticky top header — always visible at top of screen */}
