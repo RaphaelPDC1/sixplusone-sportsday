@@ -457,136 +457,115 @@ export default function TeamHub() {
               );
             })()}
             
-            {hub.members.length === 0 ? (
-              <p className="font-mono text-white/30 text-sm text-center py-8">
-                First one in. Your teammates are on their way.
-              </p>
-            ) : (
-              <>
-                {/* Collapsible squad header */}
-                <button
-                  onClick={() => setSquadExpanded((v) => !v)}
-                  className="w-full flex items-center justify-between py-3 px-4 border border-white/10 bg-white/[0.02] transition-all hover:border-white/20 mt-2"
-                >
-                  <span className="font-mono text-xs tracking-[0.25em] text-white/50">
-                    {hub.members.length} TEAMMATES
-                  </span>
-                  <span className="font-mono text-xs tracking-widest" style={{ color: tc.hex }}>
-                    {squadExpanded ? "COLLAPSE ▲" : "VIEW SQUAD ▼"}
-                  </span>
-                </button>
+            {(() => {
+              // Captains use rosterData (all members incl. locked); regular members use hub.members (unlocked only)
+              const displayMembers = rosterData
+                ? rosterData.members.map((m) => ({ ...m, isLocked: m.isLocked }))
+                : hub.members.map((m) => ({ ...m, isLocked: false }));
+              const totalCount = rosterData ? rosterData.totalMembers : hub.members.length;
+              const unlockedCount = rosterData ? rosterData.unlockedCount : hub.members.length;
 
-                {squadExpanded && (
-                <div className="space-y-3 mt-2">
-                {/* Captain Roster View (if user is captain) */}
-                {rosterData && (
-                  <div className="mb-4 p-3 border border-white/20 bg-white/[0.03]">
-                    <div className="font-mono text-[9px] tracking-[0.25em] text-white/40 mb-2">FULL ROSTER ({rosterData.unlockedCount}/{rosterData.totalMembers} UNLOCKED)</div>
-                    <div className="space-y-2">
-                      {rosterData.members.map((member) => (
+              if (displayMembers.length === 0) return (
+                <p className="font-mono text-white/30 text-sm text-center py-8">
+                  First one in. Your teammates are on their way.
+                </p>
+              );
+
+              return (
+                <>
+                  {/* Collapsible squad header */}
+                  <button
+                    onClick={() => setSquadExpanded((v) => !v)}
+                    className="w-full flex items-center justify-between py-3 px-4 border border-white/10 bg-white/[0.02] transition-all hover:border-white/20 mt-2"
+                  >
+                    <span className="font-mono text-xs tracking-[0.25em] text-white/50">
+                      {rosterData ? `${unlockedCount}/${totalCount} UNLOCKED` : `${totalCount} TEAMMATES`}
+                    </span>
+                    <span className="font-mono text-xs tracking-widest" style={{ color: tc.hex }}>
+                      {squadExpanded ? "COLLAPSE ▲" : "VIEW SQUAD ▼"}
+                    </span>
+                  </button>
+
+                  {squadExpanded && (
+                    <div className="space-y-3 mt-2">
+                      {displayMembers.map((member) => (
                         <div
                           key={member.id}
-                          className="flex items-center gap-2 p-2 border border-white/10 transition-all"
+                          className="flex items-center gap-4 p-4 border border-white/10 bg-white/[0.02] transition-all"
                           style={{
-                            opacity: member.isLocked ? 0.4 : 1,
-                            borderColor: member.isLocked ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.15)",
-                            background: member.isLocked ? "rgba(255,255,255,0.01)" : "rgba(255,255,255,0.02)",
+                            opacity: member.isLocked ? 0.35 : 1,
+                            cursor: member.isLocked ? "default" : "pointer",
+                            ...(member.id === userId
+                              ? { borderColor: `${tc.hex}50`, background: `${tc.hex}08` }
+                              : member.isLocked
+                              ? { borderColor: "rgba(255,255,255,0.04)", background: "rgba(255,255,255,0.01)" }
+                              : {}),
                           }}
+                          onClick={() => !member.isLocked && setSelectedMember(member)}
                         >
                           <div
-                            className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center border"
-                            style={{ borderColor: member.isLocked ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.2)" }}
+                            className="w-12 h-12 rounded-full overflow-hidden border flex-shrink-0 flex items-center justify-center"
+                            style={{ borderColor: member.isLocked ? "rgba(255,255,255,0.08)" : member.id === userId ? tc.hex : "rgba(255,255,255,0.15)" }}
                           >
                             {member.photoUrl ? (
                               <img src={member.photoUrl} alt={member.fullName ?? ""} className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-xs">
-                                {member.teammateType === "motivator" ? "📣"
-                                  : member.teammateType === "strategist" ? "🧠"
-                                  : member.teammateType === "wildcard" ? "🃏"
-                                  : member.teammateType === "silent_assassin" ? "🎯"
-                                  : "⚡"}
-                              </span>
+                              <div className="w-full h-full bg-white/5 flex items-center justify-center">
+                                <span className="text-xl">
+                                  {member.isLocked ? "🔒"
+                                    : member.teammateType === "motivator" ? "📣"
+                                    : member.teammateType === "strategist" ? "🧠"
+                                    : member.teammateType === "wildcard" ? "🃏"
+                                    : member.teammateType === "silent_assassin" ? "🎯"
+                                    : "⚡"}
+                                </span>
+                              </div>
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="font-mono text-xs tracking-wider" style={{ color: member.isLocked ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.8)" }}>
-                              {member.fullName}
+                            <div className="flex items-center gap-2">
+                              <span className="font-display text-lg tracking-widest truncate" style={{ color: member.isLocked ? "rgba(255,255,255,0.3)" : "white" }}>
+                                {member.fullName}
+                              </span>
+                              {member.id === userId && (
+                                <span
+                                  className="font-mono text-[10px] tracking-widest px-2 py-0.5"
+                                  style={{ background: `${tc.hex}20`, color: tc.hex }}
+                                >
+                                  YOU
+                                </span>
+                              )}
+                              {member.isLocked && (
+                                <span className="font-mono text-[9px] tracking-widest text-white/25">NOT UNLOCKED</span>
+                              )}
                             </div>
-                            {member.isLocked && (
-                              <div className="font-mono text-[8px] text-white/30">🔒 Locked</div>
+                            {!member.isLocked && member.instagramHandle && (
+                              <a
+                                href={`https://instagram.com/${member.instagramHandle.replace(/^@/, '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-mono text-white/30 text-xs hover:text-white/60 transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >@{member.instagramHandle}</a>
                             )}
+                            {!member.isLocked && member.profileTagline && (
+                              <p className="font-mono text-white/40 text-xs mt-0.5 truncate italic">
+                                "{member.profileTagline}"
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="font-mono text-white/20 text-[10px] tracking-wider">
+                              {member.isLocked ? "" : (member.strongestEvent?.toUpperCase() ?? "—")}
+                            </div>
                           </div>
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
-                {hub.members.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center gap-4 p-4 border border-white/10 bg-white/[0.02] cursor-pointer transition-all hover:border-white/30"
-                    style={member.id === userId ? { borderColor: `${tc.hex}50`, background: `${tc.hex}08` } : {}}
-                    onClick={() => setSelectedMember(member)}
-                  >
-                    <div
-                      className="w-12 h-12 rounded-full overflow-hidden border flex-shrink-0 flex items-center justify-center"
-                      style={{ borderColor: member.id === userId ? tc.hex : "rgba(255,255,255,0.15)" }}
-                    >
-                      {member.photoUrl ? (
-                        <img src={member.photoUrl} alt={member.fullName ?? ""} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-white/5 flex items-center justify-center">
-                          <span className="text-xl">
-                            {member.teammateType === "motivator" ? "📣"
-                              : member.teammateType === "strategist" ? "🧠"
-                              : member.teammateType === "wildcard" ? "🃏"
-                              : member.teammateType === "silent_assassin" ? "🎯"
-                              : "⚡"}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-display text-lg tracking-widest truncate">
-                          {member.fullName}
-                        </span>
-                        {member.id === userId && (
-                          <span
-                            className="font-mono text-[10px] tracking-widest px-2 py-0.5"
-                            style={{ background: `${tc.hex}20`, color: tc.hex }}
-                          >
-                            YOU
-                          </span>
-                        )}
-                      </div>
-                      {member.instagramHandle && (
-                         <a
-                           href={`https://instagram.com/${member.instagramHandle.replace(/^@/, '')}`}
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className="font-mono text-white/30 text-xs hover:text-white/60 transition-colors"
-                           onClick={(e) => e.stopPropagation()}
-                         >@{member.instagramHandle}</a>
-                       )}
-                      {member.profileTagline && (
-                        <p className="font-mono text-white/40 text-xs mt-0.5 truncate italic">
-                          "{member.profileTagline}"
-                        </p>
-                      )}
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="font-mono text-white/20 text-[10px] tracking-wider">
-                        {member.strongestEvent?.toUpperCase() ?? "—"}
-                      </div>
-                    </div>
-                     </div>
-                ))}
-              </div>
-                )}
-            </>
-            )}
+                  )}
+                </>
+              );
+            })()}
             {/* Photo upload prompt if no photo */}
             {!myPhoto && (
               <div

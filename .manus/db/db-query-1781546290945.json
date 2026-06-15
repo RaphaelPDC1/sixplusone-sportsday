@@ -1,0 +1,52 @@
+{
+  "query": "SELECT fullName, email, team, isCaptain FROM sports_day_registrations WHERE email IN ('queenuwacu@yahoo.co.uk', 'chigozieo@hotmail.co.uk', 'axelmuhire412@gmail.com', 'nshahidan3@gmail.com', 'georgeanderson2121212@gmail.com', 'verity-archer@hotmail.co.uk', 'henryzemah@hotmail.co.uk');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2P9ir9M7b3E7Qkh.47e60b4ce122 --database 6SwZoJcoJNmN362a73ncsK --execute SELECT fullName, email, team, isCaptain FROM sports_day_registrations WHERE email IN ('queenuwacu@yahoo.co.uk', 'chigozieo@hotmail.co.uk', 'axelmuhire412@gmail.com', 'nshahidan3@gmail.com', 'georgeanderson2121212@gmail.com', 'verity-archer@hotmail.co.uk', 'henryzemah@hotmail.co.uk');",
+  "rows": [
+    {
+      "fullName": "Queen",
+      "email": "queenuwacu@yahoo.co.uk",
+      "team": "red",
+      "isCaptain": "1"
+    },
+    {
+      "fullName": "Chigz",
+      "email": "chigozieo@hotmail.co.uk",
+      "team": "blue",
+      "isCaptain": "1"
+    },
+    {
+      "fullName": "Axel",
+      "email": "axelmuhire412@gmail.com",
+      "team": "blue",
+      "isCaptain": "1"
+    },
+    {
+      "fullName": "Nahal",
+      "email": "nshahidan3@gmail.com",
+      "team": "orange",
+      "isCaptain": "1"
+    },
+    {
+      "fullName": "KING George",
+      "email": "georgeanderson2121212@gmail.com",
+      "team": "orange",
+      "isCaptain": "1"
+    },
+    {
+      "fullName": "Vezza vee",
+      "email": "verity-archer@hotmail.co.uk",
+      "team": "pink",
+      "isCaptain": "1"
+    },
+    {
+      "fullName": "Henz",
+      "email": "henryzemah@hotmail.co.uk",
+      "team": "pink",
+      "isCaptain": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "fullName\temail\tteam\tisCaptain\nQueen\tqueenuwacu@yahoo.co.uk\tred\t1\nChigz\tchigozieo@hotmail.co.uk\tblue\t1\nAxel\taxelmuhire412@gmail.com\tblue\t1\nNahal\tnshahidan3@gmail.com\torange\t1\nKING George\tgeorgeanderson2121212@gmail.com\torange\t1\nVezza vee\tverity-archer@hotmail.co.uk\tpink\t1\nHenz\thenryzemah@hotmail.co.uk\tpink\t1\n",
+  "stderr": "",
+  "execution_time_ms": 259
+}
