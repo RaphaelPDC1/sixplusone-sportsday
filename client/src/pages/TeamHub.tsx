@@ -83,6 +83,7 @@ export default function TeamHub() {
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
   const [selectedCaptain, setSelectedCaptain] = useState<string | null>(null);
   const [squadExpanded, setSquadExpanded] = useState(false);
+  const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: hub, isLoading, error: hubError, refetch } = trpc.sportsday.getTeamHub.useQuery(
@@ -512,8 +513,14 @@ export default function TeamHub() {
                         )}
                       </div>
                       {member.instagramHandle && (
-                        <p className="font-mono text-white/30 text-xs">@{member.instagramHandle}</p>
-                      )}
+                         <a
+                           href={`https://instagram.com/${member.instagramHandle.replace(/^@/, '')}`}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="font-mono text-white/30 text-xs hover:text-white/60 transition-colors"
+                           onClick={(e) => e.stopPropagation()}
+                         >@{member.instagramHandle}</a>
+                       )}
                       {member.profileTagline && (
                         <p className="font-mono text-white/40 text-xs mt-0.5 truncate italic">
                           "{member.profileTagline}"
@@ -549,63 +556,168 @@ export default function TeamHub() {
         )}
 
         {/* ─── EVENTS TAB ─── */}
-        {activeTab === "events" && (
+        {activeTab === "events" && (() => {
+          // Build AI recs from member data
+          const members = hub.members;
+          const teammateTypes: string[] = members.map((m) => m.teammateType).filter((x) => x != null) as string[];
+          const strongestEvents: string[] = members.map((m) => m.strongestEvent).filter((x) => x != null) as string[];
+          const countOf = (arr: string[], val: string) => arr.filter((x) => x === val).length;
+
+          // Map event ID → AI insight for that event
+          const eventInsights: Record<string, string> = {};
+          // Backend enums: strongestEvent = speed | strength | endurance | coordination | vibes
+          //                 teammateType  = motivator | strategist | wildcard | silent_assassin | energy_bringer
+          const speedCount = countOf(strongestEvents, "speed");
+          if (speedCount >= 3) {
+            eventInsights["sprint"] = `${speedCount} of your squad are strongest in speed. Push hard here — this is your edge.`;
+            eventInsights["relay"] = `${speedCount} speed-focused members. Relay timing is your weapon — coordinate your fastest runners.`;
+          }
+          const strengthCount = countOf(strongestEvents, "strength");
+          if (strengthCount >= 3) {
+            eventInsights["tug_of_war"] = `${strengthCount} of your squad are strongest in strength. Tug of War is built for you — go all in.`;
+          }
+          const coordCount = countOf(strongestEvents, "coordination");
+          if (coordCount >= 3) {
+            eventInsights["obstacle"] = `${coordCount} coordination-focused players. The Obstacle Course rewards precision and timing — your squad has the edge.`;
+          }
+          const strategistCount = countOf(teammateTypes, "strategist");
+          if (strategistCount >= 3 && !eventInsights["tug_of_war"]) {
+            eventInsights["tug_of_war"] = `${strategistCount} strategists on your team. Tug of War is won by coordination, not just strength — you have the advantage.`;
+          }
+          const wildcardCount = countOf(teammateTypes, "wildcard");
+          if (wildcardCount >= 3 && !eventInsights["obstacle"]) {
+            eventInsights["obstacle"] = `${wildcardCount} wildcards in your squad. Unpredictable players thrive in chaos — this course is built for you.`;
+          }
+          const motivatorCount = countOf(teammateTypes, "motivator");
+          if (motivatorCount >= 3 && !eventInsights["relay"]) {
+            eventInsights["relay"] = `${motivatorCount} motivators on your team. Use that crowd energy in the Relay — momentum is contagious.`;
+          }
+          const energyCount = countOf(teammateTypes, "energy_bringer");
+          if (energyCount >= 3 && !eventInsights["penalty_shoot"]) {
+            eventInsights["penalty_shoot"] = `${energyCount} energy bringers on your team. Penalty shootout is a crowd moment — your energy will be the difference.`;
+          }
+          const enduranceCount = countOf(strongestEvents, "endurance");
+          if (enduranceCount >= 2) {
+            eventInsights["long_jump"] = `${enduranceCount} endurance-focused players. Long Jump rewards explosive power and consistency — push your best athletes here.`;
+          }
+
+          // Top-level recs (events with insights)
+          const topRecs = EVENTS.filter((e) => eventInsights[e.id]);
+
+          return (
           <div className="space-y-4">
+            {/* ─── AI RECOMMENDATIONS (top) ─── */}
+            <div
+              className="p-4 border"
+              style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-base">⚡</span>
+                <span className="font-display text-sm tracking-widest" style={{ color: tc.hex }}>AI TEAM INTEL</span>
+              </div>
+              <p className="font-mono text-white/35 text-[10px] leading-relaxed mb-3">
+                Based on your squad's questionnaire — tap any event to see your team's AI-powered strategy.
+              </p>
+              {topRecs.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {topRecs.map((e) => (
+                    <button
+                      key={e.id}
+                      onClick={() => setExpandedEvent(expandedEvent === e.id ? null : e.id)}
+                      className="font-mono text-[10px] tracking-wider px-2 py-1 border transition-all"
+                      style={{
+                        borderColor: `${tc.hex}50`,
+                        background: expandedEvent === e.id ? `${tc.hex}20` : "transparent",
+                        color: expandedEvent === e.id ? tc.hex : "rgba(255,255,255,0.4)",
+                      }}
+                    >
+                      {e.icon} {e.name}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="font-mono text-white/20 text-[10px]">
+                  Fill in your squad profiles to unlock personalised event recommendations.
+                </p>
+              )}
+            </div>
+
             <SectionHeader label="THE EVENTS" />
             <div className="space-y-3">
               {EVENTS.map((event) => {
                 const eventResults = hub.leaderboard.filter((e) => e.eventName === event.id);
                 const myTeamResult = eventResults.find((e) => e.team === hub.team);
+                const isExpanded = expandedEvent === event.id;
+                const aiInsight = eventInsights[event.id];
                 return (
                   <div
                     key={event.id}
-                    className="p-4 border border-white/10 bg-white/[0.02]"
+                    className="border transition-all cursor-pointer"
+                    style={{
+                      borderColor: isExpanded ? `${tc.hex}50` : "rgba(255,255,255,0.08)",
+                      background: isExpanded ? `${tc.hex}06` : "rgba(255,255,255,0.01)",
+                    }}
+                    onClick={() => setExpandedEvent(isExpanded ? null : event.id)}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{event.icon}</span>
-                        <div>
-                          <div className="font-display text-lg tracking-widest">{event.name}</div>
-                          <div className="font-mono text-white/30 text-xs mt-0.5">{event.desc}</div>
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{event.icon}</span>
+                          <div>
+                            <div className="font-display text-lg tracking-widest">{event.name}</div>
+                            <div className="font-mono text-white/30 text-xs mt-0.5">{event.desc}</div>
+                          </div>
                         </div>
-                      </div>
-                      {myTeamResult && (
-                        <div className="text-right flex-shrink-0">
-                          {myTeamResult.dnf ? (
-                            <span className="font-mono text-red-500/70 text-xs tracking-wider">DNF</span>
-                          ) : (
-                            <div>
-                              <div
-                                className="font-display text-xl tracking-widest"
-                                style={{ color: tc.hex }}
-                              >
-                                {myTeamResult.position ? `${myTeamResult.position}${ordinal(myTeamResult.position)}` : "—"}
-                              </div>
-                              <div className="font-mono text-white/30 text-xs">
-                                {myTeamResult.points ?? 0}pts
-                              </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {myTeamResult && (
+                            <div className="text-right">
+                              {myTeamResult.dnf ? (
+                                <span className="font-mono text-red-500/70 text-xs tracking-wider">DNF</span>
+                              ) : (
+                                <div>
+                                  <div className="font-display text-xl tracking-widest" style={{ color: tc.hex }}>
+                                    {myTeamResult.position ? `${myTeamResult.position}${ordinal(myTeamResult.position)}` : "—"}
+                                  </div>
+                                  <div className="font-mono text-white/30 text-xs">{myTeamResult.points ?? 0}pts</div>
+                                </div>
+                              )}
                             </div>
                           )}
+                          <span className="font-mono text-white/20 text-xs">{isExpanded ? "▲" : "▼"}</span>
                         </div>
-                      )}
+                      </div>
                     </div>
-                    {/* Mini leaderboard for this event */}
-                    {eventResults.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-4 gap-2">
-                        {(["red","blue","pink","orange"] as const).map((team) => {
-                          const r = eventResults.find((e) => e.team === team);
-                          return (
-                            <div key={team} className="text-center">
-                              <div
-                                className="w-2 h-2 rounded-full mx-auto mb-1"
-                                style={{ background: TEAM_COLORS[team]?.hex ?? "#fff" }}
-                              />
-                              <div className="font-mono text-white/30 text-[9px]">
-                                {r?.dnf ? "DNF" : r ? `${r.position ?? "—"}` : "—"}
-                              </div>
-                            </div>
-                          );
-                        })}
+
+                    {/* Expanded: AI insight + mini leaderboard */}
+                    {isExpanded && (
+                      <div className="px-4 pb-4 border-t" style={{ borderColor: `${tc.hex}20` }}>
+                        {aiInsight && (
+                          <div className="mt-3 flex items-start gap-2">
+                            <span className="text-sm mt-0.5">⚡</span>
+                            <p className="font-mono text-xs leading-relaxed" style={{ color: tc.hex }}>
+                              {aiInsight}
+                            </p>
+                          </div>
+                        )}
+                        {/* Mini leaderboard for this event */}
+                        {eventResults.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-4 gap-2">
+                            {(["red","blue","pink","orange"] as const).map((team) => {
+                              const r = eventResults.find((e) => e.team === team);
+                              return (
+                                <div key={team} className="text-center">
+                                  <div className="w-2 h-2 rounded-full mx-auto mb-1" style={{ background: TEAM_COLORS[team]?.hex ?? "#fff" }} />
+                                  <div className="font-mono text-white/30 text-[9px]">
+                                    {r?.dnf ? "DNF" : r ? `${r.position ?? "—"}` : "—"}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {!aiInsight && eventResults.length === 0 && (
+                          <p className="font-mono text-white/20 text-[10px] mt-3">No results yet. Check back on the day.</p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -613,123 +725,9 @@ export default function TeamHub() {
               })}
             </div>
 
-            {/* ─── AI RECOMMENDATIONS ─── */}
-            {(() => {
-              // Derive smart recommendations from member questionnaire data
-              const members = hub.members;
-              const teammateTypes: string[] = members.map((m) => m.teammateType).filter((x) => x != null) as string[];
-              const strongestEvents: string[] = members.map((m) => m.strongestEvent).filter((x) => x != null) as string[];
-
-              const countOf = (arr: string[], val: string) => arr.filter((x) => x === val).length;
-
-              const recs: { icon: string; title: string; insight: string; eventId?: string }[] = [];
-
-              // Speed-based rec
-              const speedCount = countOf(strongestEvents, "sprint") + countOf(strongestEvents, "relay");
-              if (speedCount >= 3) {
-                recs.push({
-                  icon: "💨",
-                  title: "PUSH HARD ON SPEED EVENTS",
-                  insight: `${speedCount} of your teammates are strongest in sprint/relay. Go all-in on the 100M SPRINT and 4×100 RELAY.`,
-                  eventId: "sprint",
-                });
-              }
-
-              // Strategist-heavy team
-              const strategistCount = countOf(teammateTypes, "strategist");
-              if (strategistCount >= 3) {
-                recs.push({
-                  icon: "🧠",
-                  title: "DOMINATE TUG OF WAR",
-                  insight: `You have ${strategistCount} strategists. Tug of War rewards coordination and planning — your team should own this.`,
-                  eventId: "tug_of_war",
-                });
-              }
-
-              // Wildcard-heavy team
-              const wildcardCount = countOf(teammateTypes, "wildcard");
-              if (wildcardCount >= 3) {
-                recs.push({
-                  icon: "🃏",
-                  title: "EMBRACE THE OBSTACLE COURSE",
-                  insight: `${wildcardCount} wildcards in your squad. Unpredictable players thrive in chaos — the Obstacle Course is your event.`,
-                  eventId: "obstacle",
-                });
-              }
-
-              // Motivator-heavy team
-              const motivatorCount = countOf(teammateTypes, "motivator");
-              if (motivatorCount >= 3) {
-                recs.push({
-                  icon: "📣",
-                  title: "ENERGY IS YOUR WEAPON",
-                  insight: `${motivatorCount} motivators on your team. Use that crowd energy in the Relay — momentum is contagious.`,
-                  eventId: "relay",
-                });
-              }
-
-              // Long jump rec
-              const jumpCount = countOf(strongestEvents, "long_jump");
-              if (jumpCount >= 2) {
-                recs.push({
-                  icon: "🦘",
-                  title: "LONG JUMP IS YOURS",
-                  insight: `${jumpCount} teammates listed Long Jump as their strongest event. Coordinate your best jumpers for maximum points.`,
-                  eventId: "long_jump",
-                });
-              }
-
-              // Default rec if no data
-              if (recs.length === 0) {
-                recs.push({
-                  icon: "⚡",
-                  title: "PLAY TO YOUR STRENGTHS",
-                  insight: "Once your squad fills their profiles, AI-powered event recommendations will appear here based on your team's strengths.",
-                });
-              }
-
-              return (
-                <div className="mt-8">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="h-px flex-1 bg-white/10" />
-                    <span className="font-mono text-xs tracking-[0.3em]" style={{ color: tc.hex }}>AI RECOMMENDATIONS</span>
-                    <div className="h-px flex-1 bg-white/10" />
-                  </div>
-                  <p className="font-mono text-white/25 text-[10px] tracking-wider mb-4">
-                    Based on your squad's questionnaire data.
-                  </p>
-                  <div className="space-y-3">
-                    {recs.map((rec, i) => (
-                      <div
-                        key={i}
-                        className="p-4 border"
-                        style={{
-                          borderColor: `${tc.hex}30`,
-                          background: `${tc.hex}06`,
-                        }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="text-2xl flex-shrink-0">{rec.icon}</span>
-                          <div>
-                            <div
-                              className="font-display text-base tracking-widest mb-1"
-                              style={{ color: tc.hex }}
-                            >
-                              {rec.title}
-                            </div>
-                            <div className="font-mono text-white/40 text-xs leading-relaxed">
-                              {rec.insight}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
           </div>
-        )}
+          );
+        })()}
 
         {/* ─── LEADERBOARD TAB ─── */}
         {activeTab === "leaderboard" && (
@@ -1187,8 +1185,13 @@ export default function TeamHub() {
               {/* Instagram handle */}
               {selectedMember.instagramHandle && (
                 <div className="text-center mb-4">
-                  <p className="font-mono text-white/50 text-sm">@{selectedMember.instagramHandle}</p>
-                </div>
+                   <a
+                     href={`https://instagram.com/${selectedMember.instagramHandle.replace(/^@/, '')}`}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="font-mono text-white/50 text-sm hover:text-white/80 transition-colors underline underline-offset-2"
+                   >@{selectedMember.instagramHandle}</a>
+                 </div>
               )}
               
               {/* Tagline */}
@@ -1284,10 +1287,15 @@ export default function TeamHub() {
 
                 {/* IG handle if found */}
                 {capMember?.instagramHandle && (
-                  <div className="text-center mb-4">
-                    <p className="font-mono text-white/50 text-sm">@{capMember.instagramHandle}</p>
-                  </div>
-                )}
+                   <div className="text-center mb-4">
+                     <a
+                       href={`https://instagram.com/${capMember.instagramHandle.replace(/^@/, '')}`}
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       className="font-mono text-white/50 text-sm hover:text-white/80 transition-colors underline underline-offset-2"
+                     >@{capMember.instagramHandle}</a>
+                   </div>
+                 )}
 
                 {/* Tagline if found */}
                 {capMember?.profileTagline && (
