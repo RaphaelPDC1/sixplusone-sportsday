@@ -557,52 +557,120 @@ export default function TeamHub() {
 
         {/* ─── EVENTS TAB ─── */}
         {activeTab === "events" && (() => {
-          // Build AI recs from member data
+          // Build AI insights from member data — always-on, scales from 1 member upward
           const members = hub.members;
           const teammateTypes: string[] = members.map((m) => m.teammateType).filter((x) => x != null) as string[];
           const strongestEvents: string[] = members.map((m) => m.strongestEvent).filter((x) => x != null) as string[];
           const countOf = (arr: string[], val: string) => arr.filter((x) => x === val).length;
+          const totalResponses = strongestEvents.length;
 
-          // Map event ID → AI insight for that event
-          const eventInsights: Record<string, string> = {};
+          // Helper: pick the right language tier based on count
+          const tier = (n: number) => {
+            if (n === 0) return null;
+            if (n === 1) return "1 member";
+            if (n === 2) return "2 members";
+            if (n <= 4) return `${n} members`;
+            return `${n} members`;
+          };
+
+          // Helper: confidence prefix based on count vs squad size
+          const confidence = (n: number) => {
+            if (n === 1) return "Early signal";
+            if (n === 2) return "Growing edge";
+            if (n <= 4) return "Strong advantage";
+            return "Dominant strength";
+          };
+
           // Backend enums: strongestEvent = speed | strength | endurance | coordination | vibes
           //                 teammateType  = motivator | strategist | wildcard | silent_assassin | energy_bringer
-          const speedCount = countOf(strongestEvents, "speed");
-          if (speedCount >= 3) {
-            eventInsights["sprint"] = `${speedCount} of your squad are strongest in speed. Push hard here — this is your edge.`;
-            eventInsights["relay"] = `${speedCount} speed-focused members. Relay timing is your weapon — coordinate your fastest runners.`;
-          }
-          const strengthCount = countOf(strongestEvents, "strength");
-          if (strengthCount >= 3) {
-            eventInsights["tug_of_war"] = `${strengthCount} of your squad are strongest in strength. Tug of War is built for you — go all in.`;
-          }
-          const coordCount = countOf(strongestEvents, "coordination");
-          if (coordCount >= 3) {
-            eventInsights["obstacle"] = `${coordCount} coordination-focused players. The Obstacle Course rewards precision and timing — your squad has the edge.`;
-          }
+          const speedCount      = countOf(strongestEvents, "speed");
+          const strengthCount   = countOf(strongestEvents, "strength");
+          const coordCount      = countOf(strongestEvents, "coordination");
+          const enduranceCount  = countOf(strongestEvents, "endurance");
+          const vibesCount      = countOf(strongestEvents, "vibes");
+          const motivatorCount  = countOf(teammateTypes, "motivator");
           const strategistCount = countOf(teammateTypes, "strategist");
-          if (strategistCount >= 3 && !eventInsights["tug_of_war"]) {
-            eventInsights["tug_of_war"] = `${strategistCount} strategists on your team. Tug of War is won by coordination, not just strength — you have the advantage.`;
-          }
-          const wildcardCount = countOf(teammateTypes, "wildcard");
-          if (wildcardCount >= 3 && !eventInsights["obstacle"]) {
-            eventInsights["obstacle"] = `${wildcardCount} wildcards in your squad. Unpredictable players thrive in chaos — this course is built for you.`;
-          }
-          const motivatorCount = countOf(teammateTypes, "motivator");
-          if (motivatorCount >= 3 && !eventInsights["relay"]) {
-            eventInsights["relay"] = `${motivatorCount} motivators on your team. Use that crowd energy in the Relay — momentum is contagious.`;
-          }
-          const energyCount = countOf(teammateTypes, "energy_bringer");
-          if (energyCount >= 3 && !eventInsights["penalty_shoot"]) {
-            eventInsights["penalty_shoot"] = `${energyCount} energy bringers on your team. Penalty shootout is a crowd moment — your energy will be the difference.`;
-          }
-          const enduranceCount = countOf(strongestEvents, "endurance");
-          if (enduranceCount >= 2) {
-            eventInsights["long_jump"] = `${enduranceCount} endurance-focused players. Long Jump rewards explosive power and consistency — push your best athletes here.`;
+          const wildcardCount   = countOf(teammateTypes, "wildcard");
+          const silentCount     = countOf(teammateTypes, "silent_assassin");
+          const energyCount     = countOf(teammateTypes, "energy_bringer");
+
+          // Map event ID → AI insight — always generated, never empty
+          const eventInsights: Record<string, string> = {};
+
+          // SPRINT — speed is the primary signal, motivators add crowd energy
+          if (speedCount > 0) {
+            eventInsights["sprint"] = `${confidence(speedCount)}: ${tier(speedCount)} rated speed as their strongest attribute. ${speedCount === 1 ? "That's your anchor — put them in the blocks." : "Line them up and let them fly — this is your event to own."}`;
+          } else if (motivatorCount > 0) {
+            eventInsights["sprint"] = `${tier(motivatorCount)} ${motivatorCount === 1 ? "is a natural motivator" : "are natural motivators"} — use that energy to push your sprinters past their limits.`;
+          } else {
+            eventInsights["sprint"] = `No speed specialists identified yet — but any team can win the sprint with the right mindset. Pick your fastest and back them fully.`;
           }
 
-          // Top-level recs (events with insights)
-          const topRecs = EVENTS.filter((e) => eventInsights[e.id]);
+          // RELAY — speed + motivators are the key signals
+          const relaySignal = speedCount + motivatorCount;
+          if (speedCount > 0 && motivatorCount > 0) {
+            eventInsights["relay"] = `${tier(speedCount)} speed-focused + ${tier(motivatorCount)} motivator${motivatorCount === 1 ? "" : "s"} — relay is where your team chemistry becomes a weapon. Nail the handoffs.`;
+          } else if (speedCount > 0) {
+            eventInsights["relay"] = `${confidence(speedCount)}: ${tier(speedCount)} built for speed. Relay rewards your fastest legs — coordinate the order and trust the baton.`;
+          } else if (motivatorCount > 0) {
+            eventInsights["relay"] = `${tier(motivatorCount)} motivator${motivatorCount === 1 ? "" : "s"} on your squad — relay is a team moment. Use that crowd energy to carry each other through.`;
+          } else {
+            eventInsights["relay"] = `Relay is about trust and timing above all else. No data yet, but the team that communicates best wins this one.`;
+          }
+
+          // TUG OF WAR — strength + strategists
+          if (strengthCount > 0 && strategistCount > 0) {
+            eventInsights["tug_of_war"] = `${tier(strengthCount)} strength-focused + ${tier(strategistCount)} strategist${strategistCount === 1 ? "" : "s"} — Tug of War is yours to dominate. Raw power meets smart anchoring.`;
+          } else if (strengthCount > 0) {
+            eventInsights["tug_of_war"] = `${confidence(strengthCount)}: ${tier(strengthCount)} rated strength as their top attribute. ${strengthCount === 1 ? "Build your line around them — they're your anchor." : "Stack them at the back and dig in — this is your event."}`;
+          } else if (strategistCount > 0) {
+            eventInsights["tug_of_war"] = `${tier(strategistCount)} strategist${strategistCount === 1 ? "" : "s"} on your team — Tug of War is won by coordination and timing, not just brute force. Outsmart them.`;
+          } else {
+            eventInsights["tug_of_war"] = `No strength specialists flagged yet — but positioning and timing win this. Get low, stay tight, and hold the line together.`;
+          }
+
+          // OBSTACLE COURSE — coordination + wildcards
+          if (coordCount > 0 && wildcardCount > 0) {
+            eventInsights["obstacle"] = `${tier(coordCount)} coordination-focused + ${tier(wildcardCount)} wildcard${wildcardCount === 1 ? "" : "s"} — Obstacle Course was made for this mix. Precision meets chaos.`;
+          } else if (coordCount > 0) {
+            eventInsights["obstacle"] = `${confidence(coordCount)}: ${tier(coordCount)} rated coordination as their strength. ${coordCount === 1 ? "Lead with them on the technical sections." : "The Obstacle Course rewards exactly this — precision and timing."}`;
+          } else if (wildcardCount > 0) {
+            eventInsights["obstacle"] = `${tier(wildcardCount)} wildcard${wildcardCount === 1 ? "" : "s"} in your squad — unpredictable players thrive in chaos. This course is built for them.`;
+          } else {
+            eventInsights["obstacle"] = `Obstacle Course rewards adaptability over raw fitness. No specialists flagged yet — but a team that communicates through the chaos will always have the edge.`;
+          }
+
+          // LONG JUMP — endurance + silent assassins (consistent performers)
+          if (enduranceCount > 0) {
+            eventInsights["long_jump"] = `${confidence(enduranceCount)}: ${tier(enduranceCount)} built for endurance. Long Jump rewards explosive consistency — ${enduranceCount === 1 ? "they're your best bet here." : "rotate your strongest athletes and keep the pressure on."}`;
+          } else if (silentCount > 0) {
+            eventInsights["long_jump"] = `${tier(silentCount)} silent assassin${silentCount === 1 ? "" : "s"} on your team — they perform when it matters most. Long Jump is a quiet event. Let them do their thing.`;
+          } else {
+            eventInsights["long_jump"] = `Long Jump is about commitment — no hesitation at the line. No specialists flagged yet, but the athlete who backs themselves fully will go furthest.`;
+          }
+
+          // PENALTY SHOOTOUT — energy bringers + vibes
+          if (energyCount > 0 && vibesCount > 0) {
+            eventInsights["penalty_shoot"] = `${tier(energyCount)} energy bringer${energyCount === 1 ? "" : "s"} + ${tier(vibesCount)} vibes-focused — Penalty Shootout is a crowd moment. Your team's energy is a genuine advantage here.`;
+          } else if (energyCount > 0) {
+            eventInsights["penalty_shoot"] = `${confidence(energyCount)}: ${tier(energyCount)} energy bringer${energyCount === 1 ? "" : "s"} on your squad. Penalty shootout is 90% nerves — your team's atmosphere will carry the shooter.`;
+          } else if (vibesCount > 0) {
+            eventInsights["penalty_shoot"] = `${tier(vibesCount)} member${vibesCount === 1 ? "" : "s"} fuelled by vibes — Penalty Shootout rewards belief. Keep the energy high and back your shooter.`;
+          } else {
+            eventInsights["penalty_shoot"] = `Penalty Shootout is pure pressure. No specific signals yet — but the team that stays loud and backs their shooter will have the psychological edge.`;
+          }
+
+          // MYSTERY TIEBREAKER — always a wildcard message
+          if (wildcardCount > 0) {
+            eventInsights["tiebreaker"] = `${tier(wildcardCount)} wildcard${wildcardCount === 1 ? "" : "s"} on your team — whatever the mystery event is, they were born for the unexpected. Stay ready.`;
+          } else if (totalResponses > 0) {
+            eventInsights["tiebreaker"] = `Nobody knows what this is yet — but your squad has answered the call. Stay loose, stay ready, and trust the team.`;
+          } else {
+            eventInsights["tiebreaker"] = `The mystery tiebreaker is unknown — but every great team thrives in the unexpected. Whatever it is, bring the energy.`;
+          }
+
+          // All events always have an insight — topRecs shows all of them
+          const topRecs = EVENTS;
 
           return (
           <div className="space-y-4">
@@ -618,28 +686,22 @@ export default function TeamHub() {
               <p className="font-mono text-white/35 text-[10px] leading-relaxed mb-3">
                 Based on your squad's questionnaire — tap any event to see your team's AI-powered strategy.
               </p>
-              {topRecs.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {topRecs.map((e) => (
-                    <button
-                      key={e.id}
-                      onClick={() => setExpandedEvent(expandedEvent === e.id ? null : e.id)}
-                      className="font-mono text-[10px] tracking-wider px-2 py-1 border transition-all"
-                      style={{
-                        borderColor: `${tc.hex}50`,
-                        background: expandedEvent === e.id ? `${tc.hex}20` : "transparent",
-                        color: expandedEvent === e.id ? tc.hex : "rgba(255,255,255,0.4)",
-                      }}
-                    >
-                      {e.icon} {e.name}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="font-mono text-white/20 text-[10px]">
-                  Fill in your squad profiles to unlock personalised event recommendations.
-                </p>
-              )}
+              <div className="flex flex-wrap gap-2">
+                {topRecs.map((e) => (
+                  <button
+                    key={e.id}
+                    onClick={() => setExpandedEvent(expandedEvent === e.id ? null : e.id)}
+                    className="font-mono text-[10px] tracking-wider px-2 py-1 border transition-all"
+                    style={{
+                      borderColor: `${tc.hex}50`,
+                      background: expandedEvent === e.id ? `${tc.hex}20` : "transparent",
+                      color: expandedEvent === e.id ? tc.hex : "rgba(255,255,255,0.4)",
+                    }}
+                  >
+                    {e.icon} {e.name}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <SectionHeader label="THE EVENTS" />
@@ -715,9 +777,7 @@ export default function TeamHub() {
                             })}
                           </div>
                         )}
-                        {!aiInsight && eventResults.length === 0 && (
-                          <p className="font-mono text-white/20 text-[10px] mt-3">No results yet. Check back on the day.</p>
-                        )}
+                        {/* Every event always has an insight — no empty fallback needed */}
                       </div>
                     )}
                   </div>
