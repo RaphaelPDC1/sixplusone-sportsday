@@ -594,6 +594,47 @@ export default function TeamHub() {
           const silentCount     = countOf(teammateTypes, "silent_assassin");
           const energyCount     = countOf(teammateTypes, "energy_bringer");
 
+          // Map event ID → best-fit member IDs for that event
+          const eventBestFit: Record<string, { member: typeof members[0]; reason: string }[]> = {};
+
+          // For each event, find members whose questionnaire answers make them a good fit
+          const addFit = (eventId: string, member: typeof members[0], reason: string) => {
+            if (!eventBestFit[eventId]) eventBestFit[eventId] = [];
+            // Avoid duplicates
+            if (!eventBestFit[eventId].some((f) => f.member.id === member.id)) {
+              eventBestFit[eventId].push({ member, reason });
+            }
+          };
+
+          members.forEach((m) => {
+            const se = m.strongestEvent;
+            const tt = m.teammateType;
+            // Sprint: speed or motivator
+            if (se === "speed")      addFit("sprint", m, "Speed specialist");
+            if (tt === "motivator")  addFit("sprint", m, "Crowd energy carrier");
+            // Relay: speed or motivator
+            if (se === "speed")      addFit("relay", m, "Speed specialist");
+            if (tt === "motivator")  addFit("relay", m, "Momentum driver");
+            // Tug of War: strength or strategist
+            if (se === "strength")   addFit("tug_of_war", m, "Strength specialist");
+            if (tt === "strategist") addFit("tug_of_war", m, "Tactical anchor");
+            // Obstacle Course: coordination or wildcard
+            if (se === "coordination") addFit("obstacle", m, "Coordination specialist");
+            if (tt === "wildcard")     addFit("obstacle", m, "Chaos navigator");
+            // Long Jump: endurance or silent assassin
+            if (se === "endurance")       addFit("long_jump", m, "Endurance specialist");
+            if (tt === "silent_assassin") addFit("long_jump", m, "Clutch performer");
+            // Penalty Shootout: energy bringer or vibes
+            if (tt === "energy_bringer") addFit("penalty_shoot", m, "Energy bringer");
+            if (se === "vibes")          addFit("penalty_shoot", m, "Vibes specialist");
+            // Mystery Tiebreaker: wildcards always, then everyone else
+            if (tt === "wildcard")    addFit("tiebreaker", m, "Born for the unexpected");
+          });
+          // Tiebreaker fallback: if no wildcards, include all members
+          if (!eventBestFit["tiebreaker"] || eventBestFit["tiebreaker"].length === 0) {
+            members.forEach((m) => addFit("tiebreaker", m, "Ready for anything"));
+          }
+
           // Map event ID → AI insight — always generated, never empty
           const eventInsights: Record<string, string> = {};
 
@@ -777,7 +818,50 @@ export default function TeamHub() {
                             })}
                           </div>
                         )}
-                        {/* Every event always has an insight — no empty fallback needed */}
+                        {/* BEST FIT: squad members suited for this event */}
+                        {(() => {
+                          const fits = eventBestFit[event.id] ?? [];
+                          if (fits.length === 0) return null;
+                          return (
+                            <div className="mt-3 pt-3 border-t" style={{ borderColor: `${tc.hex}15` }}>
+                              <div className="font-mono text-[9px] tracking-[0.25em] text-white/30 mb-2">BEST FIT FOR THIS EVENT</div>
+                              <div className="flex flex-wrap gap-2">
+                                {fits.map(({ member, reason }) => (
+                                  <div
+                                    key={member.id}
+                                    className="flex items-center gap-2 px-2 py-1.5 border"
+                                    style={{ borderColor: `${tc.hex}30`, background: `${tc.hex}08` }}
+                                  >
+                                    {/* Avatar */}
+                                    <div
+                                      className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center border"
+                                      style={{ borderColor: `${tc.hex}50` }}
+                                    >
+                                      {member.photoUrl ? (
+                                        <img src={member.photoUrl} alt={member.fullName ?? ""} className="w-full h-full object-cover" />
+                                      ) : (
+                                        <span className="text-[10px]">
+                                          {member.teammateType === "motivator" ? "📣"
+                                            : member.teammateType === "strategist" ? "🧠"
+                                            : member.teammateType === "wildcard" ? "🃏"
+                                            : member.teammateType === "silent_assassin" ? "🎯"
+                                            : "⚡"}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div>
+                                      <div className="font-display text-xs tracking-widest leading-none" style={{ color: member.id === userId ? tc.hex : "rgba(255,255,255,0.8)" }}>
+                                        {member.fullName?.split(" ")[0]?.toUpperCase()}
+                                        {member.id === userId && <span className="font-mono text-[8px] ml-1 opacity-60">YOU</span>}
+                                      </div>
+                                      <div className="font-mono text-[9px] text-white/30 mt-0.5">{reason}</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
                   </div>
