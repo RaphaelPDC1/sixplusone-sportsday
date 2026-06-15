@@ -19,10 +19,10 @@ const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
 // ── Team shirt images ─────────────────────────────────────────────────────
 const TEAM_SHIRT_URLS: Record<string, string> = {
-  red:    "/manus-storage/sportsday002-red-front-hires_376fb25e.png",
-  blue:   "/manus-storage/sportsday002-blue-front-hires_93775b9a.png",
-  pink:   "/manus-storage/sportsday002-pink-front-hires_fc58c805.png",
-  orange: "/manus-storage/sportsday002-orange-front-hires_8305fb97.png",
+  red:    "/manus-storage/sportsday002-red-front-hires-nobg_6b606d5b.png",
+  blue:   "/manus-storage/sportsday002-blue-front-hires-nobg_b4a974b8.png",
+  pink:   "/manus-storage/sportsday002-pink-front-hires-nobg_2cc01dbd.png",
+  orange: "/manus-storage/sportsday002-orange-front-hires-nobg_8ddf5939.png",
 };
 
 // ── Animation phases ───────────────────────────────────────────────────────
