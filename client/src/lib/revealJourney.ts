@@ -41,12 +41,23 @@ export function hasSeenShirtConfirm(registrationId: string): boolean {
  * Returns true if a user has completed their full reveal flow.
  * PAID: team reveal + unlock reveal
  * FREE: team reveal only
+ *
+ * Prefers server revealSeen if provided, falls back to localStorage flags.
+ * This ensures that after logout/login, the server value is used.
  */
 export function hasCompletedFullRevealFlow(
   registrationId: string,
-  accessType?: string | null
+  accessType?: string | null,
+  serverRevealSeen?: boolean
 ): boolean {
   const isPaid = accessType === "priority";
+  
+  // If server says reveal was seen, trust that (handles re-login case)
+  if (serverRevealSeen === true) {
+    return true;
+  }
+  
+  // Otherwise fall back to localStorage flags
   if (isPaid) {
     return (
       hasSeenTeamReveal(registrationId) &&
@@ -103,15 +114,26 @@ export function resetRevealJourneyForReplay(
  * FREE journey (accessType === "free" or null):
  *   /reveal → /team-hub  (skip unlock reveal)
  *
+ * Prefers server revealSeen if provided, falls back to localStorage flags.
+ * This ensures that after logout/login, the server value is used.
+ *
  * @param registrationId - The user's registration ID (used for localStorage flags)
  * @param accessType - "priority" for paid users, "free" or null for free users
+ * @param serverRevealSeen - Server-side reveal status (if available, takes precedence)
  */
 export function getNextRevealRoute(
   registrationId: string,
-  accessType?: string | null
+  accessType?: string | null,
+  serverRevealSeen?: boolean
 ): string {
   const isPaid = accessType === "priority";
 
+  // If server says reveal was seen, skip directly to team hub
+  if (serverRevealSeen === true) {
+    return "/team-hub";
+  }
+
+  // Otherwise fall back to localStorage flags
   // Both paid and free users start with team reveal
   if (!hasSeenTeamReveal(registrationId)) return "/reveal";
 

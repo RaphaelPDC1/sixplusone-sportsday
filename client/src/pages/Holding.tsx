@@ -578,7 +578,7 @@ export default function Holding() {
     sportsDayProfile: dashboard.profile ?? "",
     paymentStatus: dashboard.state === "UNLOCKED_PRIORITY" || dashboard.state === "PUBLIC_REVEAL" ? "paid" : "unpaid",
     revealStatus: dashboard.state === "UNLOCKED_PRIORITY" || dashboard.state === "PUBLIC_REVEAL" ? "unlocked" : "locked",
-    revealSeen: false,
+    revealSeen: dashboard.revealSeen ?? false, // Server-side reveal state
     referralCode: dashboard.referralCode ?? "",
     referralCount: dashboard.referralCount ?? 0,
     referralRewardUnlocked: false,
@@ -613,12 +613,13 @@ export default function Holding() {
       // Use central state manager to determine the correct next route
       const registrationId = localStorage.getItem("sd_user_id") ?? "";
       const accessType = dashboard.accessType; // "priority" for paid, "free" for free users
-      if (hasCompletedFullRevealFlow(registrationId, accessType)) {
+      const serverRevealSeen = dashboard.revealSeen ?? false; // Use server state as source of truth
+      if (hasCompletedFullRevealFlow(registrationId, accessType, serverRevealSeen)) {
         // Returning user who has seen their full journey — go straight to dashboard
         navigateRef.current("/team-hub");
       } else {
         // First-time unlock — start the reveal journey from where they left off
-        navigateRef.current(getNextRevealRoute(registrationId, accessType));
+        navigateRef.current(getNextRevealRoute(registrationId, accessType, serverRevealSeen));
       }
     }
   }, [dashboard?.state]); // eslint-disable-line react-hooks/exhaustive-deps
