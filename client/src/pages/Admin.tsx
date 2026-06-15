@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
+import { TeamCaptainsSection } from "@/components/TeamCaptainsSection";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -302,6 +303,9 @@ export default function Admin() {
 
       <div className="px-6 py-6 space-y-6">
 
+        {/* Team Captains */}
+        <TeamCaptainsSection />
+
         {/* Stats Cards */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -343,14 +347,14 @@ export default function Admin() {
             </div>
           </div>
         )}
-
         {/* Tabs */}
-        <div className="flex gap-0 border-b border-[#1A1A1A]">
-          {(["users", "health", "leaderboard", "schedule", "settings"] as const).map((tab) => (
+        <div className="flex gap-0 border-b border-[#1A1A1A] overflow-x-auto scrollbar-hide">
+          {([
+"users", "health", "leaderboard", "schedule", "settings"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as typeof activeTab)}
-              className={`font-mono text-xs tracking-[0.2em] px-6 py-3 transition-colors ${
+              className={`font-mono text-xs tracking-[0.2em] px-4 md:px-6 py-3 transition-colors whitespace-nowrap ${
                 activeTab === tab
                   ? "text-[#FF5500] border-b-2 border-[#FF5500]"
                   : "text-[#444] hover:text-[#F2F0EB]"
@@ -365,7 +369,7 @@ export default function Admin() {
         {activeTab === "users" && (
           <div>
             {/* Filters */}
-            <div className="flex flex-wrap gap-3 mb-4">
+            <div className="flex flex-col md:flex-row md:flex-wrap gap-3 mb-4">
               <input
                 type="text"
                 placeholder="Search name, email, instagram..."
