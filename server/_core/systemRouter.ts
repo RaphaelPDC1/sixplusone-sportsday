@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { notifyOwner } from "./notification";
 import { adminProcedure, publicProcedure, router } from "./trpc";
+import { askTeamFairnessBot } from "../chatbot";
 
 export const systemRouter = router({
   health: publicProcedure
@@ -25,5 +26,16 @@ export const systemRouter = router({
       return {
         success: delivered,
       } as const;
+    }),
+
+  askTeamFairnessBot: publicProcedure
+    .input(
+      z.object({
+        message: z.string().min(1, "message is required").max(500, "message too long"),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const response = await askTeamFairnessBot(input.message);
+      return response;
     }),
 });

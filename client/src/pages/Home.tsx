@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import AnimatedShaderHero from "@/components/ui/animated-shader-hero";
 import { ShootingStarCanvas } from "@/components/ui/shooting-star-canvas";
 import { AdPopup } from "@/components/AdPopup";
+import { TeamFairnessBot } from "@/components/TeamFairnessBot";
 
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
@@ -20,7 +21,7 @@ function InfoBlock({ number, title, body }: { number: string; title: string; bod
 export default function Home() {
   const [, navigate] = useLocation();
 
-  // Set SEO title and meta description
+  // Set SEO title and meta description + fire Meta Pixel ViewContent
   useEffect(() => {
     document.title = "Sports Day 002 | 6+1 Team Building Event July 2026";
     
@@ -41,6 +42,16 @@ export default function Home() {
       document.head.appendChild(metaKeywords);
     }
     metaKeywords.setAttribute('content', 'sports day, team building, 6+1, Sheffield, July 2026, event, team competition');
+    
+    // Fire Meta Pixel ViewContent event
+    if (typeof (window as any).fbq !== 'undefined') {
+      (window as any).fbq('track', 'ViewContent', {
+        content_name: 'Sports Day 002 Landing',
+        content_type: 'product',
+        value: 0.01,
+        currency: 'GBP'
+      });
+    }
   }, []);
 
   // Shooting star easter egg state
@@ -194,6 +205,7 @@ export default function Home() {
           </div>
         </div>
       </div>
+      <TeamFairnessBot />
     </div>
   );
 }
