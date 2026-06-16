@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
+import AdminScoring from "./AdminScoring";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -93,21 +94,14 @@ function AdminPasswordGate({ onUnlock }: { onUnlock: () => void }) {
 
 export default function Admin() {
   const [, navigate] = useLocation();
-  const { user, isAuthenticated, loading } = useAuth();
+  const { loading } = useAuth();
   const [showSplash, setShowSplash] = useState(
     () => sessionStorage.getItem("admin_splash_seen") !== "true"
   );
   const [passwordUnlocked, setPasswordUnlocked] = useState(
-    () => {
-      // TEMPORARY: Auto-unlock if user is authenticated as admin (bypass password gate for testing)
-      if (typeof window !== "undefined" && isAuthenticated && user?.role === "admin") {
-        sessionStorage.setItem("admin_unlocked", "true");
-        return true;
-      }
-      return sessionStorage.getItem("admin_unlocked") === "true";
-    }
+    () => sessionStorage.getItem("admin_unlocked") === "true"
   );
-  const [activeTab, setActiveTab] = useState<"users" | "health" | "leaderboard" | "schedule" | "settings">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "health" | "leaderboard" | "schedule" | "settings" | "scoring">("users");
   const [scheduleForm, setScheduleForm] = useState({ eventName: "", startTime: "", endTime: "", location: "", description: "", sortOrder: "0", isCompleted: false });
   const [lbForm, setLbForm] = useState({
     eventName: "sprint",
@@ -125,10 +119,18 @@ export default function Admin() {
     search: "",
   });
 
-  const isAdmin = isAuthenticated && user?.role === "admin";
-  // TEMPORARY: canAccess = isAdmin (bypass password gate for testing)
-  const canAccess = isAdmin;
+  // Password gate is the sole access control — no OAuth role required
+  const canAccess = passwordUnlocked;
   const utils = trpc.useUtils();
+
+  const adminLogoutMutation = trpc.sportsday.adminLogout.useMutation({
+    onSuccess: () => {
+      sessionStorage.removeItem("admin_unlocked");
+      sessionStorage.removeItem("admin_splash_seen");
+      setPasswordUnlocked(false);
+      navigate("/");
+    },
+  });
 
   const { data: stats } = trpc.sportsday.adminStats.useQuery(undefined, {
     enabled: canAccess,
@@ -253,28 +255,7 @@ export default function Admin() {
     return <AdminPasswordGate onUnlock={() => setPasswordUnlocked(true)} />;
   }
 
-  // Step 2: Must be logged in as admin
-  if (!isAuthenticated || user?.role !== "admin") {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center px-5">
-        <div className="h-[2px] bg-[#FF5500] absolute top-0 left-0 right-0" />
-        <img src={LOGO_URL} alt="6+1" className="h-10 w-auto mb-8" style={{ filter: "invert(1)" }} />
-        <h1 className="font-display text-[#F2F0EB] text-4xl tracking-widest mb-4">ACCESS DENIED.</h1>
-        <p className="font-mono text-[#555] text-sm tracking-wider mb-2">
-          Admin role required. You are{isAuthenticated ? " not an admin" : " not logged in"}.
-        </p>
-        <p className="font-mono text-[#444] text-xs tracking-wider mb-8">
-          Log in with an admin account to access this dashboard.
-        </p>
-        <button
-          onClick={() => navigate("/")}
-          className="border border-[#333] text-[#F2F0EB] font-mono text-sm tracking-widest px-8 py-4 hover:border-[#FF5500] hover:text-[#FF5500] transition-colors"
-        >
-          GO HOME
-        </button>
-      </div>
-    );
-  }
+  // Password gate is the only check — no OAuth role screen needed
 
   const totalTeam = stats ? Object.values(stats.teams).reduce((a, b) => a + b, 0) : 0;
 
@@ -293,12 +274,20 @@ export default function Admin() {
             <p className="font-mono text-[#444] text-xs tracking-wider">SPORTS DAY 002</p>
           </div>
         </div>
-        <button
-          onClick={exportCSV}
-          className="bg-[#FF5500] text-[#0A0A0A] font-mono text-xs tracking-widest px-5 py-2 hover:bg-[#F2F0EB] transition-colors"
-        >
-          EXPORT CSV ↓
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={exportCSV}
+            className="bg-[#FF5500] text-[#0A0A0A] font-mono text-xs tracking-widest px-5 py-2 hover:bg-[#F2F0EB] transition-colors"
+          >
+            EXPORT CSV ↓
+          </button>
+          <button
+            onClick={() => adminLogoutMutation.mutate()}
+            className="border border-[#333] text-[#555] font-mono text-xs tracking-widest px-4 py-2 hover:border-[#FF5500] hover:text-[#FF5500] transition-colors"
+          >
+            LOGOUT
+          </button>
+        </div>
       </header>
 
       <div className="px-6 py-6 space-y-6">
@@ -349,8 +338,7 @@ export default function Admin() {
         )}
         {/* Tabs */}
         <div className="flex gap-0 border-b border-[#1A1A1A] overflow-x-auto scrollbar-hide">
-          {([
-"users", "health", "leaderboard", "schedule", "settings"] as const).map((tab) => (
+          {(["users", "health", "leaderboard", "schedule", "settings", "scoring"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as typeof activeTab)}
@@ -360,7 +348,7 @@ export default function Admin() {
                   : "text-[#444] hover:text-[#F2F0EB]"
               }`}
             >
-              {tab === "users" ? "ALL REGISTRATIONS" : tab === "health" ? "HEALTH NOTES" : tab === "leaderboard" ? "LEADERBOARD" : tab === "schedule" ? "SCHEDULE" : "SETTINGS"}
+              {tab === "users" ? "ALL REGISTRATIONS" : tab === "health" ? "HEALTH NOTES" : tab === "leaderboard" ? "LEADERBOARD" : tab === "schedule" ? "SCHEDULE" : tab === "scoring" ? "🏆 SCORING" : "SETTINGS"}
             </button>
           ))}
         </div>
@@ -784,6 +772,10 @@ export default function Admin() {
               </ul>
             </div>
           </div>
+        )}
+
+        {activeTab === "scoring" && (
+          <AdminScoring />
         )}
 
         {activeTab === "health" && (

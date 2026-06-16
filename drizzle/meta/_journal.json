@@ -141,6 +141,13 @@
       "when": 1781620058001,
       "tag": "0019_milky_miss_america",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1781653586736,
+      "tag": "0020_free_khan",
+      "breakpoints": true
     }
   ]
 }

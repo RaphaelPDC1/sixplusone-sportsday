@@ -34,6 +34,7 @@ import { invokeLLM } from "./_core/llm";
 import { handleSportsDayRegistration, handleSportsDayPayment, handleTeamReassignment, handleAutoUnlock, handleShirtUpdate } from "./_core/klaviyo";
 import { sendCompleteRegistrationEvent, extractUserDataFromRequest } from "./_core/metaConversionsApi";
 import { TRPCError } from "@trpc/server";
+import { scoringRouter } from "./routers/scoring";
 
 // ─── In-memory rate limiter ───────────────────────────────────────────────────
 // Simple sliding-window rate limiter — no external dependency needed.
@@ -52,9 +53,39 @@ function checkRateLimit(key: string, maxRequests: number, windowMs: number): boo
 
 // ─── Admin Guard ──────────────────────────────────────────────────────────────
 
-const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.user.role !== "admin") {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
+// Admin session cookie name — separate from the sports-day participant session
+const ADMIN_SESSION_COOKIE = "sd_admin_session";
+
+// Parse raw cookie header string into a key-value map
+function parseCookieString(cookieHeader: string | undefined): Record<string, string> {
+  if (!cookieHeader) return {};
+  return Object.fromEntries(
+    cookieHeader.split(";").map((c) => {
+      const idx = c.indexOf("=");
+      if (idx === -1) return [c.trim(), ""];
+      return [c.slice(0, idx).trim(), decodeURIComponent(c.slice(idx + 1).trim())];
+    })
+  );
+}
+
+// Check if the request has a valid admin session cookie
+function hasAdminSession(req: { headers?: { cookie?: string } }): boolean {
+  const cookies = parseCookieString(req.headers?.cookie);
+  const token = cookies[ADMIN_SESSION_COOKIE];
+  if (!token) return false;
+  // Token is a HMAC of the admin password — verify it matches
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) return false;
+  const expected = crypto.createHmac("sha256", adminPassword).update("admin_session").digest("hex");
+  return token === expected;
+}
+
+// Admin procedure: accepts either OAuth admin role OR valid admin session cookie
+const adminProcedure = publicProcedure.use(({ ctx, next }) => {
+  const isOAuthAdmin = ctx.user?.role === "admin";
+  const hasCookieSession = hasAdminSession(ctx.req);
+  if (!isOAuthAdmin && !hasCookieSession) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "Admin access required" });
   }
   return next({ ctx });
 });
@@ -581,7 +612,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
     }))
     .mutation(async ({ input, ctx }) => {
       // SECURITY: Audit log all deletion requests
-      console.log(`[GDPR DELETION] Admin ${ctx.user.id} requested deletion for email: ${input.email} at ${new Date().toISOString()}`);
+      console.log(`[GDPR DELETION] Admin ${ctx.user?.id ?? 'password-session'} requested deletion for email: ${input.email} at ${new Date().toISOString()}`);
 
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -960,7 +991,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
           points: input.points,
           dnf: input.dnf,
           notes: input.notes ?? null,
-          updatedBy: ctx.user.openId,
+          updatedBy: ctx.user?.openId ?? 'admin',
         })
         .onDuplicateKeyUpdate({
           set: {
@@ -968,7 +999,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
             points: input.points,
             dnf: input.dnf,
             notes: input.notes ?? null,
-            updatedBy: ctx.user.openId,
+            updatedBy: ctx.user?.openId ?? 'admin',
           },
         });
       return { success: true };
@@ -1097,7 +1128,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       searchBy: z.enum(["email", "registrationId", "unlockToken", "stripePaymentIntentId"]),
     }))
     .query(async ({ input, ctx }) => {
-      console.log(`[AUDIT] Admin ${ctx.user.id} searched registrations by ${input.searchBy} at ${new Date().toISOString()}`);
+      console.log(`[AUDIT] Admin ${ctx.user?.id ?? 'password-session'} searched registrations by ${input.searchBy} at ${new Date().toISOString()}`);
       const db = await getDb();
       if (!db) return null;
 
@@ -1131,7 +1162,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
     }))
     .mutation(async ({ input, ctx }) => {
       // SECURITY: Audit log every manual unlock — admin ID, target, reason, timestamp
-      const adminId = String(ctx.user.id);
+      const adminId = String(ctx.user?.id ?? 'password-session');
       const now = new Date();
       console.log(`[AUDIT] Admin ${adminId} manually unlocking registration ${input.registrationId} — reason: ${input.reason} — at ${now.toISOString()}`);
 
@@ -1166,7 +1197,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
 
   // Search unmatched payments for admin recovery
   adminGetUnmatchedPayments: adminProcedure.query(async ({ ctx }) => {
-    console.log(`[AUDIT] Admin ${ctx.user.id} viewed unmatched payments at ${new Date().toISOString()}`);
+    console.log(`[AUDIT] Admin ${ctx.user?.id ?? 'password-session'} viewed unmatched payments at ${new Date().toISOString()}`);
     const db = await getDb();
     if (!db) return [];
     return db.select().from(unmatchedPayments).orderBy(unmatchedPayments.createdAt).limit(50);
@@ -1201,10 +1232,23 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       }
 
       if (match) {
+        // Set a server-side admin session cookie so subsequent adminProcedure calls are authorised
+        const token = crypto.createHmac("sha256", adminPassword).update("admin_session").digest("hex");
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(ADMIN_SESSION_COOKIE, token, {
+          ...cookieOptions,
+          maxAge: 12 * 60 * 60 * 1000, // 12 hours
+        });
         return { success: true as const };
       }
       return { success: false as const, error: "Incorrect password." };
     }),
+
+  // ─── Admin logout (clear admin session cookie) ─────────────────────────────
+  adminLogout: publicProcedure.mutation(async ({ ctx }) => {
+    ctx.res.clearCookie(ADMIN_SESSION_COOKIE, { path: "/" });
+    return { success: true };
+  }),
 
   // ─── Dashboard (backend-led, security-first) ────────────────────────────────
   getSportsDayDashboard: publicProcedure
@@ -1521,6 +1565,7 @@ export const appRouter = router({
     }),
   }),
   sportsday: sportsDayRouter,
+  scoring: scoringRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -326,3 +326,60 @@ export const sportsDaySessions = mysqlTable("sports_day_sessions", {
   expiresAt: timestamp("expiresAt").notNull(),
 });
 export type SportsDaySession = typeof sportsDaySessions.$inferSelect;
+
+// ─── Phase 1: Sports Day Scoring System ──────────────────────────────────────
+
+// Events (the 11 events on the day)
+export const sdEvents = mysqlTable("sd_events", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  arena: varchar("arena", { length: 50 }),         // "Arena A" | "Arena B"
+  blockNo: int("blockNo"),                          // 1–5, F=6
+  startTime: varchar("startTime", { length: 10 }), // "10:30"
+  endTime: varchar("endTime", { length: 10 }),      // "11:00"
+  status: mysqlEnum("status", ["upcoming", "armed", "live", "complete"]).default("upcoming").notNull(),
+  wildcardsEnabled: boolean("wildcardsEnabled").default(false).notNull(),
+  pointsMultiplier: int("pointsMultiplier").default(1).notNull(), // 2 for Tug of War finale
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SdEvent = typeof sdEvents.$inferSelect;
+export type InsertSdEvent = typeof sdEvents.$inferInsert;
+
+// Per-event results (one row per team per event)
+export const sdEventResults = mysqlTable("sd_event_results", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: int("eventId").notNull(),
+  team: mysqlEnum("team", ["red", "blue", "pink", "orange"]).notNull(),
+  placement: int("placement"),          // 1st, 2nd, 3rd, 4th — null until entered
+  basePoints: int("basePoints"),        // raw points from placement (before multipliers)
+  finalPoints: int("finalPoints"),      // after multipliers applied
+  locked: boolean("locked").default(false).notNull(), // true = pushed to leaderboard
+  lockedAt: timestamp("lockedAt"),
+  lockedBy: varchar("lockedBy", { length: 64 }), // admin identifier
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SdEventResult = typeof sdEventResults.$inferSelect;
+export type InsertSdEventResult = typeof sdEventResults.$inferInsert;
+
+// Audit log — every points change is recorded here
+export const sdPointsLog = mysqlTable("sd_points_log", {
+  id: int("id").autoincrement().primaryKey(),
+  team: mysqlEnum("team", ["red", "blue", "pink", "orange"]).notNull(),
+  delta: int("delta").notNull(),       // positive or negative
+  reason: mysqlEnum("reason", [
+    "event_result",   // locked event result
+    "double_down",    // wildcard modifier
+    "all_in",         // wildcard modifier
+    "sabotage",       // wildcard deduction
+    "admin_override", // manual correction
+  ]).notNull(),
+  eventId: int("eventId"),             // nullable — not all adjustments are event-tied
+  actor: varchar("actor", { length: 64 }).notNull(), // admin id or "system"
+  note: text("note"),                  // optional human note
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SdPointsLog = typeof sdPointsLog.$inferSelect;
+export type InsertSdPointsLog = typeof sdPointsLog.$inferInsert;
