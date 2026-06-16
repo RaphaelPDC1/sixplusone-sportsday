@@ -98,9 +98,13 @@ export default function TeamHub() {
     { enabled: !!userId, retry: false }
   );
 
+  // Only captains of Red/Blue/Orange teams can see the roster — gate the query accordingly
+  // hub is available after the loading/error guards below, so we use a derived flag
+  // We read isCaptain from hub once it's loaded; until then the query stays disabled
+  const isCaptainUser = !!(hub?.isCaptain && hub?.team !== "pink");
   const { data: rosterData } = trpc.sportsday.getTeamRoster.useQuery(
     { registrationId: userId },
-    { enabled: !!userId, retry: false, throwOnError: false }
+    { enabled: !!userId && isCaptainUser, retry: false, throwOnError: false }
   );
 
   const { data: awardData, refetch: refetchAwards } = trpc.sportsday.getAwardVotes.useQuery(

@@ -694,6 +694,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
         team,
         accessType: reg.accessType ?? "free",
         isPublicReveal,
+        isCaptain: reg.isCaptain ?? false,
         members: members.map((m) => ({
           ...m,
           photoUrl: photoMap.get(m.id) ?? null,

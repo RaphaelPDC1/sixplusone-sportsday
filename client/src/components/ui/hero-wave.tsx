@@ -31,10 +31,16 @@ export function HeroWave({
     let data: Uint8ClampedArray;
 
     const resizeCanvas = () => {
-      canvas.width = canvas.clientWidth || window.innerWidth;
-      canvas.height = canvas.clientHeight || window.innerHeight;
+      const cw = canvas.clientWidth || window.innerWidth;
+      const ch = canvas.clientHeight || window.innerHeight;
+      // Guard: skip if dimensions are still zero (canvas not yet laid out)
+      if (!cw || !ch) return;
+      canvas.width = cw;
+      canvas.height = ch;
       width = Math.floor(canvas.width / SCALE);
       height = Math.floor(canvas.height / SCALE);
+      // Guard: skip createImageData if scaled dimensions are zero
+      if (width <= 0 || height <= 0) return;
       imageData = ctx.createImageData(width, height);
       data = imageData.data;
     };
