@@ -54,7 +54,7 @@ export function TeamFairnessBot() {
       {/* Chat button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 bg-[#FF5500] hover:bg-[#FF6B1A] text-white rounded-full p-4 shadow-lg transition-all z-40"
+        className="fixed bottom-6 right-6 bg-[#FF5500] hover:bg-[#FF6B1A] text-white rounded-full p-4 shadow-lg transition-all" style={{ zIndex: 9999 }}
         aria-label="Open team fairness chatbot"
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
@@ -62,7 +62,7 @@ export function TeamFairnessBot() {
 
       {/* Chat window */}
       {isOpen && (
-        <Card className="fixed bottom-24 right-6 w-96 h-96 bg-[#1A1A1A] border-[#FF5500] flex flex-col shadow-xl z-40">
+        <Card className="fixed bottom-24 right-6 w-96 h-96 bg-[#1A1A1A] border-[#FF5500] flex flex-col shadow-xl" style={{ zIndex: 9999 }}>
           {/* Header */}
           <div className="bg-[#FF5500] text-white p-4 rounded-t-lg">
             <h3 className="font-bebas text-lg">Team Fairness Bot</h3>

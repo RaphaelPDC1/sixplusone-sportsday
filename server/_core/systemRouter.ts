@@ -34,8 +34,9 @@ export const systemRouter = router({
         message: z.string().min(1, "message is required").max(500, "message too long"),
       })
     )
-    .mutation(async ({ input }) => {
-      const response = await askTeamFairnessBot(input.message);
+    .mutation(async ({ input, ctx }) => {
+      const ip = ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown";
+      const response = await askTeamFairnessBot(input.message, ip);
       return response;
     }),
 });

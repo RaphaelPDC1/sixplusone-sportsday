@@ -1,5 +1,6 @@
 import { invokeLLM } from "./_core/llm";
 import { getTeamCounts } from "./sportsday.db";
+import { checkRateLimit, withCache } from "./rateLimit";
 
 
 /**
@@ -27,9 +28,14 @@ If they ask something off-topic, respond: "I can only answer questions about tea
 
 Be concise, friendly, and transparent about the algorithm.`;
 
-export async function askTeamFairnessBot(userMessage: string): Promise<string> {
-  // Get team statistics for context
-  const teamCounts = await getTeamCounts();
+export async function askTeamFairnessBot(userMessage: string, ipKey = "global"): Promise<string> {
+  // Rate limit: 10 requests per IP per minute
+  if (!checkRateLimit(`chatbot:${ipKey}`, 10, 60 * 1000)) {
+    return "You're asking a lot of questions! Please wait a moment before asking again.";
+  }
+
+  // Cache team counts for 60 seconds to avoid hammering the DB
+  const teamCounts = await withCache("team-counts", 60 * 1000, () => getTeamCounts());
   const teamSummary = Object.entries(teamCounts)
     .map(([team, count]: [string, number]) => `${team}: ${count} members`)
     .join(", ");

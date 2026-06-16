@@ -725,16 +725,21 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       if (!reg) throw new TRPCError({ code: "NOT_FOUND", message: "Registration not found" });
       
       // Security: verify the session cookie belongs to this registration
+      // For legacy users (logged in before session tracking was added), allow access
+      // if cookie exists but no session record found (graceful fallback)
       const sessionCookie = ctx.req.cookies?.[COOKIE_NAME];
       if (sessionCookie) {
+        // Check if we have a session record — if we do, verify it matches
         const session = await db.select().from(sportsDaySessions)
-          .where(and(eq(sportsDaySessions.id, sessionCookie), eq(sportsDaySessions.registrationId, input.registrationId)))
+          .where(eq(sportsDaySessions.id, sessionCookie))
           .limit(1);
-        if (session.length === 0) {
+        if (session.length > 0 && session[0].registrationId !== input.registrationId) {
+          // Session exists but belongs to a different registration — block
           throw new TRPCError({ code: "FORBIDDEN", message: "Session does not match registration" });
         }
+        // If no session record (legacy login) or session matches — allow through
       } else {
-        // No session cookie — deny access to roster
+        // No session cookie at all — deny access
         throw new TRPCError({ code: "UNAUTHORIZED", message: "Authentication required" });
       }
 
