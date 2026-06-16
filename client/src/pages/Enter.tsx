@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useSEO } from "@/hooks/useSEO";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -54,6 +55,12 @@ const STEP_PALETTES: string[][] = [
 ];
 
 export default function Enter() {
+  useSEO({
+    title: "Register for 6+1 Sports Day 002 — Team Building Event July 2026",
+    description: "Sign up for 6+1 Sports Day 002 on 11 July 2026 in Sheffield. Answer your profile questions, get assigned to a team, and unlock your reveal with a Priority Player Pass.",
+    keywords: "register sports day, 6+1 event registration, team building Sheffield, July 2026 event, sports day signup",
+  });
+
   const [, navigate] = useLocation();
   const [showSplash, setShowSplash] = useState(
     () => sessionStorage.getItem("enter_splash_seen") !== "true"

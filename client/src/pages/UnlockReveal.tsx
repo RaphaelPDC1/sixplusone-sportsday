@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useSEO } from "@/hooks/useSEO";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import {
@@ -297,6 +298,12 @@ function OrangeBackground({ phase }: { phase: number }) {
 }
 
 export default function UnlockReveal() {
+  useSEO({
+    title: "Priority Reveal — 6+1 Sports Day 002",
+    description: "Your Priority Player Pass is confirmed. Watch your exclusive team reveal animation for 6+1 Sports Day 002 on 11 July 2026.",
+    keywords: "priority player pass, team reveal, 6+1 sports day, unlock reveal",
+  });
+
   const [, navigate] = useLocation();
   const [userIdFromStorage] = useState<string | null>(
     () => (typeof window !== "undefined" ? localStorage.getItem("sd_user_id") : null)

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { useSEO } from "@/hooks/useSEO";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -72,6 +73,12 @@ type AwardCategory = typeof AWARD_CATEGORIES[number]["id"];
 // Location data is now served from hub.event (getTeamHub backend)
 
 export default function TeamHub() {
+  useSEO({
+    title: "Team Hub — 6+1 Sports Day 002 Squad Dashboard",
+    description: "View your team, squad members, event line-up, leaderboard and awards for 6+1 Sports Day 002 on 11 July 2026 in Sheffield.",
+    keywords: "sports day team hub, squad dashboard, team events, leaderboard, 6+1 sports day 002",
+  });
+
   const [, navigate] = useLocation();
   const [showSplash, setShowSplash] = useState(
     () => sessionStorage.getItem("teamhub_splash_seen") !== "true"

@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import { useSEO } from "@/hooks/useSEO";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -13,6 +14,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function Terms() {
   const [, navigate] = useLocation();
+
+  useSEO({
+    title: "Terms & Conditions — 6+1 Sports Day 002",
+    description: "Read the terms and conditions for 6+1 Sports Day 002. Understand your rights and responsibilities as a participant in our July 2026 event in Sheffield.",
+    keywords: "6+1 sports day terms, event terms and conditions, participant agreement, sports day 002",
+  });
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">

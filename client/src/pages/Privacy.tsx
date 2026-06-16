@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import { useSEO } from "@/hooks/useSEO";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -13,6 +14,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function Privacy() {
   const [, navigate] = useLocation();
+
+  useSEO({
+    title: "Privacy Policy — 6+1 Sports Day 002",
+    description: "Read the 6+1 Sports Day 002 privacy policy. Learn how we collect, use and protect your personal data in line with UK GDPR.",
+    keywords: "6+1 sports day privacy policy, data protection, GDPR, personal data",
+  });
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">

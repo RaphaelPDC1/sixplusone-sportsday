@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { and, eq, like, or } from "drizzle-orm";
 import { z } from "zod";
-import { awardsVotes, eventSchedule, groupCodes, leaderboard, profilePhotos, sportsDayRegistrations, unmatchedPayments, wildcardVotes } from "../drizzle/schema";
+import { awardsVotes, eventSchedule, groupCodes, leaderboard, profilePhotos, sportsDayRegistrations, sportsDaySessions, unmatchedPayments, wildcardVotes } from "../drizzle/schema";
 import { getDb } from "./db";
 import {
   assignTeam,
@@ -264,9 +264,19 @@ const sportsDayRouter = router({
   // Mark reveal animation as seen so user goes directly to team hub on next visit
   markRevealSeen: publicProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      // Security: verify the session cookie belongs to this registration
+      const sessionCookie = ctx.req.cookies?.[COOKIE_NAME];
+      if (sessionCookie) {
+        const session = await db.select().from(sportsDaySessions)
+          .where(and(eq(sportsDaySessions.id, sessionCookie), eq(sportsDaySessions.registrationId, input.id)))
+          .limit(1);
+        if (session.length === 0) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Session does not match registration" });
+        }
+      }
       await db.update(sportsDayRegistrations)
         .set({ revealSeen: true })
         .where(eq(sportsDayRegistrations.id, input.id));
@@ -694,12 +704,26 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
   // ─── Team Roster (Captains Only) ────────────────────────────────────────────
   getTeamRoster: publicProcedure
     .input(z.object({ registrationId: z.string() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       const reg = await getRegistrationById(input.registrationId);
       if (!reg) throw new TRPCError({ code: "NOT_FOUND", message: "Registration not found" });
       
+      // Security: verify the session cookie belongs to this registration
+      const sessionCookie = ctx.req.cookies?.[COOKIE_NAME];
+      if (sessionCookie) {
+        const session = await db.select().from(sportsDaySessions)
+          .where(and(eq(sportsDaySessions.id, sessionCookie), eq(sportsDaySessions.registrationId, input.registrationId)))
+          .limit(1);
+        if (session.length === 0) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Session does not match registration" });
+        }
+      } else {
+        // No session cookie — deny access to roster
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Authentication required" });
+      }
+
       // Only captains of Red, Blue, Orange can see roster (not Pink)
       if (!reg.isCaptain || reg.team === "pink") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only team captains can view roster" });
@@ -1390,6 +1414,12 @@ Return ONLY valid JSON with this exact shape:
         ...cookieOptions,
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
+      // Store session server-side so we can verify ownership on protected procedures
+      const db = await getDb();
+      if (db) {
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        await db.insert(sportsDaySessions).values({ id: sessionId, registrationId: reg.id, expiresAt });
+      }
       console.log(`[Login] User logged in via email: ${input.email}`);
       return { success: true, registrationId: reg.id, email: reg.email };
     }),

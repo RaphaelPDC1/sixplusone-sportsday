@@ -307,4 +307,14 @@ export const eventSchedule = mysqlTable("event_schedule", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 export type EventScheduleEntry = typeof eventSchedule.$inferSelect;
-export type InsertEventScheduleEntry = typeof eventSchedule.$inferInsert;
+export type InsertEventScheduleEntry = typeof eventSchedule.$inferSelect;
+
+// ─── Sports Day Sessions ─────────────────────────────────────────────────────
+// Maps session cookie tokens to registration IDs for server-side auth
+export const sportsDaySessions = mysqlTable("sports_day_sessions", {
+  id: varchar("id", { length: 64 }).primaryKey(), // session token (random hex)
+  registrationId: varchar("registrationId", { length: 36 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+});
+export type SportsDaySession = typeof sportsDaySessions.$inferSelect;

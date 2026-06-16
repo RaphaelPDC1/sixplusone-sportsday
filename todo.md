@@ -522,3 +522,19 @@
 - [x] Fixed Holding.tsx CTA: navigates to /team-hub with text "ENTER YOUR TEAM HUB →"
 - [x] Kept all psychological triggers in holding page: ad popups, referral block, funnel copy, urgency messaging
 - [x] TypeScript clean (exit 0)
+
+## Analytics, SEO & Security Sprint (16 June 2026)
+- [x] Fix analytics tracking (diagnose why Umami isn't firing on /holding and other pages)
+- [x] Create useSEO utility hook for setting document.title and meta description dynamically
+- [x] SEO: Home page — title (30-60 chars), description (50-160 chars), H2, keywords
+- [x] SEO: Holding page — title, description, H2, keywords
+- [x] SEO: Enter/Register page — title, description, H2, keywords
+- [x] SEO: TeamHub page — title, description, H2, keywords
+- [x] SEO: Privacy page — title, description, H2, keywords
+- [x] SEO: Terms page — title, description, H2, keywords
+- [x] SEO: Reveal/UnlockReveal pages — title, description, H2, keywords
+- [x] Security: Change getTeamRoster to protectedProcedure with ownership check
+- [x] Security: Change markRevealSeen to protectedProcedure with ownership check
+- [ ] Security: Add rate limiting to getTeamRoster and markRevealSeen (deferred)
+- [x] Security: Add sportsDaySessions table for server-side session ownership validation
+- [ ] Security: Add rate limiting to public procedures (deferred)

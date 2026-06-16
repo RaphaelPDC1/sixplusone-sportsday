@@ -68,6 +68,9 @@ export interface SportsDayDashboard {
 
   // Pricing
   priceState: PriceState;
+
+  // Reveal state
+  revealSeen: boolean;
 }
 
 // ─── Team colour map ──────────────────────────────────────────────────────────
@@ -323,6 +326,7 @@ export async function buildSportsDayDashboard(
     ctaLabel,
     ctaNote,
     priceState,
+    revealSeen: reg.revealSeen ?? false,
   };
 }
 

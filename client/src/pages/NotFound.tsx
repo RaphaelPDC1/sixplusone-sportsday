@@ -1,9 +1,16 @@
 import { useLocation } from "wouter";
+import { useSEO } from "@/hooks/useSEO";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
 export default function NotFound() {
   const [, setLocation] = useLocation();
+
+  useSEO({
+    title: "Page Not Found — 6+1 Sports Day 002",
+    description: "This page doesn't exist. Head back to the 6+1 Sports Day 002 home page to register or log in to your player hub.",
+    keywords: "6+1 sports day, 404, page not found",
+  });
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] flex flex-col">

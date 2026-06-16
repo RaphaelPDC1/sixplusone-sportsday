@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSEO } from "@/hooks/useSEO";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -506,6 +507,13 @@ function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
 // ─── Main Holding Page ─────────────────────────────────────────────────────────────
 export default function Holding() {
   const [, navigate] = useLocation();
+
+  useSEO({
+    title: "Your Team Is Waiting — 6+1 Sports Day 002 Player Hub",
+    description: "Log in to your 6+1 Sports Day 002 player profile. Unlock your team reveal, track your squad, and get ready for 11 July 2026 in Sheffield.",
+    keywords: "sports day player hub, team reveal, 6+1 sports day, priority player pass, unlock team",
+  });
+
   // Initialise directly from localStorage so no-session state is known on first render (no blank flash)
   const [userId, setUserId] = useState<string | null>(
     () => (typeof window !== "undefined" ? localStorage.getItem("sd_user_id") : null)
@@ -795,6 +803,9 @@ export default function Holding() {
             <span className="text-[#FF5500]">002.</span><br />
             <span className="text-[#FF5500]" style={{ fontSize: "clamp(2.4rem, 13vw, 5.6rem)" }}>{firstName}.</span>
           </h1>
+
+          {/* SEO H2 — visually hidden but crawlable */}
+          <h2 className="sr-only">Your 6+1 Sports Day 002 Player Profile &amp; Team Reveal</h2>
 
           {/* Event details line */}
           <p className="font-mono text-[#F2F0EB]/50 text-sm tracking-[0.25em] mb-1">

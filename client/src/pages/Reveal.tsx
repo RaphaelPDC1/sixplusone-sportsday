@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSEO } from "@/hooks/useSEO";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { BackNav } from "@/components/ui/back-nav";
@@ -557,6 +558,12 @@ function ChaoticWheelAnimation({ onComplete }: { onComplete: () => void }) {
 
 // ─── Main Reveal Page ─────────────────────────────────────────────────────────
 export default function Reveal() {
+  useSEO({
+    title: "Your Team Reveal — 6+1 Sports Day 002",
+    description: "Watch your team reveal animation for 6+1 Sports Day 002. Find out which team you're on and meet your squad before the big day on 11 July 2026.",
+    keywords: "team reveal, 6+1 sports day, team assignment, sports day 002 reveal",
+  });
+
   const [, navigate] = useLocation();
   const [showSplash, setShowSplash] = useState(
     () => sessionStorage.getItem("reveal_splash_seen") !== "true"
