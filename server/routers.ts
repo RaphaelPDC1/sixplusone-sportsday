@@ -1189,7 +1189,6 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       }
 
       // SECURITY: Use timing-safe comparison to prevent timing attacks
-      const crypto = require("crypto");
       const inputBuffer = Buffer.from(input.password.trim());
       const passwordBuffer = Buffer.from(adminPassword.trim());
       
