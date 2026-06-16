@@ -319,7 +319,7 @@ export async function getAdminStats() {
   const db = await getDb();
   if (!db) return { total: 0, paid: 0, free: 0, teams: { red: 0, blue: 0, pink: 0, orange: 0 }, totalReferrals: 0 };
 
-  const [totalRows, paidRows, teamRows, referralRows] = await Promise.all([
+  const [totalRows, paidRows, teamRows, referralRows, utmSourceRows, utmCampaignRows] = await Promise.all([
     db.select({ count: count() }).from(sportsDayRegistrations),
     db
       .select({ count: count() })
@@ -332,6 +332,18 @@ export async function getAdminStats() {
     db
       .select({ count: sql<number>`SUM(${sportsDayRegistrations.referralCount})` })
       .from(sportsDayRegistrations),
+    // UTM source breakdown
+    db
+      .select({ source: sportsDayRegistrations.utmSource, count: count() })
+      .from(sportsDayRegistrations)
+      .where(sql`${sportsDayRegistrations.utmSource} IS NOT NULL`)
+      .groupBy(sportsDayRegistrations.utmSource),
+    // UTM campaign breakdown
+    db
+      .select({ campaign: sportsDayRegistrations.utmCampaign, count: count() })
+      .from(sportsDayRegistrations)
+      .where(sql`${sportsDayRegistrations.utmCampaign} IS NOT NULL`)
+      .groupBy(sportsDayRegistrations.utmCampaign),
   ]);
 
   const total = totalRows[0]?.count ?? 0;
@@ -342,7 +354,17 @@ export async function getAdminStats() {
   }
   const totalReferrals = Number(referralRows[0]?.count ?? 0);
 
-  return { total, paid, free: total - paid, teams, totalReferrals };
+  // UTM attribution breakdown
+  const utmSources: Record<string, number> = {};
+  for (const row of utmSourceRows) {
+    if (row.source) utmSources[row.source] = row.count;
+  }
+  const utmCampaigns: Record<string, number> = {};
+  for (const row of utmCampaignRows) {
+    if (row.campaign) utmCampaigns[row.campaign] = row.count;
+  }
+
+  return { total, paid, free: total - paid, teams, totalReferrals, utmSources, utmCampaigns };
 }
 
 

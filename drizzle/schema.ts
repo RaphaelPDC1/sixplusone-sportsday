@@ -150,6 +150,14 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
   // Auto-unlock tracking (July 11th 8pm BST)
   autoUnlockEventFired: boolean("autoUnlockEventFired").default(false), // true once Sports Day 002 Auto Unlocked event sent to Klaviyo
   autoUnlockedAt: timestamp("autoUnlockedAt"), // timestamp when auto-unlock event fired
+
+  // UTM / Ad Attribution (captured from URL params on landing, stored at registration)
+  utmSource: varchar("utmSource", { length: 100 }),    // e.g. instagram, facebook, google
+  utmMedium: varchar("utmMedium", { length: 100 }),    // e.g. paid_social, cpc, email
+  utmCampaign: varchar("utmCampaign", { length: 200 }), // e.g. launch_june_2026
+  utmContent: varchar("utmContent", { length: 200 }),  // e.g. video_ad_v1
+  utmTerm: varchar("utmTerm", { length: 200 }),        // e.g. sports day london
+  utmLandingPage: varchar("utmLandingPage", { length: 500 }), // full URL they landed on
 });
 
 export type SportsDayRegistration = typeof sportsDayRegistrations.$inferSelect;

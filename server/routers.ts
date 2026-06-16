@@ -94,6 +94,13 @@ const sportsDayRouter = router({
         marketingConsent: z.boolean().optional(),
         referredBy: z.string().optional(),
         eventId: z.string().uuid().optional(),
+        // UTM attribution
+        utmSource: z.string().max(100).optional(),
+        utmMedium: z.string().max(100).optional(),
+        utmCampaign: z.string().max(200).optional(),
+        utmContent: z.string().max(200).optional(),
+        utmTerm: z.string().max(200).optional(),
+        utmLandingPage: z.string().max(500).optional(),
       })
     )
      .mutation(async ({ input, ctx }) => {
@@ -194,6 +201,13 @@ const sportsDayRouter = router({
         ipAddress: ctx.req.ip ?? null,
         userAgent: ctx.req.headers["user-agent"] ?? null,
         unlockToken, // Generated UUID for payment matching
+        // UTM attribution
+        utmSource: input.utmSource ?? null,
+        utmMedium: input.utmMedium ?? null,
+        utmCampaign: input.utmCampaign ?? null,
+        utmContent: input.utmContent ?? null,
+        utmTerm: input.utmTerm ?? null,
+        utmLandingPage: input.utmLandingPage ?? null,
       });
 
       // Increment referrer's count

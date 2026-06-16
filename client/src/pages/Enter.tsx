@@ -3,6 +3,7 @@ import { useSEO } from "@/hooks/useSEO";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { getStoredUTMParams, clearUTMParams } from "@/lib/utm";
 import WarpShaderBg from "@/components/ui/warp-shader";
 import StepParticles from "@/components/ui/step-particles";
 import { EntrySplash } from "@/components/ui/entry-splash";
@@ -218,7 +219,11 @@ export default function Enter() {
       marketingConsent: form.marketingConsent,
       referredBy,
       eventId,
+      // UTM attribution — read from sessionStorage (captured on landing)
+      ...getStoredUTMParams(),
     });
+    // Clear UTM params after successful registration
+    clearUTMParams();
   };
 
   const progress = ((step + 1) / TOTAL_STEPS) * 100;

@@ -7,6 +7,10 @@ import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
+import { captureUTMParams } from "./lib/utm";
+
+// Capture UTM params from URL on every page load (persists in sessionStorage)
+captureUTMParams();
 
 const queryClient = new QueryClient();
 
