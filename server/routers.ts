@@ -35,6 +35,7 @@ import { handleSportsDayRegistration, handleSportsDayPayment, handleTeamReassign
 import { sendCompleteRegistrationEvent, extractUserDataFromRequest } from "./_core/metaConversionsApi";
 import { TRPCError } from "@trpc/server";
 import { scoringRouter } from "./routers/scoring";
+import { wildcardsRouter } from "./routers/wildcards";
 
 // ─── In-memory rate limiter ───────────────────────────────────────────────────
 // Simple sliding-window rate limiter — no external dependency needed.
@@ -1566,6 +1567,7 @@ export const appRouter = router({
   }),
   sportsday: sportsDayRouter,
   scoring: scoringRouter,
+  wildcards: wildcardsRouter,
 });
 
 export type AppRouter = typeof appRouter;

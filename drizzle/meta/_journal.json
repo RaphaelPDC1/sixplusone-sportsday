@@ -148,6 +148,13 @@
       "when": 1781653586736,
       "tag": "0020_free_khan",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "5",
+      "when": 1781655116362,
+      "tag": "0021_fuzzy_star_brand",
+      "breakpoints": true
     }
   ]
 }

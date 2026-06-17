@@ -383,3 +383,69 @@ export const sdPointsLog = mysqlTable("sd_points_log", {
 });
 export type SdPointsLog = typeof sdPointsLog.$inferSelect;
 export type InsertSdPointsLog = typeof sdPointsLog.$inferInsert;
+
+// ─── Wildcard System (Phase 2–3) ─────────────────────────────────────────────
+
+// Wildcard activations — one per team per event (mostly)
+export const sdWildcards = mysqlTable("sd_wildcards", {
+  id: int("id").autoincrement().primaryKey(),
+  type: mysqlEnum("type", ["steal", "sabotage", "block", "double_down", "all_in"]).notNull(),
+  ownerTeam: mysqlEnum("ownerTeam", ["red", "blue", "pink", "orange"]).notNull(),
+  eventId: int("eventId").notNull(),
+  status: mysqlEnum("status", ["pending", "active", "resolved", "blocked", "failed"]).notNull().default("pending"),
+  targetTeam: mysqlEnum("targetTeam", ["red", "blue", "pink", "orange"]), // for steal/sabotage
+  targetPlayerId: int("targetPlayerId"),                                  // for steal (player being stolen)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  resolvedAt: timestamp("resolvedAt"),                                    // when vote closed or activation resolved
+});
+export type SdWildcard = typeof sdWildcards.$inferSelect;
+export type InsertSdWildcard = typeof sdWildcards.$inferInsert;
+
+// Votes on wildcards — one row per voter per wildcard
+export const sdWildcardVotes = mysqlTable("sd_wildcard_votes", {
+  id: int("id").autoincrement().primaryKey(),
+  wildcardId: int("wildcardId").notNull(),
+  userId: int("userId").notNull(),
+  vote: boolean("vote").notNull(),      // true = YES, false = NO
+  weight: varchar("weight", { length: 10 }).notNull(), // "0.50" for captain, split for members — stored as string
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SdWildcardVote = typeof sdWildcardVotes.$inferSelect;
+export type InsertSdWildcardVote = typeof sdWildcardVotes.$inferInsert;
+
+// Roster overrides — when a player is stolen, record the override for that event
+export const sdRosterOverrides = mysqlTable("sd_roster_overrides", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: int("eventId").notNull(),
+  playerId: int("playerId").notNull(),
+  originalTeam: mysqlEnum("originalTeam", ["red", "blue", "pink", "orange"]).notNull(),
+  competingTeam: mysqlEnum("competingTeam", ["red", "blue", "pink", "orange"]).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SdRosterOverride = typeof sdRosterOverrides.$inferSelect;
+export type InsertSdRosterOverride = typeof sdRosterOverrides.$inferInsert;
+
+// Team metadata — captain, vice-captain, cards remaining, points total
+export const sdTeams = mysqlTable("sd_teams", {
+  id: int("id").autoincrement().primaryKey(),
+  name: mysqlEnum("name", ["red", "blue", "pink", "orange"]).notNull().unique(),
+  captainUserId: int("captainUserId"),      // user.id of captain
+  viceCaptainUserId: int("viceCaptainUserId"), // user.id of vice-captain
+  cardsRemaining: int("cardsRemaining").notNull().default(3),
+  pointsTotal: int("pointsTotal").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SdTeam = typeof sdTeams.$inferSelect;
+export type InsertSdTeam = typeof sdTeams.$inferInsert;
+
+// Team membership — which user is on which team, and their role
+export const sdTeamMembers = mysqlTable("sd_team_members", {
+  id: int("id").autoincrement().primaryKey(),
+  teamId: int("teamId").notNull(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["captain", "vice_captain", "member"]).notNull().default("member"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SdTeamMember = typeof sdTeamMembers.$inferSelect;
+export type InsertSdTeamMember = typeof sdTeamMembers.$inferInsert;
