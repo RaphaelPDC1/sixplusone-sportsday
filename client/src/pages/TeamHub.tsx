@@ -9,6 +9,7 @@ import { EntrySplash } from "@/components/ui/entry-splash";
 import { HeroWave } from "@/components/ui/hero-wave";
 import { TeamLiveFeatures } from "@/components/ui/team-live-features";
 import { resetRevealJourneyForReplay } from "@/lib/revealJourney";
+import { TeamFairnessBot } from "@/components/TeamFairnessBot";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -1484,6 +1485,7 @@ export default function TeamHub() {
           );
         })()}
       </div>
+      <TeamFairnessBot />
     </div>
   );
 }

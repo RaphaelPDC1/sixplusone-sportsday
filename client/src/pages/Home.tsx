@@ -3,7 +3,6 @@ import { useLocation } from "wouter";
 import AnimatedShaderHero from "@/components/ui/animated-shader-hero";
 import { ShootingStarCanvas } from "@/components/ui/shooting-star-canvas";
 import { AdPopup } from "@/components/AdPopup";
-import { TeamFairnessBot } from "@/components/TeamFairnessBot";
 
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
@@ -205,7 +204,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <TeamFairnessBot />
     </div>
   );
 }

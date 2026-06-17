@@ -1,7 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { MessageCircle, X, Send } from "lucide-react";
 
@@ -10,7 +7,7 @@ export function TeamFairnessBot() {
   const [messages, setMessages] = useState<Array<{ role: "user" | "bot"; text: string }>>([
     {
       role: "bot",
-      text: "Hi! 👋 I'm here to answer questions about team fairness and how teams were assigned. Ask me anything!",
+      text: "Hey! 👋 I'm your Sports Day 002 assistant. Ask me anything — schedule, events, rules, teams, logistics, or how to get there!",
     },
   ]);
   const [input, setInput] = useState("");
@@ -19,19 +16,15 @@ export function TeamFairnessBot() {
 
   const askBotMutation = trpc.system.askTeamFairnessBot.useMutation();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage = input;
+    const userMessage = input.trim();
     setInput("");
     setMessages((prev) => [...prev, { role: "user", text: userMessage }]);
     setIsLoading(true);
@@ -39,10 +32,10 @@ export function TeamFairnessBot() {
     try {
       const response = await askBotMutation.mutateAsync({ message: userMessage });
       setMessages((prev) => [...prev, { role: "bot", text: response }]);
-    } catch (error) {
+    } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "bot", text: "Sorry, I encountered an error. Please try again." },
+        { role: "bot", text: "Sorry, I hit an error. Try again in a moment!" },
       ]);
     } finally {
       setIsLoading(false);
@@ -51,37 +44,57 @@ export function TeamFairnessBot() {
 
   return (
     <>
-      {/* Chat button */}
+      {/* Floating trigger button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 bg-[#FF5500] hover:bg-[#FF6B1A] text-white rounded-full p-4 shadow-lg transition-all" style={{ zIndex: 9999 }}
-        aria-label="Open team fairness chatbot"
+        onClick={() => setIsOpen((o) => !o)}
+        className="fixed bottom-5 right-5 z-[9999] bg-[#FF5500] hover:bg-[#FF6B1A] text-white rounded-full p-4 shadow-2xl transition-all active:scale-95"
+        aria-label={isOpen ? "Close chatbot" : "Open Sports Day assistant"}
       >
-        {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
+        {isOpen ? <X size={22} /> : <MessageCircle size={22} />}
       </button>
 
-      {/* Chat window */}
+      {/* Chat window — mobile-safe sizing */}
       {isOpen && (
-        <Card className="fixed bottom-24 right-6 w-96 h-96 bg-[#1A1A1A] border-[#FF5500] flex flex-col shadow-xl" style={{ zIndex: 9999 }}>
+        <div
+          className="fixed z-[9998] flex flex-col bg-[#111] border border-[#FF5500]/60 shadow-2xl"
+          style={{
+            /* On mobile: full width minus margins, capped height */
+            bottom: "80px",
+            right: "12px",
+            left: "12px",
+            maxWidth: "420px",
+            /* Push left edge right on wider screens */
+            marginLeft: "auto",
+            height: "min(520px, calc(100dvh - 100px))",
+            borderRadius: "12px",
+            overflow: "hidden",
+          }}
+        >
           {/* Header */}
-          <div className="bg-[#FF5500] text-white p-4 rounded-t-lg">
-            <h3 className="font-bebas text-lg">Team Fairness Bot</h3>
-            <p className="text-xs text-orange-100">Ask about team assignment</p>
+          <div className="flex items-center justify-between bg-[#FF5500] px-4 py-3 flex-shrink-0">
+            <div>
+              <p className="font-bebas text-white text-lg leading-none tracking-wide">SPORTS DAY ASSISTANT</p>
+              <p className="font-mono text-orange-100 text-[10px] tracking-wider">Ask anything about the event</p>
+            </div>
+            <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white">
+              <X size={18} />
+            </button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
+                  className={`max-w-[80%] px-3 py-2 text-sm leading-relaxed ${
                     msg.role === "user"
-                      ? "bg-[#FF5500] text-white rounded-br-none"
-                      : "bg-[#2A2A2A] text-[#CCC] rounded-bl-none"
+                      ? "bg-[#FF5500] text-white rounded-2xl rounded-br-sm"
+                      : "bg-[#1E1E1E] text-[#DDD] rounded-2xl rounded-bl-sm border border-[#2A2A2A]"
                   }`}
+                  style={{ wordBreak: "break-word" }}
                 >
                   {msg.text}
                 </div>
@@ -89,8 +102,8 @@ export function TeamFairnessBot() {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-[#2A2A2A] text-[#999] px-3 py-2 rounded-lg text-sm rounded-bl-none">
-                  Thinking...
+                <div className="bg-[#1E1E1E] text-[#888] px-3 py-2 rounded-2xl rounded-bl-sm text-sm border border-[#2A2A2A]">
+                  <span className="animate-pulse">Thinking…</span>
                 </div>
               </div>
             )}
@@ -98,24 +111,26 @@ export function TeamFairnessBot() {
           </div>
 
           {/* Input */}
-          <form onSubmit={handleSubmit} className="border-t border-[#333] p-3 flex gap-2">
-            <Input
+          <form
+            onSubmit={handleSubmit}
+            className="border-t border-[#222] px-3 py-3 flex gap-2 flex-shrink-0 bg-[#0D0D0D]"
+          >
+            <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about teams..."
+              placeholder="Ask about the schedule, rules, teams…"
               disabled={isLoading}
-              className="bg-[#2A2A2A] border-[#444] text-white placeholder-[#666]"
+              className="flex-1 bg-[#1A1A1A] border border-[#333] text-white placeholder-[#555] font-mono text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-[#FF5500] min-w-0"
             />
-            <Button
+            <button
               type="submit"
               disabled={isLoading || !input.trim()}
-              size="sm"
-              className="bg-[#FF5500] hover:bg-[#FF6B1A]"
+              className="bg-[#FF5500] hover:bg-[#FF6B1A] disabled:opacity-40 text-white rounded-lg px-3 py-2 transition-colors flex-shrink-0"
             >
               <Send size={16} />
-            </Button>
+            </button>
           </form>
-        </Card>
+        </div>
       )}
     </>
   );
