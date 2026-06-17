@@ -591,10 +591,20 @@ export default function TeamHub() {
                     <div className="font-mono text-xs text-white/40 mt-1">{liveEvt.arena}</div>
                   )}
                   {upNextEvt && (
-                    <div className={`font-mono text-xs text-white/40 ${liveEvt ? "mt-3 pt-3 border-t border-white/10" : ""}`}>
-                      <span className="text-white/25 tracking-wider">UP NEXT → </span>
-                      <span className="text-white/50">{upNextEvt.name.toUpperCase()}</span>
-                      {upNextEvt.startTime && <span className="text-white/30"> · {upNextEvt.startTime}</span>}
+                    <div className={`${liveEvt ? "mt-3 pt-3 border-t border-white/10" : ""}`}>
+                      <div className="font-mono text-[9px] tracking-[0.25em] text-white/30 mb-1">UP NEXT</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">{getEventEmoji(upNextEvt.name)}</span>
+                        <span className="font-display text-base tracking-widest text-white/80">{upNextEvt.name.toUpperCase()}</span>
+                        {upNextEvt.startTime && (
+                          <span
+                            className="ml-auto font-mono text-xs px-2 py-0.5 flex-shrink-0"
+                            style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)" }}
+                          >
+                            {upNextEvt.startTime}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1210,18 +1220,17 @@ export default function TeamHub() {
         {activeTab === "wildcards" && (
           <div className="space-y-4">
             <SectionHeader label="WILDCARDS" />
-            {/* Day-of gate */}
-            {!votingEnabled ? (
+            {/* Day-of banner — visible but not blocking */}
+            {!votingEnabled && (
               <div
-                className="p-8 border text-center"
-                style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.01)" }}
+                className="flex items-center gap-3 px-4 py-3 border"
+                style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}
               >
-                <div className="text-4xl mb-4">🔒</div>
-                <div className="font-display text-xl tracking-widest text-white/50 mb-2">LOCKED</div>
-                <div className="font-mono text-white/25 text-xs tracking-wider">Opens on the day</div>
+                <span className="text-lg">⏳</span>
+                <div className="font-mono text-[10px] tracking-wider text-white/35">VOTING OPENS ON THE DAY — PREVIEW ONLY</div>
               </div>
-            ) : (
-              <>
+            )}
+            <>
                 {/* Captain-only initiation panel */}
                 {isCaptainUser && (
                   <div className="space-y-2">
@@ -1372,11 +1381,9 @@ export default function TeamHub() {
                     </div>
                   );
                 })()}
-              </>
-            )}
+            </>
           </div>
         )}
-
         {/* ─── AWARDS TAB ─── */}
         {activeTab === "awards" && (
           <div className="space-y-4">
