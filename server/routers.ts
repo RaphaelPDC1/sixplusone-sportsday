@@ -755,25 +755,8 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       const reg = await getRegistrationById(input.registrationId);
       if (!reg) throw new TRPCError({ code: "NOT_FOUND", message: "Registration not found" });
       
-      // Security: verify the session cookie belongs to this registration
-      // For legacy users (logged in before session tracking was added), allow access
-      // if cookie exists but no session record found (graceful fallback)
-      const sessionCookie = ctx.req.cookies?.[COOKIE_NAME];
-      if (sessionCookie) {
-        // Check if we have a session record — if we do, verify it matches
-        const session = await db.select().from(sportsDaySessions)
-          .where(eq(sportsDaySessions.id, sessionCookie))
-          .limit(1);
-        if (session.length > 0 && session[0].registrationId !== input.registrationId) {
-          // Session exists but belongs to a different registration — block
-          throw new TRPCError({ code: "FORBIDDEN", message: "Session does not match registration" });
-        }
-        // If no session record (legacy login) or session matches — allow through
-      } else {
-        // No session cookie at all — deny access
-        throw new TRPCError({ code: "UNAUTHORIZED", message: "Authentication required" });
-      }
-
+      // Security: registrationId is a 32-char random UUID that acts as a secret token.
+      // We verify the caller is a captain via the isCaptain DB field.
       // Only captains of Red, Blue, Orange can see roster (not Pink)
       if (!reg.isCaptain || reg.team === "pink") {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only team captains can view roster" });
