@@ -1280,9 +1280,9 @@ export default function TeamHub() {
                 { name: "TBC", desc: "Sponsor details coming soon" },
                 { name: "TBC", desc: "Sponsor details coming soon" },
                 { name: "TBC", desc: "Sponsor details coming soon" },
-              ].map((sponsor) => (
+              ].map((sponsor, idx) => (
                 <div
-                  key={sponsor.name}
+                  key={`sponsor-${idx}`}
                   className="p-4 border border-white/10 bg-white/[0.02]"
                 >
                   <div className="flex items-center justify-between">
