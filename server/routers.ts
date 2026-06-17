@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { and, eq, like, or } from "drizzle-orm";
 import { z } from "zod";
-import { awardsVotes, eventSchedule, groupCodes, leaderboard, profilePhotos, sportsDayRegistrations, sportsDaySessions, unmatchedPayments, wildcardVotes } from "../drizzle/schema";
+import { awardsVotes, eventSchedule, groupCodes, leaderboard, profilePhotos, sdEvents, sportsDayRegistrations, sportsDaySessions, unmatchedPayments, wildcardVotes } from "../drizzle/schema";
 import { getDb } from "./db";
 import {
   assignTeam,
@@ -1053,12 +1053,39 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
   getLiveEvent: publicProcedure.query(async () => {
     const db = await getDb();
     if (!db) return null;
+    // First try sd_events (new scoring system — status = 'live')
+    const liveFromScoring = await db
+      .select()
+      .from(sdEvents)
+      .where(eq(sdEvents.status, "live"))
+      .orderBy(sdEvents.sortOrder)
+      .limit(1);
+    if (liveFromScoring[0]) {
+      const e = liveFromScoring[0];
+      // Find the next upcoming event for "up next"
+      const upNext = await db
+        .select()
+        .from(sdEvents)
+        .where(eq(sdEvents.status, "upcoming"))
+        .orderBy(sdEvents.sortOrder)
+        .limit(1);
+      return {
+        eventName: e.name,
+        startTime: e.startTime ?? undefined,
+        endTime: e.endTime ?? undefined,
+        location: e.arena ?? undefined,
+        description: undefined,
+        upNext: upNext[0] ? { eventName: upNext[0].name, startTime: upNext[0].startTime ?? undefined, location: upNext[0].arena ?? undefined } : null,
+      };
+    }
+    // Fallback: old event_schedule table
     const results = await db
       .select()
       .from(eventSchedule)
       .where(eq(eventSchedule.isLive, true))
       .limit(1);
-    return results[0] ?? null;
+    if (!results[0]) return null;
+    return { ...results[0], upNext: null };
   }),
 
   // Event Schedule (admin)

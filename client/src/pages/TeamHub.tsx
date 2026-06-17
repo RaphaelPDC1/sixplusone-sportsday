@@ -54,9 +54,11 @@ const EVENTS = [
 ];
 
 const WILDCARDS = [
-  { id: "double_points",   name: "DOUBLE POINTS",      desc: "One event, double the score. Use wisely.", icon: "×2" },
-  { id: "steal_a_player",  name: "STEAL A PLAYER",     desc: "Borrow one player from another team for one event.", icon: "👤" },
-  { id: "bonus_round",     name: "BONUS ROUND",        desc: "Trigger a secret bonus event for your team only.", icon: "⚡" },
+  { id: "steal",       name: "STEAL",        desc: "Take one player from any other team for a single event. They must compete for you.", icon: "👤" },
+  { id: "sabotage",    name: "SABOTAGE",     desc: "Force another team to compete in an event with one fewer player.", icon: "💣" },
+  { id: "block",       name: "BLOCK",        desc: "Nullify another team's wildcard before it activates.", icon: "🛡️" },
+  { id: "double_down", name: "DOUBLE DOWN",  desc: "Double your points for one event. Announce before it starts.", icon: "×2" },
+  { id: "all_in",      name: "ALL IN",       desc: "Stake all your current points on one event. Win = double. Lose = zero.", icon: "🎲" },
 ];
 
 const AWARD_CATEGORIES = [
@@ -100,8 +102,6 @@ export default function TeamHub() {
   );
 
   // Only captains of Red/Blue/Orange teams can see the roster — gate the query accordingly
-  // hub is available after the loading/error guards below, so we use a derived flag
-  // We read isCaptain from hub once it's loaded; until then the query stays disabled
   const isCaptainUser = !!(hub?.isCaptain && hub?.team !== "pink");
   const { data: rosterData } = trpc.sportsday.getTeamRoster.useQuery(
     { registrationId: userId },
@@ -112,6 +112,15 @@ export default function TeamHub() {
     { registrationId: userId },
     { enabled: !!userId }
   );
+
+  // ── Live scoring data from the new scoring system ──────────────────────────
+  const { data: liveLeaderboard } = trpc.scoring.getLiveLeaderboard.useQuery(undefined, {
+    refetchInterval: 15_000, // refresh every 15s on sports day
+  });
+  const { data: sdEventsData } = trpc.scoring.getEvents.useQuery();
+  const { data: publicEventResults } = trpc.scoring.getPublicEventResults.useQuery(undefined, {
+    refetchInterval: 15_000,
+  });
 
   const castVoteMutation = trpc.sportsday.castAwardVote.useMutation({
     onSuccess: () => {
@@ -228,14 +237,37 @@ export default function TeamHub() {
   const myMember = hub.members.find((m) => m.id === userId);
   const myPhoto = hub.members.find((m) => m.id === userId)?.photoUrl;
 
-  // Leaderboard: aggregate points per team
+  // Leaderboard: use live scoring data (falls back to legacy hub.leaderboard if scoring not yet active)
   const teamPoints: Record<string, number> = { red: 0, blue: 0, pink: 0, orange: 0 };
-  hub.leaderboard.forEach((entry) => {
-    if (!entry.dnf && entry.points) {
-      teamPoints[entry.team] = (teamPoints[entry.team] ?? 0) + entry.points;
-    }
-  });
+  if (liveLeaderboard && liveLeaderboard.length > 0) {
+    // Use real scoring system data
+    liveLeaderboard.forEach((entry) => {
+      teamPoints[entry.team] = entry.points;
+    });
+  } else {
+    // Fallback: legacy leaderboard from hub
+    hub.leaderboard.forEach((entry) => {
+      if (!entry.dnf && entry.points) {
+        teamPoints[entry.team] = (teamPoints[entry.team] ?? 0) + entry.points;
+      }
+    });
+  }
   const sortedTeams = Object.entries(teamPoints).sort((a, b) => b[1] - a[1]);
+
+  // Events: use live sd_events data (falls back to hardcoded EVENTS)
+  const liveEvents = sdEventsData && sdEventsData.length > 0
+    ? sdEventsData.map((e) => ({
+        id: String(e.id),
+        name: e.name,
+        icon: e.arena === "Arena A" ? "🏟️" : e.arena === "Arena B" ? "⚡" : "🏃",
+        desc: e.arena ? `${e.arena} · ${e.startTime ?? "TBC"}` : (e.startTime ?? "TBC"),
+        arena: e.arena,
+        startTime: e.startTime,
+        endTime: e.endTime,
+        status: e.status,
+        pointsMultiplier: e.pointsMultiplier,
+      }))
+    : EVENTS.map((e) => ({ ...e, arena: undefined, startTime: undefined, endTime: undefined, status: "upcoming" as const, pointsMultiplier: 1 }));
 
   const TABS = [
     { id: "team" as const,           label: "TEAM",           icon: "👥" },
@@ -751,7 +783,7 @@ export default function TeamHub() {
           }
 
           // All events always have an insight — topRecs shows all of them
-          const topRecs = EVENTS;
+          const topRecs = liveEvents;
 
           return (
           <div className="space-y-4">
@@ -771,9 +803,30 @@ export default function TeamHub() {
 
             <SectionHeader label="THE EVENTS" />
             <div className="space-y-3">
-              {EVENTS.map((event) => {
-                const eventResults = hub.leaderboard.filter((e) => e.eventName === event.id);
-                const myTeamResult = eventResults.find((e) => e.team === hub.team);
+              {liveEvents.map((event) => {
+                // Look up results from the new scoring system (by numeric event id) or legacy leaderboard
+                const numericId = Number(event.id);
+                const eventResults = publicEventResults
+                  ? publicEventResults.filter((r) => r.eventId === numericId)
+                  : hub.leaderboard.filter((e) => e.eventName === event.id);
+                // Normalise to a common shape for rendering
+                const myTeamResultRaw = publicEventResults
+                  ? publicEventResults.find((r) => r.eventId === numericId && r.team === hub.team)
+                  : hub.leaderboard.find((e) => e.eventName === event.id && e.team === hub.team);
+                const myTeamResult = myTeamResultRaw
+                  ? {
+                      dnf: (myTeamResultRaw as any).dnf ?? false,
+                      position: (myTeamResultRaw as any).placement ?? (myTeamResultRaw as any).position ?? null,
+                      points: (myTeamResultRaw as any).finalPoints ?? (myTeamResultRaw as any).points ?? 0,
+                    }
+                  : null;
+                // Normalise eventResults for the mini leaderboard
+                const normalizedEventResults = eventResults.map((r: any) => ({
+                  team: r.team as "red" | "blue" | "pink" | "orange",
+                  dnf: r.dnf ?? false,
+                  position: r.placement ?? r.position ?? null,
+                  points: r.finalPoints ?? r.points ?? 0,
+                }));
                 const isExpanded = expandedEvent === event.id;
                 const aiInsight = eventInsights[event.id];
                 return (
@@ -827,10 +880,10 @@ export default function TeamHub() {
                           </div>
                         )}
                         {/* Mini leaderboard for this event */}
-                        {eventResults.length > 0 && (
+                        {normalizedEventResults.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-4 gap-2">
                             {(["red","blue","pink","orange"] as const).map((team) => {
-                              const r = eventResults.find((e) => e.team === team);
+                              const r = normalizedEventResults.find((e) => e.team === team);
                               return (
                                 <div key={team} className="text-center">
                                   <div className="w-2 h-2 rounded-full mx-auto mb-1" style={{ background: TEAM_COLORS[team]?.hex ?? "#fff" }} />
@@ -910,7 +963,10 @@ export default function TeamHub() {
                 <div className="space-y-3">
                   {sortedTeams.map(([team, points], index) => {
                     const teamColor = TEAM_COLORS[team as keyof typeof TEAM_COLORS];
-                    const teamEventCount = hub.leaderboard.filter((e) => e.team === team && !e.dnf).length;
+                    // Count events where this team has a locked result
+                    const teamEventCount = publicEventResults
+                      ? publicEventResults.filter((e) => e.team === team).length
+                      : hub.leaderboard.filter((e) => e.team === team && !e.dnf).length;
                     return (
                       <div
                         key={team}
@@ -952,9 +1008,19 @@ export default function TeamHub() {
                 <div className="mt-6 space-y-4">
                   <SectionHeader label="EVENT RESULTS" />
                   <div className="space-y-3">
-                    {EVENTS.map((event) => {
-                      const eventResults = hub.leaderboard.filter((e) => e.eventName === event.id);
-                      if (eventResults.length === 0) return null;
+                    {liveEvents.map((event) => {
+                      const numId = Number(event.id);
+                      // Use new scoring system results if available
+                      const evResults = publicEventResults
+                        ? publicEventResults.filter((r) => r.eventId === numId)
+                        : hub.leaderboard.filter((e) => e.eventName === event.id);
+                      if (evResults.length === 0) return null;
+                      const normResults = evResults.map((r: any) => ({
+                        team: r.team as "red" | "blue" | "pink" | "orange",
+                        dnf: r.dnf ?? false,
+                        position: r.placement ?? r.position ?? null,
+                        points: r.finalPoints ?? r.points ?? 0,
+                      }));
                       return (
                         <div key={event.id} className="border border-white/10 bg-white/[0.02] p-4">
                           <div className="flex items-center gap-2 mb-3">
@@ -962,11 +1028,16 @@ export default function TeamHub() {
                             <div>
                               <div className="font-display text-base tracking-widest">{event.name}</div>
                               <div className="font-mono text-white/30 text-xs">{event.desc}</div>
+                              {(event as any).pointsMultiplier > 1 && (
+                                <div className="font-mono text-[10px] mt-0.5" style={{ color: tc.hex }}>
+                                  ×{(event as any).pointsMultiplier} POINTS MULTIPLIER
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="grid grid-cols-4 gap-2">
                             {(["red", "blue", "pink", "orange"] as const).map((team) => {
-                              const r = eventResults.find((e) => e.team === team);
+                              const r = normResults.find((e) => e.team === team);
                               const teamColor = TEAM_COLORS[team];
                               return (
                                 <div key={team} className="text-center p-2 border border-white/5 bg-white/[0.01]">
@@ -989,12 +1060,13 @@ export default function TeamHub() {
                   </div>
                 </div>
                 <div className="mt-6 p-4 border border-white/10 bg-white/[0.02]">
-                  <div className="font-mono text-xs text-white/40 tracking-wider mb-2">SCORING</div>
+                  <div className="font-mono text-xs text-white/40 tracking-wider mb-2">SCORING SYSTEM</div>
                   <div className="space-y-1 font-mono text-xs text-white/50">
-                    <div>1st Place: 5 points</div>
-                    <div>2nd Place: 3 points</div>
-                    <div>3rd Place: 1 point</div>
-                    <div>DNF: 0 points</div>
+                    <div>1st Place: 10 points</div>
+                    <div>2nd Place: 7 points</div>
+                    <div>3rd Place: 4 points</div>
+                    <div>4th Place: 2 points</div>
+                    <div className="text-white/30">Tug of War: ×2 multiplier</div>
                   </div>
                 </div>
               </>
@@ -1007,8 +1079,16 @@ export default function TeamHub() {
           <div className="space-y-4">
             <SectionHeader label="TEAM WILDCARDS" />
             <p className="font-mono text-white/30 text-xs tracking-wider">
-              3 wildcards. Vote to activate one. Majority rules.
+              Your team has 5 wildcard types. Vote to activate one — captain’s vote counts as 50%, squad splits the rest. Majority wins.
             </p>
+            <div className="p-3 border border-white/10 bg-white/[0.02]">
+              <div className="font-mono text-[10px] text-white/40 tracking-wider mb-1">WILDCARD RULES</div>
+              <div className="font-mono text-[10px] text-white/30 space-y-0.5">
+                <div>Captain vote = 50% weight · Squad splits remaining 50%</div>
+                <div>75% threshold + captain YES required to activate</div>
+                <div>Steal → target team has 10 min to respond with Block</div>
+              </div>
+            </div>
             <div className="space-y-3">
               {WILDCARDS.map((wc) => {
                 const votes = hub.wildcardCounts[wc.id] ?? 0;

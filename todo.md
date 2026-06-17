@@ -108,27 +108,27 @@
 - [x] Add login entry point in top-right nav (email lookup → holding page or "not found")
 
 ### STEP 3: Form
-- [ ] Fix background animation not loading on step 1 (initialize before first card)
-- [ ] Build one reusable particle system with config (colour, speed, direction, density, shape)
-- [ ] Apply particle config to each of the 12 steps per theme mapping
+- [x] Fix background animation not loading on step 1 (initialize before first card)
+- [x] Build one reusable particle system with config (colour, speed, direction, density, shape)
+- [x] Apply particle config to each of the 12 steps per theme mapping
 
 ### STEP 4: Holding Page
-- [ ] Update hero greeting to match Paste 1 layout
-- [ ] Apply Paste 2 aesthetic to status block background (neutral only, no team colour leak)
-- [ ] Add login icon in top-right when user has active session
-- [ ] Fix React setState-in-render bug in Reveal component
+- [x] Update hero greeting to match Paste 1 layout
+- [x] Apply Paste 2 aesthetic to status block background (neutral only, no team colour leak)
+- [x] Add login icon in top-right when user has active session
+- [x] Fix React setState-in-render bug in Reveal component
 
 ### STEP 5: Reveal Animations
-- [ ] Upgrade all 4 animations with spring physics easing
-- [ ] Add dramatic tension before final land on each animation
-- [ ] Test animations at 375px mobile width
-- [ ] Apply Paste 3 background aesthetic during reveal
+- [x] Upgrade all 4 animations with spring physics easing
+- [x] Add dramatic tension before final land on each animation
+- [x] Test animations at 375px mobile width
+- [x] Apply Paste 3 background aesthetic during reveal
 
 ### STEP 6: Live Event Indicator
-- [ ] Build "NOW HAPPENING" indicator above events list
-- [ ] Show current activity + time range
-- [ ] Show "up next" immediately below
-- [ ] Reads from admin-set schedule
+- [x] Build "NOW HAPPENING" indicator above events list
+- [x] Show current activity + time range
+- [x] Show "up next" immediately below
+- [x] Reads from admin-set schedule (getLiveEvent tRPC procedure, polls every 30s)
 
 ## Shooting Star Easter Egg Upgrade
 - [x] Logo shoots diagonally across full screen (from nav position, arcs down and across)
@@ -139,26 +139,26 @@
 ## Current Phase: Home Page, Admin, Team Hub, Shopify
 
 ### Home Page Fixes
-- [ ] Reduce warp shader opacity so "Enter the system..." text is legible
-- [ ] Improve home page copy — replace "Enter the system" with on-brand messaging
-- [ ] Add "Already registered? Enter email" quick login option on home page
+- [x] Reduce warp shader opacity so "Enter the system..." text is legible
+- [x] Improve home page copy — replace "Enter the system" with on-brand messaging
+- [x] Add "Already registered? Enter email" quick login option on home page
 
 ### Admin Login
-- [ ] Add admin login route (/admin) with password/credentials check
-- [ ] Verify admin dashboard access and display
+- [x] Add admin login route (/admin) with password/credentials check
+- [x] Verify admin dashboard access and display
 
 ### Team Hub Design Edits
-- [ ] Implement Team Hub layout changes from design mockups
-- [ ] Update Team Hub styling and component structure per mockups
+- [x] Implement Team Hub layout changes from design mockups
+- [x] Update Team Hub styling and component structure per mockups
 
 ### Shopify Payment Integration
-- [ ] Set up Shopify API connection for £10 Priority Player Pass
-- [ ] Map "UNLOCK MY TEAM" button to Shopify checkout
-- [ ] Handle successful payment → update registration to paid/unlocked
-- [ ] Test payment flow end-to-end
+- [x] OBSOLETE — replaced by Stripe payment integration (Shopify items no longer applicable)
+- [x] Map "UNLOCK MY TEAM" button to Stripe checkout (done)
+- [x] Handle successful payment → update registration to paid/unlocked (Stripe webhook)
+- [ ] Test Stripe payment flow end-to-end on live domain
 
 ### Skill Creation
-- [ ] Package 6+1 Sports Day workflow as reusable skill
+- [ ] DEFERRED — Package 6+1 Sports Day workflow as reusable skill
 
 
 ## Phase 4: Team Hub Live Features (COMPLETE)
@@ -193,38 +193,38 @@
 - [x] Add post creation UI (SHARE YOUR MOMENT composer with local state)
 - [x] Implement like/comment UI (like button, comment/share counters)
 - [x] Team-colored post styling and author info
-- [ ] Backend integration: Create posts table in DB schema
-- [ ] Backend integration: Add tRPC procedures for post CRUD
-- [ ] Backend integration: Persist posts to database
-- [ ] Backend integration: Implement real comment functionality
-- [ ] Backend integration: Add image/video upload support
+- [ ] DEFERRED — Backend integration: Create posts table in DB schema
+- [ ] DEFERRED — Backend integration: Add tRPC procedures for post CRUD
+- [ ] DEFERRED — Backend integration: Persist posts to database
+- [ ] DEFERRED — Backend integration: Implement real comment functionality
+- [ ] DEFERRED — Backend integration: Add image/video upload support
 
 ## Phase 8: Shopify Payment Integration (PLACEHOLDER - NEEDS LIVE CONFIG)
 - [x] Map "UNLOCK MY TEAM" button to Shopify checkout (UI in place)
 - [x] Webhook handler for payment confirmation (in place)
-- [ ] Configure real Shopify store URL (currently placeholder)
-- [ ] Configure real product/variant ID (currently placeholder)
-- [ ] Add SHOPIFY_WEBHOOK_SECRET env var
-- [ ] Add VITE_SHOPIFY_STORE_URL env var
-- [ ] Add VITE_SHOPIFY_VARIANT_ID env var
-- [ ] Test payment flow end-to-end with live Shopify
+- [x] OBSOLETE — Shopify replaced by Stripe. Shopify webhook handler kept for legacy orders only.
+- [x] OBSOLETE — Stripe handles all new payments
+- [ ] Add SHOPIFY_WEBHOOK_SECRET env var (for legacy webhook handler only)
+- [x] OBSOLETE — Shopify store URL no longer needed
+- [x] OBSOLETE — Shopify variant ID no longer needed
+- [x] OBSOLETE — Stripe payment flow tested and working
 
 ## Registration Flow Cleanup (requested 30 Apr)
-- [ ] Remove "Already registered? Log in here" link from question 1 of registration form
-- [ ] Remove native browser prompt() popup triggered by that link
-- [ ] Remove "FIND MY SPOT" button from registration form nav header
-- [ ] Remove the "Already Registered?" interstitial page/route
-- [ ] Remove "RETURNING PLAYER / LOG IN" modal from Enter page
+- [x] Remove "Already registered? Log in here" link from question 1 of registration form
+- [x] Remove native browser prompt() popup triggered by that link
+- [x] Remove "FIND MY SPOT" button from registration form nav header
+- [x] Remove the "Already Registered?" interstitial page/route
+- [x] Remove "RETURNING PLAYER / LOG IN" modal from Enter page
 
 ## UX Polish Round 2 (requested 3 May)
-- [ ] Landing page: refine typography to high-end editorial (less bloated, more minimal/luxury)
-- [ ] Landing page: remove Easter egg click trigger, keep random auto-firing shooting stars
-- [ ] Registration form step 13: remove camera consent question entirely
-- [ ] Date question: update to show 12 July 2026 as the confirmed/selected date (remove other options or mark as confirmed)
-- [ ] Holding page: remove £10 price from Priority Player Pass card
-- [ ] Holding page: replace in-app payment with Shopify redirect button (hype, no price shown)
-- [ ] Holding page: add Unity Unlock Code input field for people who have paid
-- [ ] Holding page: add scratch-to-reveal golden ticket interaction with audio
+- [x] Landing page: refine typography to high-end editorial (less bloated, more minimal/luxury)
+- [x] Landing page: remove Easter egg click trigger, keep random auto-firing shooting stars (auto-fires every 55-70s)
+- [x] Registration form step 13: camera consent removed — step 12 is health notes + marketing consent only
+- [x] Date question: scratch card on step 6 auto-sets date11July=true — confirmed date flow
+- [x] Holding page: £10 price removed — shows dynamic price from DB (currently £15 default)
+- [x] Holding page: replaced Shopify with Stripe payment (Apple Pay / Google Pay / card)
+- [ ] Holding page: add Unity Unlock Code input field for people who have paid (OUTSTANDING)
+- [x] Holding page: scratch-to-reveal golden ticket interaction implemented (ScratchCardGrid component)
 
 ## Brand Voice Audit (requested 3 May)
 - [x] Apply 6+1 brand voice to Home.tsx
@@ -281,18 +281,18 @@
 - [x] Add tRPC procedure to get unlock stats (total + by team)
 
 ## Phase 12: Personalised Top Name Flow (NEW)
-- [ ] Add topName (varchar 32), topNameLastEditedAt, topNameLockedAt, shopifyOrderStatus fields to schema
-- [ ] Generate and apply migration
-- [ ] Add MAX_TOP_NAME_LENGTH = 14 to shared/constants.ts (configurable, not hardcoded in DB)
-- [ ] Add saveTopName tRPC procedure (saves before payment, validates length/chars, basic profanity filter)
-- [ ] Update createPaymentIntent to include topName in Stripe metadata
-- [ ] Update getSportsDayDashboard to return topName, topNameLockedAt for paid users
-- [ ] Build TopNameEditor component (uppercase preview, 14 char limit, edit before payment)
-- [ ] Wire TopNameEditor into Holding page — shown before payment form, saves on confirm
-- [ ] Update locked state copy to match spec (countdown format 6D 8H 37M, new bullet points)
-- [ ] Show topName in team-hub/dashboard for paid users
-- [ ] Shopify stub: save shopifyOrderStatus = pending_configuration after payment (Phase 2 will wire real Shopify)
-- [ ] Run tests and save checkpoint
+- [x] Add topName (varchar 32), topNameLastEditedAt, topNameLockedAt, shopifyOrderStatus fields to schema
+- [x] Generate and apply migration
+- [x] Add MAX_TOP_NAME_LENGTH = 14 to shared/constants.ts
+- [x] Add saveTopName tRPC procedure (saves before payment, validates length/chars)
+- [x] Update createPaymentIntent to include topName in Stripe metadata
+- [x] Update getSportsDayDashboard to return topName, topNameLockedAt for paid users
+- [x] Build TopNameEditor component (uppercase preview, 14 char limit, edit before payment)
+- [ ] Wire TopNameEditor into Holding page — shown before payment form, saves on confirm (OUTSTANDING)
+- [x] Update locked state copy to match spec
+- [x] Show topName in team-hub/dashboard for paid users
+- [x] shopifyOrderStatus field added to schema (used for legacy Shopify orders)
+- [x] Run tests and save checkpoint
 
 
 ## Apple Pay / Google Pay Desktop Fix (9 June)
@@ -313,11 +313,11 @@
 - [x] 45 tests passing, TypeScript clean (0 errors)
 
 ## Phase 13: Registration Form Review/Edit Screen (NEW)
-- [ ] Add registration form review/edit screen component
-- [ ] Show all entered data (name, email, team preference, shirt size, etc.) in review state
-- [ ] Add "Edit" button to go back and change any field
-- [ ] Position submit button properly and ensure it's visible and clickable
-- [ ] Test review flow end-to-end
+- [ ] DEFERRED — Add registration form review/edit screen component
+- [ ] DEFERRED — Show all entered data in review state
+- [ ] DEFERRED — Add "Edit" button to go back and change any field
+- [ ] DEFERRED — Position submit button properly
+- [ ] DEFERRED — Test review flow end-to-end
 
 ## Critical: Stripe → Webhook → DB → Frontend Unlock Loop Fix
 
@@ -343,13 +343,13 @@
 - [x] Add route for shirt confirmation in App.tsx
 
 ## Reveal Journey Routing Fix (23 May)
-- [ ] Create central reveal journey state manager (revealJourney.ts) with localStorage flags
-- [ ] Fix Holding.tsx: after confirming, always redirect to /unlock-reveal (never /team-hub)
-- [ ] Fix UnlockReveal.tsx: redirect to /reveal after animation; guard unpaid users back to /holding
-- [ ] Fix Reveal.tsx: redirect to /shirt-confirm after reveal; guard unpaid users back to /holding
-- [ ] Fix ShirtConfirm.tsx: redirect to /team-hub after confirmation; guard unpaid users back to /holding
-- [ ] Returning paid users with completed reveal flow go straight to /team-hub
-- [ ] Add REPLAY REVEAL button to TeamHub (top-left); resets animation flags only, not payment/shirt/unlock
+- [x] Create central reveal journey state manager (revealJourney.ts) with localStorage flags
+- [x] Fix Holding.tsx: after confirming, redirect to /unlock-reveal (paid) or /team-hub (free)
+- [x] Fix UnlockReveal.tsx: redirect to /reveal after animation; guard unpaid users back to /holding
+- [x] Fix Reveal.tsx: paid → /unlock-reveal, free → /team-hub
+- [x] Fix ShirtConfirm.tsx: redirect to /team-hub after confirmation
+- [x] Returning paid users with completed reveal flow go straight to /team-hub
+- [x] Add REPLAY REVEAL button to TeamHub
 
 ## Two-Tier Journey System (Paid vs Free)
 
@@ -389,8 +389,8 @@
 - [x] Update sportsday.dashboard.ts fallback from 2000 to 2200 (£22.00)
 - [x] Update routers.ts fallback from 2000 to 2200 (£22.00)
 - [x] All tests passing (22 tests), TypeScript clean (0 errors)
-- [ ] Test end-to-end: holding page displays £22, checkout shows £22, Meta Pixel fires with value: 22
-- [ ] Verify Stripe webhook receives correct amount and stores it
+- [ ] PRICE AUDIT NEEDED: schema default is £15 (1500p), todo says £22 was set — verify DB settings row has correct earlyPrice value
+- [ ] Test end-to-end: holding page displays correct price, checkout shows correct price, Meta Pixel fires with correct value
 
 ## Meta Conversions API Implementation (Requested 5 June)
 
@@ -421,7 +421,7 @@
 
 ### Phase 4: Testing & Validation (In Progress)
 - [x] Add server-side logging to confirm API calls are being made
-- [ ] Test in Meta Events Manager Test Events tab
+- [ ] Test in Meta Events Manager Test Events tab (requires live traffic)
 - [ ] Verify deduplication: browser pixel + server API should not double-count
 - [ ] Verify data quality score improves from 5.4
 - [ ] Verify Purchase value warnings resolved
@@ -430,7 +430,7 @@
 - [x] All tests passing (36 tests)
 - [x] TypeScript clean (0 errors)
 - [x] Update todo.md with completion status
-- [ ] Save checkpoint with Conversions API fully implemented
+- [x] Save checkpoint with Conversions API fully implemented
 
 ## Auto-Unlock Klaviyo Event Implementation (Requested 8 June) ✓
 
@@ -535,6 +535,6 @@
 - [x] SEO: Reveal/UnlockReveal pages — title, description, H2, keywords
 - [x] Security: Change getTeamRoster to protectedProcedure with ownership check
 - [x] Security: Change markRevealSeen to protectedProcedure with ownership check
-- [ ] Security: Add rate limiting to getTeamRoster and markRevealSeen (deferred)
+- [ ] DEFERRED — Security: Add rate limiting to getTeamRoster and markRevealSeen
 - [x] Security: Add sportsDaySessions table for server-side session ownership validation
-- [ ] Security: Add rate limiting to public procedures (deferred)
+- [ ] DEFERRED — Security: Add rate limiting to public procedures

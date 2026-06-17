@@ -71,6 +71,15 @@ export function NowHappening() {
             {liveEvent.description}
           </p>
         )}
+        {(liveEvent as any).upNext && (
+          <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-2">
+            <span className="font-mono text-white/25 text-[10px] tracking-[0.2em] uppercase">Up next:</span>
+            <span className="font-mono text-white/50 text-[10px]">{(liveEvent as any).upNext.eventName}</span>
+            {(liveEvent as any).upNext.startTime && (
+              <span className="font-mono text-white/30 text-[10px]">· {(liveEvent as any).upNext.startTime}</span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

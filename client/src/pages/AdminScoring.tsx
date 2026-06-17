@@ -1,10 +1,11 @@
 /**
  * AdminScoring — Phase 1 scoring panel
- * Live leaderboard, event status control, result entry, audit log
+ * Live leaderboard, event status control, result entry, audit log, wildcard monitor
  */
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { AdminWildcardMonitor } from "@/components/AdminWildcardMonitor";
 
 type Team = "red" | "blue" | "pink" | "orange";
 const TEAMS: Team[] = ["red", "blue", "pink", "orange"];
@@ -30,7 +31,7 @@ const STATUS_COLORS: Record<string, string> = {
   complete: "#4488FF",
 };
 
-type ScoringView = "leaderboard" | "events" | "entry" | "audit";
+type ScoringView = "leaderboard" | "events" | "entry" | "audit" | "wildcards";
 
 // ─── Live Leaderboard ─────────────────────────────────────────────────────────
 function LiveLeaderboard() {
@@ -422,6 +423,7 @@ export default function AdminScoring() {
     { id: "events", label: "EVENTS" },
     { id: "entry", label: "RESULT ENTRY" },
     { id: "audit", label: "AUDIT LOG" },
+    { id: "wildcards", label: "⚡ WILDCARDS" },
   ];
 
   return (
@@ -453,6 +455,7 @@ export default function AdminScoring() {
       {view === "events" && <EventControl />}
       {view === "entry" && <ResultEntry />}
       {view === "audit" && <AuditLog />}
+      {view === "wildcards" && <AdminWildcardMonitor />}
     </div>
   );
 }

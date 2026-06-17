@@ -353,4 +353,22 @@ export const scoringRouter = router({
         .orderBy(desc(sdPointsLog.createdAt))
         .limit(input.limit);
     }),
+
+  // ── Public: locked event results (for TeamHub leaderboard tab) ────────────
+  getPublicEventResults: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    // Only return locked results (pushed to leaderboard by admin)
+    const results = await db
+      .select({
+        eventId: sdEventResults.eventId,
+        team: sdEventResults.team,
+        placement: sdEventResults.placement,
+        finalPoints: sdEventResults.finalPoints,
+        locked: sdEventResults.locked,
+      })
+      .from(sdEventResults)
+      .where(eq(sdEventResults.locked, true));
+    return results;
+  }),
 });
