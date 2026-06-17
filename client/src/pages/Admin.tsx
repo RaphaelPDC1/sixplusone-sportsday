@@ -175,6 +175,13 @@ export default function Admin() {
     },
     onError: (e) => toast.error(e.message),
   });
+  const toggleVotingMutation = trpc.sportsday.adminToggleVoting.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Voting ${data.votingEnabled ? "ENABLED" : "DISABLED"} — wildcards & fun awards`);
+      refetchSettings();
+    },
+    onError: (e) => toast.error(e.message),
+  });
 
   const upsertLb = trpc.sportsday.adminUpsertLeaderboard.useMutation({
     onSuccess: () => {
@@ -747,6 +754,53 @@ export default function Admin() {
                 <div className="border border-[#444]/20 bg-[#444]/5 px-4 py-3 mt-2">
                   <p className="font-mono text-[#444] text-[10px] tracking-wider">
                     Pop-ups are OFF. Enable before running ads or sending emails so the funnel is ready.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Voting Gate Toggle */}
+            <div className="border border-[#1A1A1A] bg-[#0D0D0D] p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <p className="font-mono text-[#FF5500] text-xs tracking-[0.2em] mb-1">DAY-OF VOTING GATE</p>
+                  <p className="font-mono text-[#444] text-[10px] tracking-wider leading-relaxed max-w-sm">
+                    Enable on the morning of Sports Day. Unlocks wildcard voting (captain-initiated)
+                    and fun awards voting for all registered players.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-6">
+                  <span className={`font-mono text-xs tracking-wider ${
+                    adminSettings?.votingEnabled ? "text-[#22c55e]" : "text-[#444]"
+                  }`}>
+                    {adminSettings?.votingEnabled ? "ON" : "OFF"}
+                  </span>
+                  <button
+                    onClick={() => toggleVotingMutation.mutate({ enabled: !adminSettings?.votingEnabled })}
+                    disabled={toggleVotingMutation.isPending}
+                    className={`relative w-14 h-7 rounded-full transition-colors duration-300 focus:outline-none ${
+                      adminSettings?.votingEnabled ? "bg-[#22c55e]" : "bg-[#222]"
+                    }`}
+                    aria-label="Toggle voting"
+                  >
+                    <span
+                      className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform duration-300 ${
+                        adminSettings?.votingEnabled ? "translate-x-8" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+              {adminSettings?.votingEnabled ? (
+                <div className="border border-[#22c55e]/20 bg-[#22c55e]/5 px-4 py-3 mt-2">
+                  <p className="font-mono text-[#22c55e] text-[10px] tracking-wider">
+                    ✓ VOTING IS LIVE — Captains can trigger wildcards. All players can vote on fun awards.
+                  </p>
+                </div>
+              ) : (
+                <div className="border border-[#444]/20 bg-[#444]/5 px-4 py-3 mt-2">
+                  <p className="font-mono text-[#444] text-[10px] tracking-wider">
+                    Voting is OFF. Enable on the morning of Sports Day to open wildcard and fun awards voting.
                   </p>
                 </div>
               )}

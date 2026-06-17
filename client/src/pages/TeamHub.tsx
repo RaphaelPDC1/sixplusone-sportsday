@@ -43,6 +43,39 @@ const TEAM_CAPTAINS: Record<string, { squadName: string; captains: string[] }> =
   orange: { squadName: "CHAOS",        captains: ["Nahal", "George"] },
 };
 
+// Unique emoji per event name (maps sd_events.name → emoji)
+const EVENT_EMOJI: Record<string, string> = {
+  "100M SPRINT":          "💨",
+  "4×100 RELAY":          "🏃",
+  "4x100 RELAY":          "🏃",
+  "TUG OF WAR":           "💪",
+  "OBSTACLE COURSE":      "🧱",
+  "LONG JUMP":            "🦘",
+  "PENALTY SHOOTOUT":     "⚽",
+  "MYSTERY TIEBREAKER":   "❓",
+  "SPRINT":               "💨",
+  "RELAY":                "🏃",
+  "TUG OF WAR (FINALE)":  "🏆",
+  "JAVELIN":              "🎯",
+  "HIGH JUMP":            "🏋️",
+  "SHOT PUT":             "🪨",
+  "EGG AND SPOON":        "🥚",
+  "SACK RACE":            "🎒",
+  "THREE-LEGGED RACE":    "🦵",
+};
+function getEventEmoji(name: string, arena?: string): string {
+  const upper = name.toUpperCase();
+  if (EVENT_EMOJI[upper]) return EVENT_EMOJI[upper];
+  // Partial match fallback
+  for (const [key, emoji] of Object.entries(EVENT_EMOJI)) {
+    if (upper.includes(key) || key.includes(upper)) return emoji;
+  }
+  // Arena fallback
+  if (arena === "Arena A") return "🏟️";
+  if (arena === "Arena B") return "⚡";
+  return "🏃";
+}
+
 const EVENTS = [
   { id: "sprint",        name: "100M SPRINT",          icon: "💨", desc: "Pure speed. No excuses." },
   { id: "relay",         name: "4×100 RELAY",           icon: "🏃", desc: "Team timing is everything." },
@@ -54,11 +87,11 @@ const EVENTS = [
 ];
 
 const WILDCARDS = [
-  { id: "steal",       name: "STEAL",        desc: "Take one player from any other team for a single event. They must compete for you.", icon: "👤" },
-  { id: "sabotage",    name: "SABOTAGE",     desc: "Force another team to compete in an event with one fewer player.", icon: "💣" },
-  { id: "block",       name: "BLOCK",        desc: "Nullify another team's wildcard before it activates.", icon: "🛡️" },
-  { id: "double_down", name: "DOUBLE DOWN",  desc: "Double your points for one event. Announce before it starts.", icon: "×2" },
-  { id: "all_in",      name: "ALL IN",       desc: "Stake all your current points on one event. Win = double. Lose = zero.", icon: "🎲" },
+  { id: "steal",       name: "STEAL",        short: "Borrow a player from another team for one event.",    desc: "Borrow a player from another team for one event.",    icon: "👤", captainOnly: true, needsTarget: true },
+  { id: "sabotage",    name: "SABOTAGE",     short: "Make a rival team compete with one fewer player.",     desc: "Make a rival team compete with one fewer player.",     icon: "💣", captainOnly: true, needsTarget: true },
+  { id: "block",       name: "BLOCK",        short: "Cancel a wildcard that another team just played.",     desc: "Cancel a wildcard that another team just played.",     icon: "🛡️", captainOnly: true, needsTarget: true },
+  { id: "double_down", name: "DOUBLE DOWN",  short: "Double your points for the next event.",              desc: "Double your points for the next event.",              icon: "×2", captainOnly: true, needsTarget: false },
+  { id: "all_in",      name: "ALL IN",       short: "Stake everything on one event: win = double points, lose = zero.", desc: "Stake everything on one event: win = double points, lose = zero.", icon: "🎲", captainOnly: true, needsTarget: false },
 ];
 
 const AWARD_CATEGORIES = [
@@ -112,6 +145,26 @@ export default function TeamHub() {
     { registrationId: userId },
     { enabled: !!userId }
   );
+
+  // Day-of voting gate
+  const { data: votingGate } = trpc.sportsday.getVotingEnabled.useQuery(undefined, {
+    refetchInterval: 30_000,
+  });
+  const votingEnabled = votingGate?.enabled ?? false;
+
+  // Wildcard initiation state
+  const [wildcardInitiating, setWildcardInitiating] = useState<string | null>(null);
+  const [wildcardTarget, setWildcardTarget] = useState<string | null>(null);
+
+  const initiateWildcardMutation = trpc.sportsday.initiateWildcard.useMutation({
+    onSuccess: () => {
+      toast.success("Wildcard initiated! Your team is now voting.");
+      setWildcardInitiating(null);
+      setWildcardTarget(null);
+      refetch();
+    },
+    onError: (e) => toast.error(e.message),
+  });
 
   // ── Live scoring data from the new scoring system ──────────────────────────
   const { data: liveLeaderboard } = trpc.scoring.getLiveLeaderboard.useQuery(undefined, {
@@ -259,15 +312,16 @@ export default function TeamHub() {
     ? sdEventsData.map((e) => ({
         id: String(e.id),
         name: e.name,
-        icon: e.arena === "Arena A" ? "🏟️" : e.arena === "Arena B" ? "⚡" : "🏃",
+        icon: getEventEmoji(e.name, e.arena ?? undefined),
         desc: e.arena ? `${e.arena} · ${e.startTime ?? "TBC"}` : (e.startTime ?? "TBC"),
         arena: e.arena,
         startTime: e.startTime,
         endTime: e.endTime,
         status: e.status,
         pointsMultiplier: e.pointsMultiplier,
+        wildcardsEnabled: e.wildcardsEnabled,
       }))
-    : EVENTS.map((e) => ({ ...e, arena: undefined, startTime: undefined, endTime: undefined, status: "upcoming" as const, pointsMultiplier: 1 }));
+    : EVENTS.map((e) => ({ ...e, arena: undefined, startTime: undefined, endTime: undefined, status: "upcoming" as const, pointsMultiplier: 1, wildcardsEnabled: false }));
 
   const TABS = [
     { id: "team" as const,           label: "TEAM",           icon: "👥" },
@@ -357,18 +411,23 @@ export default function TeamHub() {
             </div>
 
             <div className="min-w-0">
+              {/* Player first name in team colour */}
               <div
                 className="font-display text-4xl tracking-widest leading-none"
                 style={{ color: tc.hex, textShadow: `0 0 30px ${tc.glow}` }}
               >
+                {myMember?.fullName?.split(" ")[0]?.toUpperCase() ?? (hub.team ?? "red").toUpperCase()}
+              </div>
+              {/* Team name as subtitle */}
+              <div className="font-mono text-white/40 text-xs tracking-[0.25em] mt-1">
                 TEAM {(hub.team ?? "red").toUpperCase()}
               </div>
               {myMember?.profileTagline && (
-                <p className="font-mono text-white/40 text-xs tracking-wider mt-1 truncate">
-                  {myMember.profileTagline}
+                <p className="font-mono text-white/30 text-[10px] tracking-wider mt-1 truncate italic">
+                  "{myMember.profileTagline}"
                 </p>
               )}
-              <p className="font-mono text-white/25 text-xs mt-1">
+              <p className="font-mono text-white/20 text-[10px] mt-1">
                 {hub.totalMembers} MEMBERS
               </p>
             </div>
@@ -449,11 +508,11 @@ export default function TeamHub() {
                     {/* top accent bar */}
                     <div className="absolute top-0 left-0 right-0 h-1" style={{ background: tc.hex }} />
 
-                    <div className="flex items-center justify-between mb-5">
-                      <span className="font-mono text-xs tracking-[0.3em]" style={{ color: tc.hex }}>
+                    <div className="flex items-center justify-between mb-5 gap-2">
+                      <span className="font-mono text-xs tracking-[0.3em] flex-shrink-0" style={{ color: tc.hex }}>
                         TEAM CAPTAINS
                       </span>
-                      <span className="font-display text-sm tracking-widest text-white/40">
+                      <span className="font-display text-sm tracking-widest text-white/40 truncate text-right">
                         {capData.squadName}
                       </span>
                     </div>
@@ -501,6 +560,47 @@ export default function TeamHub() {
               );
             })()}
             
+            {/* ─── LIVE EVENT STRIP ─── */}
+            {(() => {
+              const liveEvt = liveEvents?.find((e) => e.status === "live");
+              const upNextEvt = liveEvents?.find((e) => e.status === "armed" || e.status === "upcoming");
+              if (!liveEvt && !upNextEvt) return null;
+              return (
+                <div
+                  className="p-4 border mb-2"
+                  style={{
+                    borderColor: liveEvt ? tc.hex : "rgba(255,255,255,0.15)",
+                    background: liveEvt ? `${tc.hex}10` : "rgba(255,255,255,0.02)",
+                  }}
+                >
+                  {liveEvt && (
+                    <div className="flex items-center gap-3 mb-2">
+                      <div
+                        className="w-2 h-2 rounded-full animate-pulse"
+                        style={{ background: tc.hex }}
+                      />
+                      <span className="font-mono text-[10px] tracking-[0.3em]" style={{ color: tc.hex }}>NOW HAPPENING</span>
+                    </div>
+                  )}
+                  {liveEvt && (
+                    <div className="font-display text-xl tracking-widest truncate" style={{ color: tc.hex }}>
+                      {getEventEmoji(liveEvt.name)} {liveEvt.name.toUpperCase()}
+                    </div>
+                  )}
+                  {liveEvt?.arena && (
+                    <div className="font-mono text-xs text-white/40 mt-1">{liveEvt.arena}</div>
+                  )}
+                  {upNextEvt && (
+                    <div className={`font-mono text-xs text-white/40 ${liveEvt ? "mt-3 pt-3 border-t border-white/10" : ""}`}>
+                      <span className="text-white/25 tracking-wider">UP NEXT → </span>
+                      <span className="text-white/50">{upNextEvt.name.toUpperCase()}</span>
+                      {upNextEvt.startTime && <span className="text-white/30"> · {upNextEvt.startTime}</span>}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {(() => {
               // Captains use rosterData (all members incl. locked); regular members use hub.members (unlocked only)
               const displayMembers = rosterData
@@ -871,6 +971,38 @@ export default function TeamHub() {
                     {/* Expanded: AI insight + mini leaderboard */}
                     {isExpanded && (
                       <div className="px-4 pb-4 border-t" style={{ borderColor: `${tc.hex}20` }}>
+                        {/* Arena + time + wildcard availability */}
+                        <div className="flex flex-wrap gap-3 mt-3 mb-2">
+                          {event.arena && (
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-1 h-1 rounded-full" style={{ background: tc.hex }} />
+                              <span className="font-mono text-white/40 text-[10px] tracking-wider">{event.arena}</span>
+                            </div>
+                          )}
+                          {event.startTime && (
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-1 h-1 rounded-full" style={{ background: tc.hex }} />
+                              <span className="font-mono text-white/40 text-[10px] tracking-wider">
+                                {event.startTime}{event.endTime ? ` – ${event.endTime}` : ""}
+                              </span>
+                            </div>
+                          )}
+                          {(event as any).wildcardsEnabled && (
+                            <div
+                              className="flex items-center gap-1.5 px-2 py-0.5 border"
+                              style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}10` }}
+                            >
+                              <span className="text-[10px]">⚡</span>
+                              <span className="font-mono text-[9px] tracking-widest" style={{ color: tc.hex }}>WILDCARDS ACTIVE</span>
+                            </div>
+                          )}
+                          {!(event as any).wildcardsEnabled && (
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 border border-white/10">
+                              <span className="text-[10px]">🔒</span>
+                              <span className="font-mono text-[9px] tracking-widest text-white/25">NO WILDCARDS</span>
+                            </div>
+                          )}
+                        </div>
                         {aiInsight && (
                           <div className="mt-3 flex items-start gap-2">
                             <span className="text-sm mt-0.5">⚡</span>
@@ -1074,90 +1206,174 @@ export default function TeamHub() {
           </div>
         )}
 
-        {/* ─── WILDCARDS TAB ─── */}
+                {/* ─── WILDCARDS TAB ─── */}
         {activeTab === "wildcards" && (
           <div className="space-y-4">
-            <SectionHeader label="TEAM WILDCARDS" />
-            <p className="font-mono text-white/30 text-xs tracking-wider">
-              Your team has 5 wildcard types. Vote to activate one — captain’s vote counts as 50%, squad splits the rest. Majority wins.
-            </p>
-            <div className="p-3 border border-white/10 bg-white/[0.02]">
-              <div className="font-mono text-[10px] text-white/40 tracking-wider mb-1">WILDCARD RULES</div>
-              <div className="font-mono text-[10px] text-white/30 space-y-0.5">
-                <div>Captain vote = 50% weight · Squad splits remaining 50%</div>
-                <div>75% threshold + captain YES required to activate</div>
-                <div>Steal → target team has 10 min to respond with Block</div>
+            <SectionHeader label="WILDCARDS" />
+            {/* Day-of gate */}
+            {!votingEnabled ? (
+              <div
+                className="p-8 border text-center"
+                style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.01)" }}
+              >
+                <div className="text-4xl mb-4">🔒</div>
+                <div className="font-display text-xl tracking-widest text-white/50 mb-2">LOCKED</div>
+                <div className="font-mono text-white/25 text-xs tracking-wider">Opens on the day</div>
               </div>
-            </div>
-            <div className="space-y-3">
-              {WILDCARDS.map((wc) => {
-                const votes = hub.wildcardCounts[wc.id] ?? 0;
-                const hasVoted = hub.myWildcardVotes.includes(wc.id);
-                const totalVotes = Object.values(hub.wildcardCounts).reduce((a, b) => a + b, 0);
-                const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
-                return (
-                  <div
-                    key={wc.id}
-                    className="p-5 border transition-all"
-                    style={{
-                      borderColor: hasVoted ? tc.hex : "rgba(255,255,255,0.1)",
-                      background: hasVoted ? `${tc.hex}08` : "rgba(255,255,255,0.01)",
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="font-display text-2xl tracking-widest"
-                          style={{ color: tc.hex }}
-                        >
-                          {wc.icon}
-                        </span>
-                        <div>
-                          <div className="font-display text-lg tracking-widest">{wc.name}</div>
-                          <div className="font-mono text-white/30 text-xs mt-0.5">{wc.desc}</div>
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <div
-                          className="font-display text-2xl tracking-widest"
-                          style={{ color: hasVoted ? tc.hex : "rgba(255,255,255,0.3)" }}
-                        >
-                          {votes}
-                        </div>
-                        <div className="font-mono text-white/20 text-[10px]">VOTES</div>
-                      </div>
+            ) : (
+              <>
+                {/* Captain-only initiation panel */}
+                {isCaptainUser && (
+                  <div className="space-y-2">
+                    <div className="font-mono text-[10px] tracking-[0.3em] mb-2" style={{ color: tc.hex }}>
+                      INITIATE A WILDCARD
                     </div>
-                    {/* Vote bar */}
-                    <div className="h-1 bg-white/10 mb-3">
-                      <div
-                        className="h-full transition-all duration-500"
-                        style={{ width: `${pct}%`, background: tc.hex }}
-                      />
+                    <div className="grid grid-cols-1 gap-2">
+                      {WILDCARDS.map((wc) => {
+                        const isInitiating = wildcardInitiating === wc.id;
+                        return (
+                          <div key={wc.id}>
+                            <button
+                              onClick={() => setWildcardInitiating(isInitiating ? null : wc.id)}
+                              className="w-full flex items-center gap-3 p-3 border transition-all active:scale-[0.99] text-left"
+                              style={{
+                                borderColor: isInitiating ? tc.hex : "rgba(255,255,255,0.08)",
+                                background: isInitiating ? `${tc.hex}12` : "rgba(255,255,255,0.01)",
+                              }}
+                            >
+                              <span className="text-xl flex-shrink-0 w-8 text-center">{wc.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-display text-sm tracking-widest">{wc.name}</div>
+                                <div className="font-mono text-white/25 text-[9px] mt-0.5 truncate">{wc.short}</div>
+                              </div>
+                              <span className="font-mono text-[9px] tracking-wider flex-shrink-0" style={{ color: isInitiating ? tc.hex : "rgba(255,255,255,0.2)" }}>
+                                {isInitiating ? "✕" : "→"}
+                              </span>
+                            </button>
+                            {isInitiating && (
+                              <div
+                                className="p-4 border-x border-b"
+                                style={{ borderColor: tc.hex }}
+                              >
+                                {wc.needsTarget && (
+                                  <div className="mb-3">
+                                    <div className="font-mono text-[10px] text-white/40 tracking-wider mb-2">TARGET TEAM</div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                      {(["red","blue","pink","orange"] as const)
+                                        .filter((t) => t !== hub.team)
+                                        .map((t) => (
+                                          <button
+                                            key={t}
+                                            onClick={() => setWildcardTarget(wildcardTarget === t ? null : t)}
+                                            className="py-2 font-mono text-xs tracking-widest border transition-all"
+                                            style={{
+                                              borderColor: wildcardTarget === t ? TEAM_COLORS[t]?.hex : "rgba(255,255,255,0.1)",
+                                              color: wildcardTarget === t ? TEAM_COLORS[t]?.hex : "rgba(255,255,255,0.4)",
+                                              background: wildcardTarget === t ? `${TEAM_COLORS[t]?.hex}15` : "transparent",
+                                            }}
+                                          >
+                                            {t.toUpperCase()}
+                                          </button>
+                                        ))}
+                                    </div>
+                                  </div>
+                                )}
+                                <button
+                                  onClick={() => {
+                                    if (wc.needsTarget && !wildcardTarget) { toast.error("Select a target team first"); return; }
+                                    initiateWildcardMutation.mutate({
+                                      registrationId: userId,
+                                      team: hub.team as "red"|"blue"|"pink"|"orange",
+                                      wildcardId: wc.id as "steal"|"sabotage"|"block"|"double_down"|"all_in",
+                                      targetTeam: wildcardTarget as "red"|"blue"|"pink"|"orange" | undefined,
+                                    });
+                                  }}
+                                  disabled={initiateWildcardMutation.isPending}
+                                  className="w-full py-3 font-display text-base tracking-widest transition-all active:scale-[0.99]"
+                                  style={{ background: tc.hex, color: "#0A0A0A" }}
+                                >
+                                  {initiateWildcardMutation.isPending ? "INITIATING..." : `INITIATE ${wc.name} →`}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                    {!hasVoted ? (
-                      <button
-                        onClick={() =>
-                          wildcardMutation.mutate({
-                            voterId: userId,
-                            team: hub.team as "red" | "blue" | "pink" | "orange",
-                            wildcardId: wc.id,
-                          })
-                        }
-                        disabled={wildcardMutation.isPending}
-                        className="w-full py-3 font-display text-lg tracking-widest transition-all active:scale-[0.99]"
-                        style={{ background: `${tc.hex}20`, color: tc.hex, border: `1px solid ${tc.hex}40` }}
-                      >
-                        VOTE FOR THIS →
-                      </button>
-                    ) : (
-                      <div className="text-center font-mono text-xs tracking-wider" style={{ color: tc.hex }}>
-                        ✓ YOUR VOTE IS IN
-                      </div>
-                    )}
                   </div>
-                );
-              })}
-            </div>
+                )}
+
+                {/* Member vote panel — shown to everyone */}
+                {(() => {
+                  const activeWildcards = WILDCARDS.filter((wc) => (hub.wildcardCounts[wc.id] ?? 0) > 0);
+                  if (!isCaptainUser && activeWildcards.length === 0) {
+                    return (
+                      <div className="text-center py-10">
+                        <div className="text-3xl mb-3">⏳</div>
+                        <div className="font-mono text-white/25 text-xs tracking-wider">Waiting for your captain to play a card</div>
+                      </div>
+                    );
+                  }
+                  const displayWildcards = isCaptainUser ? [] : activeWildcards; // captains see their own panel above
+                  if (displayWildcards.length === 0 && isCaptainUser) return null;
+                  return (
+                    <div className="space-y-2">
+                      <div className="font-mono text-[10px] text-white/30 tracking-[0.3em] mb-2">TEAM VOTE</div>
+                      {displayWildcards.map((wc) => {
+                        const votes = hub.wildcardCounts[wc.id] ?? 0;
+                        const hasVoted = hub.myWildcardVotes.includes(wc.id);
+                        const pct = Math.min(100, Math.round((votes / Math.max(1, hub.totalMembers)) * 100));
+                        return (
+                          <div
+                            key={wc.id}
+                            className="p-4 border"
+                            style={{
+                              borderColor: hasVoted ? tc.hex : "rgba(255,255,255,0.15)",
+                              background: hasVoted ? `${tc.hex}08` : "rgba(255,255,255,0.02)",
+                            }}
+                          >
+                            <div className="flex items-center gap-3 mb-3">
+                              <span className="text-xl w-8 text-center flex-shrink-0">{wc.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-display text-base tracking-widest">{wc.name}</div>
+                              </div>
+                              <div className="text-right flex-shrink-0">
+                                <div className="font-display text-lg" style={{ color: tc.hex }}>{pct}%</div>
+                                <div className="font-mono text-white/20 text-[9px]">APPROVAL</div>
+                              </div>
+                            </div>
+                            <div className="h-1 bg-white/10 mb-3 overflow-hidden">
+                              <div
+                                className="h-full transition-all duration-700"
+                                style={{ width: `${pct}%`, background: tc.hex }}
+                              />
+                            </div>
+                            {!hasVoted ? (
+                              <button
+                                onClick={() => wildcardMutation.mutate({
+                                  voterId: userId,
+                                  team: hub.team as "red"|"blue"|"pink"|"orange",
+                                  wildcardId: wc.id,
+                                })}
+                                disabled={wildcardMutation.isPending}
+                                className="w-full py-2.5 font-display text-sm tracking-widest transition-all active:scale-[0.99]"
+                                style={{ background: `${tc.hex}20`, color: tc.hex, border: `1px solid ${tc.hex}40` }}
+                              >
+                                VOTE YES →
+                              </button>
+                            ) : (
+                              <div className="text-center font-mono text-xs tracking-wider" style={{ color: tc.hex }}>
+                                ✓ VOTED
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </>
+            )}
           </div>
         )}
 
@@ -1165,10 +1381,24 @@ export default function TeamHub() {
         {activeTab === "awards" && (
           <div className="space-y-4">
             <SectionHeader label="FUN AWARDS" />
-            <p className="font-mono text-white/30 text-xs tracking-wider">
-              One vote per category. Make it count.
-            </p>
 
+            {/* Day-of gate */}
+            {!votingEnabled ? (
+              <div
+                className="p-6 border text-center"
+                style={{ borderColor: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.02)" }}
+              >
+                <div className="text-3xl mb-3">🏆</div>
+                <div className="font-display text-xl tracking-widest text-white/60 mb-2">AWARDS LOCKED</div>
+                <div className="font-mono text-white/30 text-xs tracking-wider">
+                  Voting opens on the day. One vote per category.
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="font-mono text-white/30 text-xs tracking-wider">
+                  One vote per category. Make it count.
+                </p>
             {AWARD_CATEGORIES.map((cat) => {
               const myVote = awardData?.myVotes.find((v) => v.category === cat.id);
               const votedFor = myVote ? hub.members.find((m) => m.id === myVote.nomineeId) : null;
@@ -1262,6 +1492,8 @@ export default function TeamHub() {
                 </div>
               );
             })}
+              </>
+            )}
           </div>
         )}
 

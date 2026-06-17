@@ -262,6 +262,10 @@ export const sportsDaySettings = mysqlTable("sports_day_settings", {
   // Funnel pop-ups toggle (admin enables before ads/emails go out)
   popupsEnabled: boolean("popupsEnabled").default(false),
 
+  // Day-of voting gate: admin flips this on the morning of Sports Day
+  // Gates wildcard voting AND fun awards voting
+  votingEnabled: boolean("votingEnabled").default(false),
+
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 export type SportsDaySettings = typeof sportsDaySettings.$inferSelect;

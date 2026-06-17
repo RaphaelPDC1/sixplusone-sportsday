@@ -1,0 +1,1 @@
+ALTER TABLE `sports_day_settings` ADD `votingEnabled` boolean DEFAULT false;

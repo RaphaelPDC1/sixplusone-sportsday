@@ -1482,6 +1482,28 @@ Return ONLY valid JSON with this exact shape:
       return { success: true, popupsEnabled: input.enabled };
     }),
 
+  // ─── Admin: toggle day-of voting gate ──────────────────────────────────────────
+  adminToggleVoting: adminProcedure
+    .input(z.object({ enabled: z.boolean() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const { sportsDaySettings } = await import("../drizzle/schema");
+      const existing = await db.select().from(sportsDaySettings).limit(1);
+      if (existing.length === 0) {
+        await db.insert(sportsDaySettings).values({ votingEnabled: input.enabled });
+      } else {
+        await db.update(sportsDaySettings).set({ votingEnabled: input.enabled });
+      }
+      return { success: true, votingEnabled: input.enabled };
+    }),
+
+  // ─── Public: check if voting is enabled (day-of gate) ────────────────────────
+  getVotingEnabled: publicProcedure.query(async () => {
+    const settings = await getSportsDaySettings();
+    return { enabled: settings?.votingEnabled ?? false };
+  }),
+
   // ─── Admin: get current settings (for admin panel display) ───────────────────
   adminGetSettings: adminProcedure.query(async () => {
     const settings = await getSportsDaySettings();
@@ -1513,6 +1535,51 @@ Return ONLY valid JSON with this exact shape:
       }
       console.log(`[Login] User logged in via email: ${input.email}`);
       return { success: true, registrationId: reg.id, email: reg.email };
+    }),
+
+  // ─── Captain-only: initiate a wildcard vote ────────────────────────────────
+  initiateWildcard: publicProcedure
+    .input(z.object({
+      registrationId: z.string(),
+      team: z.enum(["red","blue","pink","orange"]),
+      wildcardId: z.enum(["steal","sabotage","block","double_down","all_in"]),
+      targetTeam: z.enum(["red","blue","pink","orange"]).optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      // Verify voting is enabled
+      const settings = await getSportsDaySettings();
+      if (!settings?.votingEnabled) throw new TRPCError({ code: "FORBIDDEN", message: "Voting is not open yet. Wildcards unlock on the day." });
+      // Verify registrant is on this team
+      const reg = await getRegistrationById(input.registrationId);
+      if (!reg || reg.team !== input.team) throw new TRPCError({ code: "FORBIDDEN", message: "Not on this team" });
+      // Verify registrant is a captain (check TEAM_CAPTAINS constant by name)
+      const CAPTAIN_NAMES: Record<string, string[]> = {
+        red:    ["Raphael", "Togbe"],
+        blue:   ["Shola", "Adekunle"],
+        pink:   ["Sade", "Adesola"],
+        orange: ["Temi", "Adewale"],
+      };
+      const captainNames = CAPTAIN_NAMES[input.team] ?? [];
+      const isCaptain = captainNames.some((name) =>
+        reg.fullName?.toLowerCase().includes(name.toLowerCase())
+      );
+      if (!isCaptain) throw new TRPCError({ code: "FORBIDDEN", message: "Only team captains can initiate wildcards." });
+      // Check no duplicate pending wildcard for this team
+      const existing = await db
+        .select()
+        .from(wildcardVotes)
+        .where(and(eq(wildcardVotes.team, input.team), eq(wildcardVotes.wildcardId, input.wildcardId)))
+        .limit(1);
+      if (existing.length > 0) throw new TRPCError({ code: "BAD_REQUEST", message: "A vote for this wildcard is already in progress." });
+      // Cast the captain's vote (counts as the initiation + first YES vote)
+      await db.insert(wildcardVotes).values({
+        voterId: input.registrationId,
+        team: input.team,
+        wildcardId: input.wildcardId,
+      });
+      return { success: true, message: "Wildcard initiated. Your team is now voting." };
     }),
 
   // ─── Create Stripe PaymentIntent (embedded element) ─────────────────────────
