@@ -162,6 +162,13 @@
       "when": 1781696739800,
       "tag": "0022_gifted_rafael_vega",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1781699052992,
+      "tag": "0023_zippy_iron_lad",
+      "breakpoints": true
     }
   ]
 }

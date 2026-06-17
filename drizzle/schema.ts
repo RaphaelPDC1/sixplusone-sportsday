@@ -83,7 +83,6 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
   // Access / Payment
   accessType: mysqlEnum("accessType", ["free", "priority"]).default("free"),
   paymentStatus: mysqlEnum("paymentStatus", ["unpaid", "paid"]).default("unpaid"),
-  shopifyOrderId: varchar("shopifyOrderId", { length: 100 }),
   paidAt: timestamp("paidAt"),
 
   // Referral
@@ -95,9 +94,6 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
   // Klaviyo tags
   klaviyoTags: json("klaviyoTags").$type<string[]>(),
 
-  // Shopify
-  shopifyCustomerId: varchar("shopifyCustomerId", { length: 100 }),
-
   // Metadata
   ipAddress: varchar("ipAddress", { length: 45 }),
   userAgent: text("userAgent"),
@@ -106,13 +102,6 @@ export const sportsDayRegistrations = mysqlTable("sports_day_registrations", {
   topName: varchar("topName", { length: 32 }),           // what appears on the printed top
   topNameLastEditedAt: timestamp("topNameLastEditedAt"), // last time user edited it
   topNameLockedAt: timestamp("topNameLockedAt"),         // set only when production lock happens (not on payment)
-
-  // Shopify audit mirror (not the source of unlock truth)
-  shopifyOrderStatus: mysqlEnum("shopifyOrderStatus", [
-    "pending_configuration",
-    "created",
-    "failed",
-  ]),
 
   // Payment tracking (Phase 10+)
   unlockToken: varchar("unlockToken", { length: 36 }).unique(), // UUID, non-guessable, primary match key
@@ -222,25 +211,6 @@ export const wildcardVotes = mysqlTable("wildcard_votes", {
 }));
 export type WildcardVote = typeof wildcardVotes.$inferSelect;
 
-// ─── Leaderboard ──────────────────────────────────────────────────────────────
-// Admin fills in results per event per team
-export const leaderboard = mysqlTable("leaderboard", {
-  id: int("id").autoincrement().primaryKey(),
-  eventName: varchar("eventName", { length: 100 }).notNull(),
-  team: mysqlEnum("team", ["red", "blue", "pink", "orange"]).notNull(),
-  position: int("position"),          // 1st, 2nd, 3rd, 4th
-  points: int("points").default(0),
-  dnf: boolean("dnf").default(false),
-  notes: text("notes"),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  updatedBy: varchar("updatedBy", { length: 64 }), // admin openId
-}, (t) => ({
-  // One result per event per team
-  eventTeamIdx: uniqueIndex("event_team_idx").on(t.eventName, t.team),
-}));
-export type LeaderboardEntry = typeof leaderboard.$inferSelect;
-export type InsertLeaderboardEntry = typeof leaderboard.$inferInsert;
-
 // ─── Sports Day Settings ─────────────────────────────────────────────────────
 // Single-row config table for pricing, dates, and manual overrides
 export const sportsDaySettings = mysqlTable("sports_day_settings", {
@@ -265,6 +235,10 @@ export const sportsDaySettings = mysqlTable("sports_day_settings", {
   // Day-of voting gate: admin flips this on the morning of Sports Day
   // Gates wildcard voting AND fun awards voting
   votingEnabled: boolean("votingEnabled").default(false),
+
+  // Unity Unlock Code: a global code that unlocks any registration (for offline payments)
+  // Admin sets this in the Settings tab; players enter it on the Holding page
+  globalUnlockCode: varchar("globalUnlockCode", { length: 64 }),
 
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -302,24 +276,6 @@ export const unmatchedPayments = mysqlTable("unmatched_payments", {
   resolutionNote: text("resolutionNote"),
 });
 export type UnmatchedPayment = typeof unmatchedPayments.$inferSelect;
-
-// ─── Event Schedule & Live Status ─────────────────────────────────────────────
-// Admin controls which event is "now happening" and the event schedule
-export const eventSchedule = mysqlTable("event_schedule", {
-  id: int("id").autoincrement().primaryKey(),
-  eventName: varchar("eventName", { length: 100 }).notNull(),
-  startTime: varchar("startTime", { length: 10 }),   // e.g. "10:00"
-  endTime: varchar("endTime", { length: 10 }),
-  location: varchar("location", { length: 200 }),
-  description: text("description"),
-  sortOrder: int("sortOrder").default(0),
-  isLive: boolean("isLive").default(false),
-  isCompleted: boolean("isCompleted").default(false),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-export type EventScheduleEntry = typeof eventSchedule.$inferSelect;
-export type InsertEventScheduleEntry = typeof eventSchedule.$inferSelect;
 
 // ─── Sports Day Sessions ─────────────────────────────────────────────────────
 // Maps session cookie tokens to registration IDs for server-side auth

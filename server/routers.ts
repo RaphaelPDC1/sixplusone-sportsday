@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { and, eq, like, or } from "drizzle-orm";
 import { z } from "zod";
-import { awardsVotes, eventSchedule, groupCodes, leaderboard, profilePhotos, sdEvents, sportsDayRegistrations, sportsDaySessions, unmatchedPayments, wildcardVotes } from "../drizzle/schema";
+import { awardsVotes, groupCodes, profilePhotos, sdEvents, sportsDayRegistrations, sportsDaySessions, unmatchedPayments, wildcardVotes } from "../drizzle/schema";
 import { getDb } from "./db";
 import {
   assignTeam,
@@ -528,7 +528,6 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
           accessType: "priority",
           revealStatus: "unlocked",
           stripePaymentIntentId: input.paymentIntentId,
-          shopifyOrderId: input.orderId ?? null,
           paidAt: new Date(),
           klaviyoTags: updatedTags,
         })
@@ -555,7 +554,8 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
     };
   }),
 
-  adminUsers: adminProcedure
+  // adminGetRegistrations: admin-only endpoint for viewing all registrations
+  adminGetRegistrations: adminProcedure
     .input(
       z.object({
         team: z.enum(["red", "blue", "pink", "orange", "all"]).optional(),
@@ -606,7 +606,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
   }),
 
   // ─── GDPR: Admin data deletion (right to erasure) ──────────────────────────
-  adminDeleteUserData: adminProcedure
+  adminDeleteRegistration: adminProcedure
     .input(z.object({
       email: z.string().email(),
       confirmDelete: z.literal(true), // Safety: must explicitly pass true
@@ -709,8 +709,6 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       // Profile photos
       const photos = await db.select().from(profilePhotos);
       const photoMap = new Map(photos.map((p) => [p.registrationId, p.url]));
-      // Leaderboard
-      const lb = await db.select().from(leaderboard);
       // Wildcard votes for this team
       const wv = await db
         .select()
@@ -731,7 +729,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
           ...m,
           photoUrl: photoMap.get(m.id) ?? null,
         })),
-        leaderboard: lb,
+        leaderboard: [], // Legacy table — will be replaced by sd_event_results
         wildcardCounts,
         myWildcardVotes,
         totalMembers: members.length,
@@ -971,46 +969,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
     }),
 
   // ─── Admin: leaderboard management ───────────────────────────────────────
-  adminUpsertLeaderboard: adminProcedure
-    .input(z.object({
-      eventName: z.string(),
-      team: z.enum(["red","blue","pink","orange"]),
-      position: z.number().optional(),
-      points: z.number().default(0),
-      dnf: z.boolean().default(false),
-      notes: z.string().optional(),
-    }))
-    .mutation(async ({ input, ctx }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-      await db
-        .insert(leaderboard)
-        .values({
-          eventName: input.eventName,
-          team: input.team,
-          position: input.position ?? null,
-          points: input.points,
-          dnf: input.dnf,
-          notes: input.notes ?? null,
-          updatedBy: ctx.user?.openId ?? 'admin',
-        })
-        .onDuplicateKeyUpdate({
-          set: {
-            position: input.position ?? null,
-            points: input.points,
-            dnf: input.dnf,
-            notes: input.notes ?? null,
-            updatedBy: ctx.user?.openId ?? 'admin',
-          },
-        });
-      return { success: true };
-    }),
-
-  adminGetLeaderboard: adminProcedure.query(async () => {
-    const db = await getDb();
-    if (!db) return [];
-    return db.select().from(leaderboard);
-  }),
+  // Legacy leaderboard procedures removed — use sd_event_results scoring system instead
 
   adminGetAwardVotes: adminProcedure.query(async () => {
     const db = await getDb();
@@ -1043,110 +1002,8 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       return { exists: result.length > 0, id: result[0]?.id ?? null };
     }),
 
-  // Event Schedule (public)
-  getEventSchedule: publicProcedure.query(async () => {
-    const db = await getDb();
-    if (!db) return [];
-    return db.select().from(eventSchedule).orderBy(eventSchedule.sortOrder);
-  }),
-
-  getLiveEvent: publicProcedure.query(async () => {
-    const db = await getDb();
-    if (!db) return null;
-    // First try sd_events (new scoring system — status = 'live')
-    const liveFromScoring = await db
-      .select()
-      .from(sdEvents)
-      .where(eq(sdEvents.status, "live"))
-      .orderBy(sdEvents.sortOrder)
-      .limit(1);
-    if (liveFromScoring[0]) {
-      const e = liveFromScoring[0];
-      // Find the next upcoming event for "up next"
-      const upNext = await db
-        .select()
-        .from(sdEvents)
-        .where(eq(sdEvents.status, "upcoming"))
-        .orderBy(sdEvents.sortOrder)
-        .limit(1);
-      return {
-        eventName: e.name,
-        startTime: e.startTime ?? undefined,
-        endTime: e.endTime ?? undefined,
-        location: e.arena ?? undefined,
-        description: undefined,
-        upNext: upNext[0] ? { eventName: upNext[0].name, startTime: upNext[0].startTime ?? undefined, location: upNext[0].arena ?? undefined } : null,
-      };
-    }
-    // Fallback: old event_schedule table
-    const results = await db
-      .select()
-      .from(eventSchedule)
-      .where(eq(eventSchedule.isLive, true))
-      .limit(1);
-    if (!results[0]) return null;
-    return { ...results[0], upNext: null };
-  }),
-
-  // Event Schedule (admin)
-  adminSetLiveEvent: adminProcedure
-    .input(z.object({ id: z.number().nullable() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) return { success: false };
-      await db.update(eventSchedule).set({ isLive: false });
-      if (input.id !== null) {
-        await db.update(eventSchedule).set({ isLive: true }).where(eq(eventSchedule.id, input.id));
-      }
-      return { success: true };
-    }),
-
-  adminUpsertEvent: adminProcedure
-    .input(z.object({
-      id: z.number().optional(),
-      eventName: z.string(),
-      startTime: z.string().optional(),
-      endTime: z.string().optional(),
-      location: z.string().optional(),
-      description: z.string().optional(),
-      sortOrder: z.number().optional(),
-      isCompleted: z.boolean().optional(),
-    }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) return { success: false };
-      if (input.id) {
-        await db.update(eventSchedule).set({
-          eventName: input.eventName,
-          startTime: input.startTime ?? null,
-          endTime: input.endTime ?? null,
-          location: input.location ?? null,
-          description: input.description ?? null,
-          sortOrder: input.sortOrder ?? 0,
-          isCompleted: input.isCompleted ?? false,
-        }).where(eq(eventSchedule.id, input.id));
-      } else {
-        await db.insert(eventSchedule).values({
-          eventName: input.eventName,
-          startTime: input.startTime ?? null,
-          endTime: input.endTime ?? null,
-          location: input.location ?? null,
-          description: input.description ?? null,
-          sortOrder: input.sortOrder ?? 0,
-          isCompleted: input.isCompleted ?? false,
-        });
-      }
-      return { success: true };
-    }),
-
-  adminDeleteEvent: adminProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) return { success: false };
-      await db.delete(eventSchedule).where(eq(eventSchedule.id, input.id));
-      return { success: true };
-    }),
+  // Legacy event schedule procedures removed — use sd_events scoring system instead
+  // getLiveEvent still available via scoring router
 
   // ─── Admin: Manual payment recovery ─────────────────────────────────────────
   // SECURITY: admin-only — can unlock paid access. Never expose publicly.
@@ -1538,14 +1395,14 @@ Return ONLY valid JSON with this exact shape:
     }),
 
   // ─── Captain-only: initiate a wildcard vote ────────────────────────────────
-  initiateWildcard: publicProcedure
+  initiateWildcard: protectedProcedure
     .input(z.object({
       registrationId: z.string(),
       team: z.enum(["red","blue","pink","orange"]),
       wildcardId: z.enum(["steal","sabotage","block","double_down","all_in"]),
       targetTeam: z.enum(["red","blue","pink","orange"]).optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       // Verify voting is enabled

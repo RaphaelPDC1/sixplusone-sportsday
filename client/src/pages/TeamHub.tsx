@@ -298,8 +298,8 @@ export default function TeamHub() {
       teamPoints[entry.team] = entry.points;
     });
   } else {
-    // Fallback: legacy leaderboard from hub
-    hub.leaderboard.forEach((entry) => {
+    // Fallback: legacy leaderboard from hub (empty — scoring system not yet active)
+    (hub.leaderboard as any[]).forEach((entry: any) => {
       if (!entry.dnf && entry.points) {
         teamPoints[entry.team] = (teamPoints[entry.team] ?? 0) + entry.points;
       }
@@ -918,11 +918,11 @@ export default function TeamHub() {
                 const numericId = Number(event.id);
                 const eventResults = publicEventResults
                   ? publicEventResults.filter((r) => r.eventId === numericId)
-                  : hub.leaderboard.filter((e) => e.eventName === event.id);
+                  : (hub.leaderboard as any[]).filter((e: any) => e.eventName === event.id);
                 // Normalise to a common shape for rendering
                 const myTeamResultRaw = publicEventResults
                   ? publicEventResults.find((r) => r.eventId === numericId && r.team === hub.team)
-                  : hub.leaderboard.find((e) => e.eventName === event.id && e.team === hub.team);
+                  : (hub.leaderboard as any[]).find((e: any) => e.eventName === event.id && e.team === hub.team);
                 const myTeamResult = myTeamResultRaw
                   ? {
                       dnf: (myTeamResultRaw as any).dnf ?? false,
@@ -1108,7 +1108,7 @@ export default function TeamHub() {
                     // Count events where this team has a locked result
                     const teamEventCount = publicEventResults
                       ? publicEventResults.filter((e) => e.team === team).length
-                      : hub.leaderboard.filter((e) => e.team === team && !e.dnf).length;
+                      : (hub.leaderboard as any[]).filter((e: any) => e.team === team && !e.dnf).length;
                     return (
                       <div
                         key={team}
@@ -1155,7 +1155,7 @@ export default function TeamHub() {
                       // Use new scoring system results if available
                       const evResults = publicEventResults
                         ? publicEventResults.filter((r) => r.eventId === numId)
-                        : hub.leaderboard.filter((e) => e.eventName === event.id);
+                        : (hub.leaderboard as any[]).filter((e: any) => e.eventName === event.id);
                       if (evResults.length === 0) return null;
                       const normResults = evResults.map((r: any) => ({
                         team: r.team as "red" | "blue" | "pink" | "orange",
@@ -1230,158 +1230,132 @@ export default function TeamHub() {
                 <div className="font-mono text-[10px] tracking-wider text-white/35">VOTING OPENS ON THE DAY — PREVIEW ONLY</div>
               </div>
             )}
-            <>
-                {/* Captain-only initiation panel */}
-                {isCaptainUser && (
-                  <div className="space-y-2">
-                    <div className="font-mono text-[10px] tracking-[0.3em] mb-2" style={{ color: tc.hex }}>
-                      INITIATE A WILDCARD
+            {/* Captain initiation hint */}
+            {votingEnabled && isCaptainUser && (
+              <div className="font-mono text-[10px] tracking-[0.3em] px-1" style={{ color: tc.hex }}>
+                TAP A CARD TO INITIATE AS CAPTAIN
+              </div>
+            )}
+            {/* All 5 wildcard cards — always visible */}
+            <div className="space-y-3">
+              {WILDCARDS.map((wc) => {
+                const votes = hub.wildcardCounts[wc.id] ?? 0;
+                const hasVoted = hub.myWildcardVotes.includes(wc.id);
+                const pct = Math.min(100, Math.round((votes / Math.max(1, hub.totalMembers)) * 100));
+                const isInitiating = wildcardInitiating === wc.id;
+                const isActive = votes > 0; // captain has played this card
+                return (
+                  <div
+                    key={wc.id}
+                    className="border"
+                    style={{
+                      borderColor: isActive ? tc.hex : hasVoted ? `${tc.hex}60` : "rgba(255,255,255,0.1)",
+                      background: isActive ? `${tc.hex}10` : "rgba(255,255,255,0.02)",
+                    }}
+                  >
+                    {/* Card header */}
+                    <div className="flex items-center gap-3 p-4">
+                      <span className="text-2xl w-9 text-center flex-shrink-0">{wc.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-display text-base tracking-widest">{wc.name}</div>
+                        <div className="font-mono text-white/35 text-[9px] mt-0.5 leading-relaxed">{wc.short}</div>
+                      </div>
+                      <div className="text-right flex-shrink-0 pl-2">
+                        <div className="font-display text-xl" style={{ color: isActive ? tc.hex : "rgba(255,255,255,0.2)" }}>{votes}</div>
+                        <div className="font-mono text-white/20 text-[8px] tracking-wider">VOTES</div>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-1 gap-2">
-                      {WILDCARDS.map((wc) => {
-                        const isInitiating = wildcardInitiating === wc.id;
-                        return (
-                          <div key={wc.id}>
+                    {/* Vote progress bar */}
+                    <div className="h-0.5 bg-white/5 mx-4 mb-3 overflow-hidden">
+                      <div
+                        className="h-full transition-all duration-700"
+                        style={{ width: `${pct}%`, background: tc.hex }}
+                      />
+                    </div>
+                    {/* Action area */}
+                    <div className="px-4 pb-4">
+                      {!votingEnabled ? (
+                        <div className="text-center font-mono text-[9px] tracking-wider text-white/20 py-1">
+                          VOTING OPENS ON THE DAY
+                        </div>
+                      ) : isCaptainUser ? (
+                        /* Captain: initiate flow */
+                        hasVoted ? (
+                          <div className="text-center font-mono text-xs tracking-wider" style={{ color: tc.hex }}>✓ INITIATED</div>
+                        ) : (
+                          <>
+                            {isInitiating && wc.needsTarget && (
+                              <div className="mb-2 grid grid-cols-4 gap-1">
+                                {(["red","blue","pink","orange"] as const).filter(t => t !== hub.team).map(t => (
+                                  <button
+                                    key={t}
+                                    onClick={() => setWildcardTarget(wildcardTarget === t ? null : t)}
+                                    className="py-1.5 font-display text-[10px] tracking-widest border transition-all"
+                                    style={{
+                                      borderColor: wildcardTarget === t ? tc.hex : "rgba(255,255,255,0.15)",
+                                      background: wildcardTarget === t ? `${tc.hex}20` : "transparent",
+                                      color: wildcardTarget === t ? tc.hex : "rgba(255,255,255,0.4)",
+                                    }}
+                                  >
+                                    {t.toUpperCase()}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                             <button
-                              onClick={() => setWildcardInitiating(isInitiating ? null : wc.id)}
-                              className="w-full flex items-center gap-3 p-3 border transition-all active:scale-[0.99] text-left"
+                              onClick={() => {
+                                if (!isInitiating) { setWildcardInitiating(wc.id); return; }
+                                if (wc.needsTarget && !wildcardTarget) return;
+                                initiateWildcardMutation.mutate({
+                                  registrationId: userId,
+                                  team: hub.team as "red"|"blue"|"pink"|"orange",
+                                  wildcardId: wc.id as "steal"|"sabotage"|"block"|"double_down"|"all_in",
+                                  targetTeam: wildcardTarget as "red"|"blue"|"pink"|"orange" | undefined,
+                                });
+                              }}
+                              disabled={initiateWildcardMutation.isPending || (isInitiating && wc.needsTarget && !wildcardTarget)}
+                              className="w-full py-2.5 font-display text-sm tracking-widest transition-all active:scale-[0.99]"
                               style={{
-                                borderColor: isInitiating ? tc.hex : "rgba(255,255,255,0.08)",
-                                background: isInitiating ? `${tc.hex}12` : "rgba(255,255,255,0.01)",
+                                background: isInitiating ? tc.hex : `${tc.hex}20`,
+                                color: isInitiating ? "#0A0A0A" : tc.hex,
+                                border: isInitiating ? "none" : `1px solid ${tc.hex}40`,
+                                opacity: (isInitiating && wc.needsTarget && !wildcardTarget) ? 0.4 : 1,
                               }}
                             >
-                              <span className="text-xl flex-shrink-0 w-8 text-center">{wc.icon}</span>
-                              <div className="flex-1 min-w-0">
-                                <div className="font-display text-sm tracking-widest">{wc.name}</div>
-                                <div className="font-mono text-white/25 text-[9px] mt-0.5 truncate">{wc.short}</div>
-                              </div>
-                              <span className="font-mono text-[9px] tracking-wider flex-shrink-0" style={{ color: isInitiating ? tc.hex : "rgba(255,255,255,0.2)" }}>
-                                {isInitiating ? "✕" : "→"}
-                              </span>
+                              {initiateWildcardMutation.isPending ? "INITIATING..." : isInitiating ? (wc.needsTarget ? (wildcardTarget ? `CONFIRM ${wc.name} →` : "SELECT TARGET FIRST") : `CONFIRM ${wc.name} →`) : `INITIATE →`}
                             </button>
-                            {isInitiating && (
-                              <div
-                                className="p-4 border-x border-b"
-                                style={{ borderColor: tc.hex }}
-                              >
-                                {wc.needsTarget && (
-                                  <div className="mb-3">
-                                    <div className="font-mono text-[10px] text-white/40 tracking-wider mb-2">TARGET TEAM</div>
-                                    <div className="grid grid-cols-3 gap-2">
-                                      {(["red","blue","pink","orange"] as const)
-                                        .filter((t) => t !== hub.team)
-                                        .map((t) => (
-                                          <button
-                                            key={t}
-                                            onClick={() => setWildcardTarget(wildcardTarget === t ? null : t)}
-                                            className="py-2 font-mono text-xs tracking-widest border transition-all"
-                                            style={{
-                                              borderColor: wildcardTarget === t ? TEAM_COLORS[t]?.hex : "rgba(255,255,255,0.1)",
-                                              color: wildcardTarget === t ? TEAM_COLORS[t]?.hex : "rgba(255,255,255,0.4)",
-                                              background: wildcardTarget === t ? `${TEAM_COLORS[t]?.hex}15` : "transparent",
-                                            }}
-                                          >
-                                            {t.toUpperCase()}
-                                          </button>
-                                        ))}
-                                    </div>
-                                  </div>
-                                )}
-                                <button
-                                  onClick={() => {
-                                    if (wc.needsTarget && !wildcardTarget) { toast.error("Select a target team first"); return; }
-                                    initiateWildcardMutation.mutate({
-                                      registrationId: userId,
-                                      team: hub.team as "red"|"blue"|"pink"|"orange",
-                                      wildcardId: wc.id as "steal"|"sabotage"|"block"|"double_down"|"all_in",
-                                      targetTeam: wildcardTarget as "red"|"blue"|"pink"|"orange" | undefined,
-                                    });
-                                  }}
-                                  disabled={initiateWildcardMutation.isPending}
-                                  className="w-full py-3 font-display text-base tracking-widest transition-all active:scale-[0.99]"
-                                  style={{ background: tc.hex, color: "#0A0A0A" }}
-                                >
-                                  {initiateWildcardMutation.isPending ? "INITIATING..." : `INITIATE ${wc.name} →`}
-                                </button>
-                              </div>
-                            )}
+                          </>
+                        )
+                      ) : (
+                        /* Member: vote on active cards only */
+                        isActive ? (
+                          hasVoted ? (
+                            <div className="text-center font-mono text-xs tracking-wider" style={{ color: tc.hex }}>✓ VOTED</div>
+                          ) : (
+                            <button
+                              onClick={() => wildcardMutation.mutate({
+                                voterId: userId,
+                                team: hub.team as "red"|"blue"|"pink"|"orange",
+                                wildcardId: wc.id as "steal"|"sabotage"|"block"|"double_down"|"all_in",
+                              })}
+                              disabled={wildcardMutation.isPending}
+                              className="w-full py-2.5 font-display text-sm tracking-widest transition-all active:scale-[0.99]"
+                              style={{ background: `${tc.hex}20`, color: tc.hex, border: `1px solid ${tc.hex}40` }}
+                            >
+                              VOTE YES →
+                            </button>
+                          )
+                        ) : (
+                          <div className="text-center font-mono text-[9px] tracking-wider text-white/15 py-1">
+                            CAPTAIN ACTIVATES
                           </div>
-                        );
-                      })}
+                        )
+                      )}
                     </div>
                   </div>
-                )}
-
-                {/* Member vote panel — shown to everyone */}
-                {(() => {
-                  const activeWildcards = WILDCARDS.filter((wc) => (hub.wildcardCounts[wc.id] ?? 0) > 0);
-                  if (!isCaptainUser && activeWildcards.length === 0) {
-                    return (
-                      <div className="text-center py-10">
-                        <div className="text-3xl mb-3">⏳</div>
-                        <div className="font-mono text-white/25 text-xs tracking-wider">Waiting for your captain to play a card</div>
-                      </div>
-                    );
-                  }
-                  const displayWildcards = isCaptainUser ? [] : activeWildcards; // captains see their own panel above
-                  if (displayWildcards.length === 0 && isCaptainUser) return null;
-                  return (
-                    <div className="space-y-2">
-                      <div className="font-mono text-[10px] text-white/30 tracking-[0.3em] mb-2">TEAM VOTE</div>
-                      {displayWildcards.map((wc) => {
-                        const votes = hub.wildcardCounts[wc.id] ?? 0;
-                        const hasVoted = hub.myWildcardVotes.includes(wc.id);
-                        const pct = Math.min(100, Math.round((votes / Math.max(1, hub.totalMembers)) * 100));
-                        return (
-                          <div
-                            key={wc.id}
-                            className="p-4 border"
-                            style={{
-                              borderColor: hasVoted ? tc.hex : "rgba(255,255,255,0.15)",
-                              background: hasVoted ? `${tc.hex}08` : "rgba(255,255,255,0.02)",
-                            }}
-                          >
-                            <div className="flex items-center gap-3 mb-3">
-                              <span className="text-xl w-8 text-center flex-shrink-0">{wc.icon}</span>
-                              <div className="flex-1 min-w-0">
-                                <div className="font-display text-base tracking-widest">{wc.name}</div>
-                              </div>
-                              <div className="text-right flex-shrink-0">
-                                <div className="font-display text-lg" style={{ color: tc.hex }}>{pct}%</div>
-                                <div className="font-mono text-white/20 text-[9px]">APPROVAL</div>
-                              </div>
-                            </div>
-                            <div className="h-1 bg-white/10 mb-3 overflow-hidden">
-                              <div
-                                className="h-full transition-all duration-700"
-                                style={{ width: `${pct}%`, background: tc.hex }}
-                              />
-                            </div>
-                            {!hasVoted ? (
-                              <button
-                                onClick={() => wildcardMutation.mutate({
-                                  voterId: userId,
-                                  team: hub.team as "red"|"blue"|"pink"|"orange",
-                                  wildcardId: wc.id,
-                                })}
-                                disabled={wildcardMutation.isPending}
-                                className="w-full py-2.5 font-display text-sm tracking-widest transition-all active:scale-[0.99]"
-                                style={{ background: `${tc.hex}20`, color: tc.hex, border: `1px solid ${tc.hex}40` }}
-                              >
-                                VOTE YES →
-                              </button>
-                            ) : (
-                              <div className="text-center font-mono text-xs tracking-wider" style={{ color: tc.hex }}>
-                                ✓ VOTED
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
-            </>
+                );
+              })}
+            </div>
           </div>
         )}
         {/* ─── AWARDS TAB ─── */}

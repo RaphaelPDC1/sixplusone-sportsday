@@ -136,35 +136,22 @@ export default function Admin() {
     enabled: canAccess,
   });
 
-  const { data: allUsers = [] } = trpc.sportsday.adminUsers.useQuery(undefined, {
+  const { data: allUsers = [] } = trpc.sportsday.adminGetRegistrations.useQuery(undefined, {
     enabled: canAccess,
-  });
+  }) as { data: any[] };
 
   const { data: healthNotes = [] } = trpc.sportsday.adminHealthNotes.useQuery(undefined, {
     enabled: canAccess && activeTab === "health",
   });
-  const { data: leaderboardData = [] } = trpc.sportsday.adminGetLeaderboard.useQuery(undefined, {
-    enabled: canAccess && activeTab === "leaderboard",
-  });
-  const { data: eventScheduleData = [], refetch: refetchSchedule } = trpc.sportsday.getEventSchedule.useQuery(undefined, {
-    enabled: canAccess && activeTab === "schedule",
-  });
-  const { data: liveEventData, refetch: refetchLive } = trpc.sportsday.getLiveEvent.useQuery(undefined, {
-    enabled: canAccess,
-    refetchInterval: 15000,
-  });
-  const setLiveEventMutation = trpc.sportsday.adminSetLiveEvent.useMutation({
-    onSuccess: () => { toast.success("Live event updated!"); refetchLive(); refetchSchedule(); },
-    onError: (e: { message: string }) => toast.error(e.message),
-  });
-  const upsertEventMutation = trpc.sportsday.adminUpsertEvent.useMutation({
-    onSuccess: () => { toast.success("Event saved!"); setScheduleForm({ eventName: "", startTime: "", endTime: "", location: "", description: "", sortOrder: "0", isCompleted: false }); refetchSchedule(); },
-    onError: (e: { message: string }) => toast.error(e.message),
-  });
-  const deleteEventMutation = trpc.sportsday.adminDeleteEvent.useMutation({
-    onSuccess: () => { toast.success("Event deleted!"); refetchSchedule(); },
-    onError: (e: { message: string }) => toast.error(e.message),
-  });
+  // Legacy leaderboard/schedule procedures removed — replaced by sd_events scoring system
+  const leaderboardData: any[] = [];
+  const eventScheduleData: any[] = [];
+  const liveEventData: any = null;
+  const refetchSchedule = () => {};
+  const refetchLive = () => {};
+  const setLiveEventMutation = { mutate: (_: any) => {}, isPending: false } as any;
+  const upsertEventMutation = { mutate: (_: any) => {}, isPending: false } as any;
+  const deleteEventMutation = { mutate: (_: any) => {}, isPending: false } as any;
   const { data: adminSettings, refetch: refetchSettings } = trpc.sportsday.adminGetSettings.useQuery(undefined, {
     enabled: canAccess && activeTab === "settings",
   });
@@ -183,13 +170,8 @@ export default function Admin() {
     onError: (e) => toast.error(e.message),
   });
 
-  const upsertLb = trpc.sportsday.adminUpsertLeaderboard.useMutation({
-    onSuccess: () => {
-      toast.success("Leaderboard updated!");
-      utils.sportsday.adminGetLeaderboard.invalidate();
-    },
-    onError: (e) => toast.error(e.message),
-  });
+  // Legacy leaderboard mutation removed
+  const upsertLb = { mutate: (_: any) => {}, isPending: false } as any;
 
   const filteredUsers = useMemo(() => {
     return allUsers.filter((u) => {

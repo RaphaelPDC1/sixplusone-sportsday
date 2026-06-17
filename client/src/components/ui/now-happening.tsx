@@ -1,11 +1,14 @@
 import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
 
-// Polls every 30 seconds for the live event
+// Polls every 30 seconds for the live event using the scoring router
 export function NowHappening() {
-  const { data: liveEvent, refetch } = trpc.sportsday.getLiveEvent.useQuery(undefined, {
+  const { data: events } = trpc.scoring.getEvents.useQuery(undefined, {
     refetchInterval: 30_000,
   });
+
+  const liveEvent = events?.find((e) => e.status === "live");
+  const upNext = events?.find((e) => e.status === "armed" || e.status === "upcoming");
 
   const [pulse, setPulse] = useState(false);
   useEffect(() => {
@@ -47,7 +50,7 @@ export function NowHappening() {
       {/* Event info */}
       <div className="px-4 py-4">
         <h3 className="font-display text-white tracking-widest text-xl mb-1">
-          {liveEvent.eventName}
+          {liveEvent.name}
         </h3>
         <div className="flex flex-wrap gap-3 mt-2">
           {(liveEvent.startTime || liveEvent.endTime) && (
@@ -59,24 +62,20 @@ export function NowHappening() {
               </span>
             </div>
           )}
-          {liveEvent.location && (
+          {liveEvent.arena && (
             <div className="flex items-center gap-1.5">
               <div className="w-1 h-1 rounded-full bg-[#FF5500]/60" />
-              <span className="font-mono text-white/50 text-xs">{liveEvent.location}</span>
+              <span className="font-mono text-white/50 text-xs">{liveEvent.arena}</span>
             </div>
           )}
         </div>
-        {liveEvent.description && (
-          <p className="font-mono text-white/40 text-xs mt-2 leading-relaxed">
-            {liveEvent.description}
-          </p>
-        )}
-        {(liveEvent as any).upNext && (
+
+        {upNext && (
           <div className="mt-3 pt-3 border-t border-white/10 flex items-center gap-2">
             <span className="font-mono text-white/25 text-[10px] tracking-[0.2em] uppercase">Up next:</span>
-            <span className="font-mono text-white/50 text-[10px]">{(liveEvent as any).upNext.eventName}</span>
-            {(liveEvent as any).upNext.startTime && (
-              <span className="font-mono text-white/30 text-[10px]">· {(liveEvent as any).upNext.startTime}</span>
+            <span className="font-mono text-white/50 text-[10px]">{upNext.name}</span>
+            {upNext.startTime && (
+              <span className="font-mono text-white/30 text-[10px]">· {upNext.startTime}</span>
             )}
           </div>
         )}
@@ -87,9 +86,10 @@ export function NowHappening() {
 
 // Compact version for use in headers / small spaces
 export function NowHappeningBadge() {
-  const { data: liveEvent } = trpc.sportsday.getLiveEvent.useQuery(undefined, {
+  const { data: events } = trpc.scoring.getEvents.useQuery(undefined, {
     refetchInterval: 30_000,
   });
+  const liveEvent = events?.find((e) => e.status === "live");
   const [pulse, setPulse] = useState(false);
   useEffect(() => {
     if (!liveEvent) return;
@@ -106,7 +106,7 @@ export function NowHappeningBadge() {
         style={{ opacity: pulse ? 1 : 0.4, transform: pulse ? "scale(1.3)" : "scale(1)" }}
       />
       <span className="font-display text-[#FF5500] text-xs tracking-[0.2em]">
-        {liveEvent.eventName}
+        {liveEvent.name}
       </span>
     </div>
   );

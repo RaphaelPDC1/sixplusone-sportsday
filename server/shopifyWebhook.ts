@@ -106,7 +106,6 @@ export function registerShopifyWebhook(app: Router) {
             paymentStatus: "paid",
             accessType: "priority",
             revealStatus: "unlocked",
-            shopifyOrderId: orderId ?? null,
             paidAt: new Date(),
             klaviyoTags: updatedTags,
           })
