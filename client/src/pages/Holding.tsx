@@ -965,6 +965,20 @@ export default function Holding() {
                 <span className="font-mono text-[#333] text-[10px] tracking-wider">Instant unlock</span>
                 <span className="font-mono text-[#333] text-[10px] tracking-wider">Apple Pay</span>
               </div>
+              {/* Logout link */}
+              <div className="flex justify-center pt-2">
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("sd_user_id");
+                    localStorage.removeItem("userEmail");
+                    sessionStorage.removeItem("holding_splash_seen");
+                    setUserId(null);
+                  }}
+                  className="font-mono text-[#F2F0EB]/30 text-[10px] tracking-[0.15em] hover:text-[#F2F0EB]/60 transition-colors underline underline-offset-2"
+                >
+                  NOT YOU? LOG OUT
+                </button>
+              </div>
             </div>
           )}
 
