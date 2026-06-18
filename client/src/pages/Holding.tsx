@@ -3,6 +3,7 @@ import { useSEO } from "@/hooks/useSEO";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+
 import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
 import { ParticleTextBg } from "@/components/ui/particle-text-bg";
@@ -542,6 +543,21 @@ export default function Holding() {
     sessionStorage.setItem("holding_splash_seen", "true");
     setShowSplash(false);
   };
+
+  // ── Auto-login via OAuth cookie set by callback ──
+  useEffect(() => {
+    if (userId) return; // Already have a session
+    // Read the JS-readable cookie set by the OAuth callback
+    const match = document.cookie.match(/(?:^|;\s*)sd_oauth_registration_id=([^;]+)/);
+    const oauthRegId = match ? decodeURIComponent(match[1]) : null;
+    if (oauthRegId) {
+      localStorage.setItem("sd_user_id", oauthRegId);
+      setUserId(oauthRegId);
+      // Clear the cookie
+      document.cookie = 'sd_oauth_registration_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=None; Secure';
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!userId) return;

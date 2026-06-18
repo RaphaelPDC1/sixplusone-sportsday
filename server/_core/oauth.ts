@@ -1,6 +1,7 @@
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import type { Express, Request, Response } from "express";
 import * as db from "../db";
+import { getRegistrationByEmail } from "../sportsday.db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 
@@ -44,7 +45,28 @@ export function registerOAuthRoutes(app: Express) {
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      res.redirect(302, "/");
+      // Auto-link Sports Day registration if one exists for this email
+      let redirectUrl = "/";
+      if (userInfo.email) {
+        try {
+          const registration = await getRegistrationByEmail(userInfo.email);
+          if (registration) {
+            // Store registrationId in a JS-readable cookie so the Holding page can pick it up
+            res.cookie("sd_oauth_registration_id", registration.id, {
+              httpOnly: false,
+              secure: true,
+              sameSite: "none",
+              maxAge: 5 * 60 * 1000, // 5 minute expiry
+            });
+            redirectUrl = "/holding";
+          }
+        } catch (err) {
+          // Silently fail — user can manually enter email on Holding page
+          console.error("[OAuth] Failed to auto-link registration:", err);
+        }
+      }
+
+      res.redirect(302, redirectUrl);
     } catch (error) {
       console.error("[OAuth] Callback failed", error);
       res.status(500).json({ error: "OAuth callback failed" });
