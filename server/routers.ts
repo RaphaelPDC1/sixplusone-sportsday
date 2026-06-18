@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { and, eq, like, or } from "drizzle-orm";
 import { z } from "zod";
-import { awardsVotes, groupCodes, profilePhotos, sdEvents, sportsDayRegistrations, sportsDaySessions, unmatchedPayments, wildcardVotes } from "../drizzle/schema";
+import { awardsVotes, groupCodes, powerUpVotes, profilePhotos, sdEvents, sportsDayRegistrations, sportsDaySessions, unmatchedPayments } from "../drizzle/schema";
 import { getDb } from "./db";
 import {
   assignTeam,
@@ -655,7 +655,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       };
     }),
 
-  // ─── Team Hub: get team members + leaderboard + wildcards ─────────────────
+  // ─── Team Hub: get team members + leaderboard + power ups ─────────────────
   getTeamHub: publicProcedure
     .input(z.object({ registrationId: z.string() }))
     .query(async ({ input }) => {
@@ -709,17 +709,17 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       // Profile photos
       const photos = await db.select().from(profilePhotos);
       const photoMap = new Map(photos.map((p) => [p.registrationId, p.url]));
-      // Wildcard votes for this team
+      // Power Up votes for this team
       const wv = await db
         .select()
-        .from(wildcardVotes)
-        .where(eq(wildcardVotes.team, team as "red" | "blue" | "pink" | "orange"));
+        .from(powerUpVotes)
+        .where(eq(powerUpVotes.team, team as "red" | "blue" | "pink" | "orange"));
       const wildcardCounts: Record<string, number> = {};
       wv.forEach((v) => {
-        wildcardCounts[v.wildcardId] = (wildcardCounts[v.wildcardId] ?? 0) + 1;
+        wildcardCounts[v.powerUpId] = (wildcardCounts[v.powerUpId] ?? 0) + 1;
       });
-      // Has this user voted for each wildcard?
-      const myWildcardVotes = wv.filter((v) => v.voterId === input.registrationId).map((v) => v.wildcardId);
+      // Has this user voted for each power up?
+      const myWildcardVotes = wv.filter((v) => v.voterId === input.registrationId).map((v) => v.powerUpId);
       return {
         team,
         accessType: reg.accessType ?? "free",
@@ -927,8 +927,8 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       return { competitors, byTeam };
     }),
 
-  // ─── Wildcard voting ──────────────────────────────────────────────────────
-  castWildcardVote: publicProcedure
+  // ─── Power Up voting ──────────────────────────────────────────────────────
+  castPowerUpVote: publicProcedure
     .input(z.object({
       voterId: z.string(),
       team: z.enum(["red","blue","pink","orange"]),
@@ -940,14 +940,14 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       // Check voter is on this team
       const reg = await getRegistrationById(input.voterId);
       if (!reg || reg.team !== input.team) throw new TRPCError({ code: "FORBIDDEN", message: "Not on this team" });
-      // Check hasn't already voted for this wildcard
+      // Check hasn't already voted for this power up
       const existing = await db
         .select()
-        .from(wildcardVotes)
-        .where(and(eq(wildcardVotes.voterId, input.voterId), eq(wildcardVotes.wildcardId, input.wildcardId)))
+        .from(powerUpVotes)
+        .where(and(eq(powerUpVotes.voterId, input.voterId), eq(powerUpVotes.powerUpId, input.wildcardId)))
         .limit(1);
-      if (existing.length > 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Already voted for this wildcard" });
-      await db.insert(wildcardVotes).values({ voterId: input.voterId, team: input.team, wildcardId: input.wildcardId });
+      if (existing.length > 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Already voted for this power up" });
+      await db.insert(powerUpVotes).values({ voterId: input.voterId, team: input.team, powerUpId: input.wildcardId });
       return { success: true };
     }),
 
@@ -1377,8 +1377,8 @@ Return ONLY valid JSON with this exact shape:
       return { success: true, registrationId: reg.id, email: reg.email };
     }),
 
-  // ─── Captain-only: initiate a wildcard vote ────────────────────────────────
-  initiateWildcard: protectedProcedure
+  // ─── Captain-only: initiate a power up vote ────────────────────────────────
+  initiatePowerUp: protectedProcedure
     .input(z.object({
       registrationId: z.string(),
       team: z.enum(["red","blue","pink","orange"]),
@@ -1390,7 +1390,7 @@ Return ONLY valid JSON with this exact shape:
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       // Verify voting is enabled
       const settings = await getSportsDaySettings();
-      if (!settings?.votingEnabled) throw new TRPCError({ code: "FORBIDDEN", message: "Voting is not open yet. Wildcards unlock on the day." });
+      if (!settings?.votingEnabled) throw new TRPCError({ code: "FORBIDDEN", message: "Voting is not open yet. Power Ups unlock on the day." });
       // Verify registrant is on this team
       const reg = await getRegistrationById(input.registrationId);
       if (!reg || reg.team !== input.team) throw new TRPCError({ code: "FORBIDDEN", message: "Not on this team" });
@@ -1405,21 +1405,21 @@ Return ONLY valid JSON with this exact shape:
       const isCaptain = captainNames.some((name) =>
         reg.fullName?.toLowerCase().includes(name.toLowerCase())
       );
-      if (!isCaptain) throw new TRPCError({ code: "FORBIDDEN", message: "Only team captains can initiate wildcards." });
-      // Check no duplicate pending wildcard for this team
+      if (!isCaptain) throw new TRPCError({ code: "FORBIDDEN", message: "Only team captains can initiate power ups." });
+      // Check no duplicate pending power up for this team
       const existing = await db
         .select()
-        .from(wildcardVotes)
-        .where(and(eq(wildcardVotes.team, input.team), eq(wildcardVotes.wildcardId, input.wildcardId)))
+        .from(powerUpVotes)
+        .where(and(eq(powerUpVotes.team, input.team), eq(powerUpVotes.powerUpId, input.wildcardId)))
         .limit(1);
-      if (existing.length > 0) throw new TRPCError({ code: "BAD_REQUEST", message: "A vote for this wildcard is already in progress." });
+      if (existing.length > 0) throw new TRPCError({ code: "BAD_REQUEST", message: "A vote for this power up is already in progress." });
       // Cast the captain's vote (counts as the initiation + first YES vote)
-      await db.insert(wildcardVotes).values({
+      await db.insert(powerUpVotes).values({
         voterId: input.registrationId,
         team: input.team,
-        wildcardId: input.wildcardId,
+        powerUpId: input.wildcardId,
       });
-      return { success: true, message: "Wildcard initiated. Your team is now voting." };
+      return { success: true, message: "Power Up initiated. Your team is now voting." };
     }),
 
   // ─── Create Stripe PaymentIntent (embedded element) ─────────────────────────
@@ -1501,7 +1501,7 @@ export const appRouter = router({
   }),
   sportsday: sportsDayRouter,
   scoring: scoringRouter,
-  wildcards: wildcardsRouter,
+  powerUps: wildcardsRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -198,18 +198,18 @@ export const awardsVotes = mysqlTable("awards_votes", {
 export type AwardsVote = typeof awardsVotes.$inferSelect;
 
 // ─── Wildcard Votes ───────────────────────────────────────────────────────────
-// Each team has 3 wildcards they can vote to activate
-export const wildcardVotes = mysqlTable("wildcard_votes", {
+// Each team has 3 power ups they can vote to activate
+export const powerUpVotes = mysqlTable("power_up_votes", {
   id: int("id").autoincrement().primaryKey(),
   voterId: varchar("voterId", { length: 36 }).notNull(),
   team: mysqlEnum("team", ["red", "blue", "pink", "orange"]).notNull(),
-  wildcardId: varchar("wildcardId", { length: 50 }).notNull(), // e.g. "double_points", "steal_a_player", "bonus_round"
+  powerUpId: varchar("powerUpId", { length: 50 }).notNull(), // e.g. "double_points", "steal_a_player", "bonus_round"
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (t) => ({
   // One vote per voter per wildcard
-  voterWildcardIdx: uniqueIndex("voter_wildcard_idx").on(t.voterId, t.wildcardId),
+  voterPowerUpIdx: uniqueIndex("voter_power_up_idx").on(t.voterId, t.powerUpId),
 }));
-export type WildcardVote = typeof wildcardVotes.$inferSelect;
+export type PowerUpVote = typeof powerUpVotes.$inferSelect;
 
 // ─── Sports Day Settings ─────────────────────────────────────────────────────
 // Single-row config table for pricing, dates, and manual overrides
@@ -346,8 +346,8 @@ export type InsertSdPointsLog = typeof sdPointsLog.$inferInsert;
 
 // ─── Wildcard System (Phase 2–3) ─────────────────────────────────────────────
 
-// Wildcard activations — one per team per event (mostly)
-export const sdWildcards = mysqlTable("sd_wildcards", {
+// Power up activations — one per team per event (mostly)
+export const sdPowerUps = mysqlTable("sd_power_ups", {
   id: int("id").autoincrement().primaryKey(),
   type: mysqlEnum("type", ["steal", "sabotage", "block", "double_down", "all_in"]).notNull(),
   ownerTeam: mysqlEnum("ownerTeam", ["red", "blue", "pink", "orange"]).notNull(),
@@ -358,20 +358,20 @@ export const sdWildcards = mysqlTable("sd_wildcards", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   resolvedAt: timestamp("resolvedAt"),                                    // when vote closed or activation resolved
 });
-export type SdWildcard = typeof sdWildcards.$inferSelect;
-export type InsertSdWildcard = typeof sdWildcards.$inferInsert;
+export type SdPowerUp = typeof sdPowerUps.$inferSelect;
+export type InsertSdPowerUp = typeof sdPowerUps.$inferInsert;
 
-// Votes on wildcards — one row per voter per wildcard
-export const sdWildcardVotes = mysqlTable("sd_wildcard_votes", {
+// Votes on power ups — one row per voter per power up
+export const sdPowerUpVotes = mysqlTable("sd_power_up_votes", {
   id: int("id").autoincrement().primaryKey(),
-  wildcardId: int("wildcardId").notNull(),
+  powerUpId: int("powerUpId").notNull(),
   userId: int("userId").notNull(),
   vote: boolean("vote").notNull(),      // true = YES, false = NO
   weight: varchar("weight", { length: 10 }).notNull(), // "0.50" for captain, split for members — stored as string
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
-export type SdWildcardVote = typeof sdWildcardVotes.$inferSelect;
-export type InsertSdWildcardVote = typeof sdWildcardVotes.$inferInsert;
+export type SdPowerUpVote = typeof sdPowerUpVotes.$inferSelect;
+export type InsertSdPowerUpVote = typeof sdPowerUpVotes.$inferInsert;
 
 // Roster overrides — when a player is stolen, record the override for that event
 export const sdRosterOverrides = mysqlTable("sd_roster_overrides", {

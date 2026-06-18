@@ -164,7 +164,7 @@ export default function Admin() {
   });
   const toggleVotingMutation = trpc.sportsday.adminToggleVoting.useMutation({
     onSuccess: (data) => {
-      toast.success(`Voting ${data.votingEnabled ? "ENABLED" : "DISABLED"} — wildcards & fun awards`);
+      toast.success(`Voting ${data.votingEnabled ? "ENABLED" : "DISABLED"} — power ups & fun awards`);
       refetchSettings();
     },
     onError: (e) => toast.error(e.message),
@@ -747,7 +747,7 @@ export default function Admin() {
                 <div>
                   <p className="font-mono text-[#FF5500] text-xs tracking-[0.2em] mb-1">DAY-OF VOTING GATE</p>
                   <p className="font-mono text-[#444] text-[10px] tracking-wider leading-relaxed max-w-sm">
-                    Enable on the morning of Sports Day. Unlocks wildcard voting (captain-initiated)
+                    Enable on the morning of Sports Day. Unlocks power up voting (captain-initiated)
                     and fun awards voting for all registered players.
                   </p>
                 </div>
@@ -776,13 +776,13 @@ export default function Admin() {
               {adminSettings?.votingEnabled ? (
                 <div className="border border-[#22c55e]/20 bg-[#22c55e]/5 px-4 py-3 mt-2">
                   <p className="font-mono text-[#22c55e] text-[10px] tracking-wider">
-                    ✓ VOTING IS LIVE — Captains can trigger wildcards. All players can vote on fun awards.
+                    ✓ VOTING IS LIVE — Captains can trigger power ups. All players can vote on fun awards.
                   </p>
                 </div>
               ) : (
                 <div className="border border-[#444]/20 bg-[#444]/5 px-4 py-3 mt-2">
                   <p className="font-mono text-[#444] text-[10px] tracking-wider">
-                    Voting is OFF. Enable on the morning of Sports Day to open wildcard and fun awards voting.
+                    Voting is OFF. Enable on the morning of Sports Day to open power up and fun awards voting.
                   </p>
                 </div>
               )}

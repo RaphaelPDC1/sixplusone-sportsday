@@ -1,5 +1,5 @@
 /**
- * Wildcard system backend
+ * Power Up system backend
  * Vote engine, Steal/Block logic, vote weight calculation, card tracking
  */
 import { z } from "zod";
@@ -7,12 +7,12 @@ import { and, eq, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { sdWildcards, sdWildcardVotes, sdTeams, sdTeamMembers, sdRosterOverrides, sdPointsLog, sdEvents } from "../../drizzle/schema";
+import { sdPowerUps, sdPowerUpVotes, sdTeams, sdTeamMembers, sdRosterOverrides, sdPointsLog, sdEvents } from "../../drizzle/schema";
 
 // ─── Vote Weight Calculation ──────────────────────────────────────────────────
 
 /**
- * Calculate vote weights for a team at the time a wildcard is opened.
+ * Calculate vote weights for a team at the time a power up is opened.
  * Captain = 0.50, remaining 0.50 split equally among present members.
  */
 async function calculateVoteWeights(teamName: string, db: Awaited<ReturnType<typeof getDb>>) {
@@ -42,7 +42,7 @@ async function calculateVoteWeights(teamName: string, db: Awaited<ReturnType<typ
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 export const wildcardsRouter = router({
-  // Open a wildcard vote
+  // Open a power up vote
   openVote: protectedProcedure
     .input(
       z.object({
@@ -64,26 +64,26 @@ export const wildcardsRouter = router({
       const team = teams[0];
       if (!team) throw new TRPCError({ code: "NOT_FOUND", message: "Team not found" });
       if (team.cardsRemaining <= 0) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "No wildcard cards remaining" });
+        throw new TRPCError({ code: "FORBIDDEN", message: "No power up cards remaining" });
       }
 
-      // Check no pending wildcard for this team on this event
+      // Check no pending power up for this team on this event
       const pending = await db
         .select()
-        .from(sdWildcards)
+        .from(sdPowerUps)
         .where(
           and(
-            eq(sdWildcards.ownerTeam, input.teamName as any),
-            eq(sdWildcards.eventId, input.eventId),
-            eq(sdWildcards.status, "pending")
+            eq(sdPowerUps.ownerTeam, input.teamName as any),
+            eq(sdPowerUps.eventId, input.eventId),
+            eq(sdPowerUps.status, "pending")
           )
         );
       if (pending.length > 0) {
-        throw new TRPCError({ code: "CONFLICT", message: "Team already has a pending wildcard for this event" });
+        throw new TRPCError({ code: "CONFLICT", message: "Team already has a pending power up for this event" });
       }
 
-      // Create wildcard
-      await db.insert(sdWildcards).values({
+      // Create power up
+      await db.insert(sdPowerUps).values({
         type: input.wildcardType,
         ownerTeam: input.teamName as any,
         eventId: input.eventId,
@@ -95,7 +95,7 @@ export const wildcardsRouter = router({
       return { success: true }
     }),
 
-  // Cast a vote on a wildcard
+  // Cast a vote on a power up
   castVote: protectedProcedure
     .input(
       z.object({
@@ -107,12 +107,12 @@ export const wildcardsRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      // Get wildcard to find team and weights
-      const wildcards = await db.select().from(sdWildcards).where(eq(sdWildcards.id, input.wildcardId));
-      const wc = wildcards[0];
-      if (!wc) throw new TRPCError({ code: "NOT_FOUND", message: "Wildcard not found" });
+      // Get power up to find team and weights
+      const powerUps = await db.select().from(sdPowerUps).where(eq(sdPowerUps.id, input.wildcardId));
+      const wc = powerUps[0];
+      if (!wc) throw new TRPCError({ code: "NOT_FOUND", message: "Power Up not found" });
       if (wc.status !== "pending") {
-        throw new TRPCError({ code: "CONFLICT", message: "Wildcard is not open for voting" });
+        throw new TRPCError({ code: "CONFLICT", message: "Power Up is not open for voting" });
       }
 
       const weights = await calculateVoteWeights(wc.ownerTeam, db);
@@ -126,8 +126,8 @@ export const wildcardsRouter = router({
       }
 
       // Insert vote
-      await db.insert(sdWildcardVotes).values({
-        wildcardId: input.wildcardId,
+      await db.insert(sdPowerUpVotes).values({
+        powerUpId: input.wildcardId,
         userId: ctx.user!.id,
         vote: input.vote,
         weight: userWeight,
@@ -136,21 +136,21 @@ export const wildcardsRouter = router({
       return { success: true };
     }),
 
-  // Check if a wildcard has reached threshold
+  // Check if a power up has reached threshold
   checkThreshold: protectedProcedure
     .input(z.object({ wildcardId: z.number().int() }))
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      const wildcards = await db.select().from(sdWildcards).where(eq(sdWildcards.id, input.wildcardId));
-      const wc = wildcards[0];
-      if (!wc) throw new TRPCError({ code: "NOT_FOUND", message: "Wildcard not found" });
+      const powerUps = await db.select().from(sdPowerUps).where(eq(sdPowerUps.id, input.wildcardId));
+      const wc = powerUps[0];
+      if (!wc) throw new TRPCError({ code: "NOT_FOUND", message: "Power Up not found" });
 
       const weights = await calculateVoteWeights(wc.ownerTeam, db);
 
       // Get all votes
-      const votes = await db.select().from(sdWildcardVotes).where(eq(sdWildcardVotes.wildcardId, input.wildcardId));
+      const votes = await db.select().from(sdPowerUpVotes).where(eq(sdPowerUpVotes.powerUpId, input.wildcardId));
 
       // Check captain voted YES
       const captainVote = votes.find((v) => v.userId === weights.captainUserId);
@@ -170,7 +170,7 @@ export const wildcardsRouter = router({
       return { reached: false, reason: `Insufficient weight: ${yesWeight.toFixed(2)} < 0.75`, yesWeight };
     }),
 
-  // Get active wildcards for an event
+  // Get active power ups for an event
   getActiveWildcards: protectedProcedure
     .input(z.object({ eventId: z.number().int() }))
     .query(async ({ input }) => {
@@ -178,11 +178,11 @@ export const wildcardsRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       return await db
         .select()
-        .from(sdWildcards)
+        .from(sdPowerUps)
         .where(
           and(
-            eq(sdWildcards.eventId, input.eventId),
-            eq(sdWildcards.status, "active")
+            eq(sdPowerUps.eventId, input.eventId),
+            eq(sdPowerUps.status, "active")
           )
         );
     }),
@@ -199,21 +199,21 @@ export const wildcardsRouter = router({
       return { cardsRemaining: team.cardsRemaining };
     }),
 
-  // Get all wildcards for an event (admin view)
+  // Get all power ups for an event (admin view)
   getEventWildcards: protectedProcedure
     .input(z.object({ eventId: z.number().int() }))
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-      return await db.select().from(sdWildcards).where(eq(sdWildcards.eventId, input.eventId));
+      return await db.select().from(sdPowerUps).where(eq(sdPowerUps.eventId, input.eventId));
     }),
 
-  // Get votes on a wildcard (admin view)
+  // Get votes on a power up (admin view)
   getWildcardVotes: protectedProcedure
     .input(z.object({ wildcardId: z.number().int() }))
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-      return await db.select().from(sdWildcardVotes).where(eq(sdWildcardVotes.wildcardId, input.wildcardId));
+      return await db.select().from(sdPowerUpVotes).where(eq(sdPowerUpVotes.powerUpId, input.wildcardId));
     }),
 });

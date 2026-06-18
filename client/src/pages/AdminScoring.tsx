@@ -5,7 +5,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { AdminWildcardMonitor } from "@/components/AdminWildcardMonitor";
+import { AdminPowerUpMonitor } from "@/components/AdminWildcardMonitor";
 
 type Team = "red" | "blue" | "pink" | "orange";
 const TEAMS: Team[] = ["red", "blue", "pink", "orange"];
@@ -455,7 +455,7 @@ export default function AdminScoring() {
       {view === "events" && <EventControl />}
       {view === "entry" && <ResultEntry />}
       {view === "audit" && <AuditLog />}
-      {view === "wildcards" && <AdminWildcardMonitor />}
+      {view === "wildcards" && <AdminPowerUpMonitor />}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 /**
- * Admin Wildcard Monitor
- * View active wildcards, votes, and manage resolutions
+ * Admin Power Up Monitor
+ * View active power ups, votes, and manage resolutions
  * Standalone — no required props, includes event selector
  */
 import { useState } from "react";
@@ -13,7 +13,7 @@ const TEAM_COLORS: Record<string, string> = {
   orange: "#FF8800",
 };
 
-const WILDCARD_LABELS: Record<string, string> = {
+const POWER_UP_LABELS: Record<string, string> = {
   steal: "👤 STEAL",
   sabotage: "💣 SABOTAGE",
   block: "🛡️ BLOCK",
@@ -29,12 +29,12 @@ const STATUS_COLORS: Record<string, string> = {
   failed: "#555",
 };
 
-export function AdminWildcardMonitor() {
+export function AdminPowerUpMonitor() {
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const events = trpc.scoring.getEvents.useQuery();
-  const wildcards = trpc.wildcards.getEventWildcards.useQuery(
+  const wildcards = trpc.powerUps.getEventWildcards.useQuery(
     { eventId: selectedEventId ?? 0 },
     { enabled: selectedEventId !== null && selectedEventId > 0, refetchInterval: 5_000 }
   );
@@ -68,11 +68,11 @@ export function AdminWildcardMonitor() {
       </div>
 
       {selectedEventId === null ? (
-        <p className="text-xs text-[#444] tracking-wider">Select an event to view wildcards.</p>
+        <p className="text-xs text-[#444] tracking-wider">Select an event to view power ups.</p>
       ) : wildcards.isLoading ? (
         <p className="text-xs text-[#444] tracking-wider">Loading...</p>
       ) : allWildcards.length === 0 ? (
-        <p className="text-xs text-[#444] tracking-wider">No wildcards for this event yet.</p>
+        <p className="text-xs text-[#444] tracking-wider">No power ups for this event yet.</p>
       ) : (
         <div className="space-y-4">
           {/* Summary */}
@@ -102,7 +102,7 @@ export function AdminWildcardMonitor() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="text-sm tracking-widest" style={{ color: ownerColor }}>
-                      {WILDCARD_LABELS[wc.type] ?? wc.type.toUpperCase()}
+                      {POWER_UP_LABELS[wc.type] ?? wc.type.toUpperCase()}
                     </div>
                     <div className="text-xs text-[#555]">
                       <span style={{ color: ownerColor }}>{wc.ownerTeam.toUpperCase()}</span>

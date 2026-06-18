@@ -86,10 +86,10 @@ const EVENTS = [
   { id: "tiebreaker",   name: "MYSTERY TIEBREAKER",    icon: "❓", desc: "Nobody knows. Yet." },
 ];
 
-const WILDCARDS = [
+const POWER_UPS = [
   { id: "steal",       name: "STEAL",        short: "Borrow a player from another team for one event.",    desc: "Borrow a player from another team for one event.",    icon: "👤", captainOnly: true, needsTarget: true },
   { id: "sabotage",    name: "SABOTAGE",     short: "Make a rival team compete with one fewer player.",     desc: "Make a rival team compete with one fewer player.",     icon: "💣", captainOnly: true, needsTarget: true },
-  { id: "block",       name: "BLOCK",        short: "Cancel a wildcard that another team just played.",     desc: "Cancel a wildcard that another team just played.",     icon: "🛡️", captainOnly: true, needsTarget: true },
+  { id: "block",       name: "BLOCK",        short: "Cancel a power up that another team just played.",     desc: "Cancel a power up that another team just played.",     icon: "🛡️", captainOnly: true, needsTarget: true },
   { id: "double_down", name: "DOUBLE DOWN",  short: "Double your points for the next event.",              desc: "Double your points for the next event.",              icon: "×2", captainOnly: true, needsTarget: false },
   { id: "all_in",      name: "ALL IN",       short: "Stake everything on one event: win = double points, lose = zero.", desc: "Stake everything on one event: win = double points, lose = zero.", icon: "🎲", captainOnly: true, needsTarget: false },
 ];
@@ -120,7 +120,7 @@ export default function TeamHub() {
     () => sessionStorage.getItem("teamhub_splash_seen") !== "true"
   );
   const userId = typeof window !== "undefined" ? localStorage.getItem("sd_user_id") ?? "" : "";
-  const [activeTab, setActiveTab] = useState<"team" | "events" | "leaderboard" | "wildcards" | "awards" | "sponsors" | "location">("team");
+  const [activeTab, setActiveTab] = useState<"team" | "events" | "leaderboard" | "power-ups" | "awards" | "sponsors" | "location">("team");
   const [votingFor, setVotingFor] = useState<AwardCategory | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
@@ -152,13 +152,13 @@ export default function TeamHub() {
   });
   const votingEnabled = votingGate?.enabled ?? false;
 
-  // Wildcard initiation state
-  const [wildcardInitiating, setWildcardInitiating] = useState<string | null>(null);
-  const [wildcardTarget, setWildcardTarget] = useState<string | null>(null);
+  // Power Up initiation state
+  const [powerUpInitiating, setWildcardInitiating] = useState<string | null>(null);
+  const [powerUpTarget, setWildcardTarget] = useState<string | null>(null);
 
-  const initiateWildcardMutation = trpc.sportsday.initiateWildcard.useMutation({
+  const initiatePowerUpMutation = trpc.sportsday.initiatePowerUp.useMutation({
     onSuccess: () => {
-      toast.success("Wildcard initiated! Your team is now voting.");
+      toast.success("Power Up initiated! Your team is now voting.");
       setWildcardInitiating(null);
       setWildcardTarget(null);
       refetch();
@@ -184,9 +184,9 @@ export default function TeamHub() {
     onError: (e) => toast.error(e.message),
   });
 
-  const wildcardMutation = trpc.sportsday.castWildcardVote.useMutation({
+  const powerUpMutation = trpc.sportsday.castPowerUpVote.useMutation({
     onSuccess: () => {
-      toast.success("Wildcard vote locked in!");
+      toast.success("Power Up vote locked in!");
       refetch();
     },
     onError: (e) => toast.error(e.message),
@@ -327,7 +327,7 @@ export default function TeamHub() {
     { id: "team" as const,           label: "TEAM",           icon: "👥" },
     { id: "events" as const,         label: "EVENTS",         icon: "🏃" },
     { id: "leaderboard" as const,    label: "LEADERBOARD",    icon: "📊" },
-    { id: "wildcards" as const,      label: "WILDCARDS",      icon: "⚡" },
+    { id: "power-ups" as const,      label: "POWER UPS",      icon: "⚡" },
     { id: "awards" as const,         label: "AWARDS",         icon: "🏆" },
     { id: "sponsors" as const,       label: "SPONSORS",       icon: "🤟" },
     { id: "location" as const,       label: "LOCATION",       icon: "📍" },
@@ -1003,13 +1003,13 @@ export default function TeamHub() {
                               style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}10` }}
                             >
                               <span className="text-[10px]">⚡</span>
-                              <span className="font-mono text-[9px] tracking-widest" style={{ color: tc.hex }}>WILDCARDS ACTIVE</span>
+                              <span className="font-mono text-[9px] tracking-widest" style={{ color: tc.hex }}>POWER UPS ACTIVE</span>
                             </div>
                           )}
                           {!(event as any).wildcardsEnabled && (
                             <div className="flex items-center gap-1.5 px-2 py-0.5 border border-white/10">
                               <span className="text-[10px]">🔒</span>
-                              <span className="font-mono text-[9px] tracking-widest text-white/25">NO WILDCARDS</span>
+                              <span className="font-mono text-[9px] tracking-widest text-white/25">NO POWER UPS</span>
                             </div>
                           )}
                         </div>
@@ -1217,9 +1217,9 @@ export default function TeamHub() {
         )}
 
                 {/* ─── WILDCARDS TAB ─── */}
-        {activeTab === "wildcards" && (
+        {activeTab === "power-ups" && (
           <div className="space-y-4">
-            <SectionHeader label="WILDCARDS" />
+            <SectionHeader label="POWER UPS" />
             {/* Day-of banner — visible but not blocking */}
             {!votingEnabled && (
               <div
@@ -1236,13 +1236,13 @@ export default function TeamHub() {
                 TAP A CARD TO INITIATE AS CAPTAIN
               </div>
             )}
-            {/* All 5 wildcard cards — always visible */}
+            {/* All 5 power up cards — always visible */}
             <div className="space-y-3">
-              {WILDCARDS.map((wc) => {
+              {POWER_UPS.map((wc) => {
                 const votes = hub.wildcardCounts[wc.id] ?? 0;
                 const hasVoted = hub.myWildcardVotes.includes(wc.id);
                 const pct = Math.min(100, Math.round((votes / Math.max(1, hub.totalMembers)) * 100));
-                const isInitiating = wildcardInitiating === wc.id;
+                const isInitiating = powerUpInitiating === wc.id;
                 const isActive = votes > 0; // captain has played this card
                 return (
                   <div
@@ -1289,12 +1289,12 @@ export default function TeamHub() {
                                 {(["red","blue","pink","orange"] as const).filter(t => t !== hub.team).map(t => (
                                   <button
                                     key={t}
-                                    onClick={() => setWildcardTarget(wildcardTarget === t ? null : t)}
+                                    onClick={() => setWildcardTarget(powerUpTarget === t ? null : t)}
                                     className="py-1.5 font-display text-[10px] tracking-widest border transition-all"
                                     style={{
-                                      borderColor: wildcardTarget === t ? tc.hex : "rgba(255,255,255,0.15)",
-                                      background: wildcardTarget === t ? `${tc.hex}20` : "transparent",
-                                      color: wildcardTarget === t ? tc.hex : "rgba(255,255,255,0.4)",
+                                      borderColor: powerUpTarget === t ? tc.hex : "rgba(255,255,255,0.15)",
+                                      background: powerUpTarget === t ? `${tc.hex}20` : "transparent",
+                                      color: powerUpTarget === t ? tc.hex : "rgba(255,255,255,0.4)",
                                     }}
                                   >
                                     {t.toUpperCase()}
@@ -1305,24 +1305,24 @@ export default function TeamHub() {
                             <button
                               onClick={() => {
                                 if (!isInitiating) { setWildcardInitiating(wc.id); return; }
-                                if (wc.needsTarget && !wildcardTarget) return;
-                                initiateWildcardMutation.mutate({
+                                if (wc.needsTarget && !powerUpTarget) return;
+                                initiatePowerUpMutation.mutate({
                                   registrationId: userId,
                                   team: hub.team as "red"|"blue"|"pink"|"orange",
                                   wildcardId: wc.id as "steal"|"sabotage"|"block"|"double_down"|"all_in",
-                                  targetTeam: wildcardTarget as "red"|"blue"|"pink"|"orange" | undefined,
+                                  targetTeam: powerUpTarget as "red"|"blue"|"pink"|"orange" | undefined,
                                 });
                               }}
-                              disabled={initiateWildcardMutation.isPending || (isInitiating && wc.needsTarget && !wildcardTarget)}
+                              disabled={initiatePowerUpMutation.isPending || (isInitiating && wc.needsTarget && !powerUpTarget)}
                               className="w-full py-2.5 font-display text-sm tracking-widest transition-all active:scale-[0.99]"
                               style={{
                                 background: isInitiating ? tc.hex : `${tc.hex}20`,
                                 color: isInitiating ? "#0A0A0A" : tc.hex,
                                 border: isInitiating ? "none" : `1px solid ${tc.hex}40`,
-                                opacity: (isInitiating && wc.needsTarget && !wildcardTarget) ? 0.4 : 1,
+                                opacity: (isInitiating && wc.needsTarget && !powerUpTarget) ? 0.4 : 1,
                               }}
                             >
-                              {initiateWildcardMutation.isPending ? "INITIATING..." : isInitiating ? (wc.needsTarget ? (wildcardTarget ? `CONFIRM ${wc.name} →` : "SELECT TARGET FIRST") : `CONFIRM ${wc.name} →`) : `INITIATE →`}
+                              {initiatePowerUpMutation.isPending ? "INITIATING..." : isInitiating ? (wc.needsTarget ? (powerUpTarget ? `CONFIRM ${wc.name} →` : "SELECT TARGET FIRST") : `CONFIRM ${wc.name} →`) : `INITIATE →`}
                             </button>
                           </>
                         )
@@ -1333,12 +1333,12 @@ export default function TeamHub() {
                             <div className="text-center font-mono text-xs tracking-wider" style={{ color: tc.hex }}>✓ VOTED</div>
                           ) : (
                             <button
-                              onClick={() => wildcardMutation.mutate({
+                              onClick={() => powerUpMutation.mutate({
                                 voterId: userId,
                                 team: hub.team as "red"|"blue"|"pink"|"orange",
                                 wildcardId: wc.id as "steal"|"sabotage"|"block"|"double_down"|"all_in",
                               })}
-                              disabled={wildcardMutation.isPending}
+                              disabled={powerUpMutation.isPending}
                               className="w-full py-2.5 font-display text-sm tracking-widest transition-all active:scale-[0.99]"
                               style={{ background: `${tc.hex}20`, color: tc.hex, border: `1px solid ${tc.hex}40` }}
                             >

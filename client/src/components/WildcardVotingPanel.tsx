@@ -20,13 +20,13 @@ export function WildcardVotingPanel({ teamName, eventId }: WildcardVotingPanelPr
   const [voting, setVoting] = useState(false);
 
   // Query: card budget
-  const cardBudget = trpc.wildcards.getCardBudget.useQuery({ teamName });
+  const cardBudget = trpc.powerUps.getCardBudget.useQuery({ teamName });
 
   // Query: active wildcards for this event
-  const activeWildcards = trpc.wildcards.getActiveWildcards.useQuery({ eventId });
+  const activeWildcards = trpc.powerUps.getActiveWildcards.useQuery({ eventId });
 
   // Mutation: open a vote
-  const openVote = trpc.wildcards.openVote.useMutation({
+  const openVote = trpc.powerUps.openVote.useMutation({
     onSuccess: () => {
       setSelectedWildcard(null);
       setTargetTeam(null);
@@ -35,7 +35,7 @@ export function WildcardVotingPanel({ teamName, eventId }: WildcardVotingPanelPr
   });
 
   // Mutation: cast a vote
-  const castVote = trpc.wildcards.castVote.useMutation({
+  const castVote = trpc.powerUps.castVote.useMutation({
     onSuccess: () => {
       setVoting(false);
     },
@@ -175,8 +175,8 @@ export function WildcardVotingPanel({ teamName, eventId }: WildcardVotingPanelPr
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
             <div>
-              <h4 className="font-semibold text-red-900">No Wildcard Cards</h4>
-              <p className="text-sm text-red-700 mt-1">Your team has used all wildcard cards for this event.</p>
+              <h4 className="font-semibold text-red-900">No Power Up Cards</h4>
+              <p className="text-sm text-red-700 mt-1">Your team has used all power up cards for this event.</p>
             </div>
           </div>
         </Card>
