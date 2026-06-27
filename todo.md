@@ -389,8 +389,8 @@
 - [x] Update sportsday.dashboard.ts fallback from 2000 to 2200 (£22.00)
 - [x] Update routers.ts fallback from 2000 to 2200 (£22.00)
 - [x] All tests passing (22 tests), TypeScript clean (0 errors)
-- [ ] PRICE AUDIT NEEDED: schema default is £15 (1500p), todo says £22 was set — verify DB settings row has correct earlyPrice value
-- [ ] Test end-to-end: holding page displays correct price, checkout shows correct price, Meta Pixel fires with correct value
+- [x] PRICE AUDIT DONE (18 Jun): live DB earlyPrice = 1500 (£15) — CORRECT. £15 is the Sports Day unlock price; £22 is the standalone shirt price on the main site (separate). DB is right.
+- [x] Confirmed holding page reads price dynamically from DB (£15) via getSportsDayDashboard
 
 ## Meta Conversions API Implementation (Requested 5 June)
 

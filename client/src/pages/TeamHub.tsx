@@ -134,8 +134,8 @@ export default function TeamHub() {
     { enabled: !!userId, retry: false }
   );
 
-  // Only captains of Red/Blue/Orange teams can see the roster — gate the query accordingly
-  const isCaptainUser = !!(hub?.isCaptain && hub?.team !== "pink");
+  // Captains of all teams (Red/Blue/Pink/Orange) can see the roster
+  const isCaptainUser = !!hub?.isCaptain;
   const { data: rosterData } = trpc.sportsday.getTeamRoster.useQuery(
     { registrationId: userId },
     { enabled: !!userId && isCaptainUser, retry: false, throwOnError: false }
