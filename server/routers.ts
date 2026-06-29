@@ -757,8 +757,8 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       
       // Security: registrationId is a 32-char random UUID that acts as a secret token.
       // We verify the caller is a captain via the isCaptain DB field.
-      // Only captains of Red, Blue, Orange can see roster (not Pink)
-      if (!reg.isCaptain || reg.team === "pink") {
+      // All team captains (Red, Blue, Pink, Orange) can see their full roster
+      if (!reg.isCaptain) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only team captains can view roster" });
       }
       
