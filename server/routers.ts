@@ -755,6 +755,54 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       };
     }),
 
+  // ─── Team Roster (Captains Only) ────────────────────────────────────────────
+  getTeamRoster: publicProcedure
+    .input(z.object({ registrationId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const reg = await getRegistrationById(input.registrationId);
+      if (!reg) throw new TRPCError({ code: "NOT_FOUND", message: "Registration not found" });
+      
+      // Security: registrationId is a 32-char random UUID that acts as a secret token.
+      // We verify the caller is a captain via the isCaptain DB field.
+      // All team captains (Red, Blue, Pink, Orange) can see their full roster
+      if (!reg.isCaptain) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only team captains can view roster" });
+      }
+      
+      const team = reg.team;
+      // Get all team members with their unlock status
+      const members = await db.select({
+        id: sportsDayRegistrations.id,
+        fullName: sportsDayRegistrations.fullName,
+        instagramHandle: sportsDayRegistrations.instagramHandle,
+        sportsDayProfile: sportsDayRegistrations.sportsDayProfile,
+        profileTagline: sportsDayRegistrations.profileTagline,
+        teammateType: sportsDayRegistrations.teammateType,
+        strongestEvent: sportsDayRegistrations.strongestEvent,
+        revealStatus: sportsDayRegistrations.revealStatus,
+        paymentStatus: sportsDayRegistrations.paymentStatus,
+      })
+        .from(sportsDayRegistrations)
+        .where(eq(sportsDayRegistrations.team, team as "red" | "blue" | "pink" | "orange"));
+      
+      // Get profile photos
+      const photos = await db.select().from(profilePhotos);
+      const photoMap = new Map(photos.map((p) => [p.registrationId, p.url]));
+      
+      return {
+        team,
+        members: members.map((m) => ({
+          ...m,
+          photoUrl: photoMap.get(m.id) ?? null,
+          isLocked: m.revealStatus !== "unlocked",
+        })),
+        totalMembers: members.length,
+        unlockedCount: members.filter((m) => m.revealStatus === "unlocked").length,
+      };
+    }),
+
   // ─── Profile photo upload ─────────────────────────────────────────────────
   uploadProfilePhoto: publicProcedure
     .input(z.object({

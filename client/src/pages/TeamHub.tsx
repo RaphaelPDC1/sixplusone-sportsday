@@ -128,7 +128,7 @@ export default function TeamHub() {
   const [votingFor, setVotingFor] = useState<AwardCategory | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any | null>(null);
-
+  const [selectedCaptain, setSelectedCaptain] = useState<string | null>(null);
   const [squadExpanded, setSquadExpanded] = useState(false);
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
   const [dnaExpanded, setDnaExpanded] = useState(false);
@@ -141,7 +141,12 @@ export default function TeamHub() {
     { enabled: !!userId, retry: false }
   );
 
-
+  // Captains of all teams (Red/Blue/Pink/Orange) can see the roster
+  const isCaptainUser = !!hub?.isCaptain;
+  const { data: rosterData } = trpc.sportsday.getTeamRoster.useQuery(
+    { registrationId: userId },
+    { enabled: !!userId && isCaptainUser, retry: false, throwOnError: false }
+  );
 
   const { data: awardData, refetch: refetchAwards } = trpc.sportsday.getAwardVotes.useQuery(
     { registrationId: userId },
@@ -611,9 +616,9 @@ export default function TeamHub() {
                         return (
                           <button
                             key={cap}
+                            onClick={() => setSelectedCaptain(cap)}
                             className="flex flex-col items-center text-center p-4 border transition-all active:scale-95 hover:opacity-80 w-full"
                             style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
-                            disabled
                           >
                             <div
                               className="w-14 h-14 rounded-full border-2 overflow-hidden flex-shrink-0 flex items-center justify-center mb-3"
@@ -756,6 +761,115 @@ export default function TeamHub() {
               );
             })()}
 
+            {(() => {
+              // Captains use rosterData (all members incl. locked); regular members use hub.members (unlocked only)
+              const displayMembers = rosterData
+                ? rosterData.members.map((m) => ({ ...m, isLocked: m.isLocked }))
+                : hub.members.map((m) => ({ ...m, isLocked: false }));
+              const totalCount = rosterData ? rosterData.totalMembers : hub.members.length;
+              const unlockedCount = rosterData ? rosterData.unlockedCount : hub.members.length;
+
+              if (displayMembers.length === 0) return (
+                <p className="font-mono text-white/30 text-sm text-center py-8">
+                  First one in. Your teammates are on their way.
+                </p>
+              );
+
+              return (
+                <>
+                  {/* Collapsible squad header */}
+                  <button
+                    onClick={() => setSquadExpanded((v) => !v)}
+                    className="w-full flex items-center justify-between py-3 px-4 border border-white/10 bg-white/[0.02] transition-all hover:border-white/20 mt-2"
+                  >
+                    <span className="font-mono text-xs tracking-[0.25em] text-white/50">
+                      {rosterData ? `${unlockedCount}/${totalCount} UNLOCKED` : `${totalCount} TEAMMATES`}
+                    </span>
+                    <span className="font-mono text-xs tracking-widest" style={{ color: tc.hex }}>
+                      {squadExpanded ? "COLLAPSE ▲" : "VIEW SQUAD ▼"}
+                    </span>
+                  </button>
+
+                  {squadExpanded && (
+                    <div className="space-y-3 mt-2">
+                      {displayMembers.map((member) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center gap-4 p-4 border border-white/10 bg-white/[0.02] transition-all"
+                          style={{
+                            opacity: member.isLocked ? 0.35 : 1,
+                            cursor: member.isLocked ? "default" : "pointer",
+                            ...(member.id === userId
+                              ? { borderColor: `${tc.hex}50`, background: `${tc.hex}08` }
+                              : member.isLocked
+                              ? { borderColor: "rgba(255,255,255,0.04)", background: "rgba(255,255,255,0.01)" }
+                              : {}),
+                          }}
+                          onClick={() => !member.isLocked && setSelectedMember(member)}
+                        >
+                          <div
+                            className="w-12 h-12 rounded-full overflow-hidden border flex-shrink-0 flex items-center justify-center"
+                            style={{ borderColor: member.isLocked ? "rgba(255,255,255,0.08)" : member.id === userId ? tc.hex : "rgba(255,255,255,0.15)" }}
+                          >
+                            {member.photoUrl ? (
+                              <img src={member.photoUrl} alt={member.fullName ?? ""} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-white/5 flex items-center justify-center">
+                                <span className="text-xl">
+                                  {member.isLocked ? "🔒"
+                                    : member.teammateType === "motivator" ? "📣"
+                                    : member.teammateType === "strategist" ? "🧠"
+                                    : member.teammateType === "wildcard" ? "🃏"
+                                    : member.teammateType === "silent_assassin" ? "🎯"
+                                    : "⚡"}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-display text-lg tracking-widest truncate" style={{ color: member.isLocked ? "rgba(255,255,255,0.3)" : "white" }}>
+                                {member.fullName}
+                              </span>
+                              {member.id === userId && (
+                                <span
+                                  className="font-mono text-[10px] tracking-widest px-2 py-0.5"
+                                  style={{ background: `${tc.hex}20`, color: tc.hex }}
+                                >
+                                  YOU
+                                </span>
+                              )}
+                              {member.isLocked && (
+                                <span className="font-mono text-[9px] tracking-widest text-white/25">NOT UNLOCKED</span>
+                              )}
+                            </div>
+                            {!member.isLocked && member.instagramHandle && (
+                              <a
+                                href={`https://instagram.com/${member.instagramHandle.replace(/^@/, '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-mono text-white/30 text-xs hover:text-white/60 transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >@{member.instagramHandle}</a>
+                            )}
+                            {!member.isLocked && member.profileTagline && (
+                              <p className="font-mono text-white/40 text-xs mt-0.5 truncate italic">
+                                "{member.profileTagline}"
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="font-mono text-white/20 text-[10px] tracking-wider">
+                              {member.isLocked ? "" : (member.strongestEvent?.toUpperCase() ?? "—")}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
             {/* Photo upload prompt if no photo */}
             {!myPhoto && (
               <div
@@ -1626,7 +1740,12 @@ export default function TeamHub() {
                 <div className="font-mono text-[10px] tracking-wider text-white/35">VOTING OPENS ON THE DAY — PREVIEW ONLY</div>
               </div>
             )}
-
+            {/* Captain initiation hint */}
+            {votingEnabled && isCaptainUser && (
+              <div className="font-mono text-[10px] tracking-[0.3em] px-1" style={{ color: tc.hex }}>
+                TAP A CARD TO INITIATE AS CAPTAIN
+              </div>
+            )}
             {/* All 5 power up cards — always visible */}
             <div className="space-y-3">
               {POWER_UPS.map((wc) => {
@@ -1669,6 +1788,55 @@ export default function TeamHub() {
                         <div className="text-center font-mono text-[9px] tracking-wider text-white/20 py-1">
                           VOTING OPENS ON THE DAY
                         </div>
+                      ) : isCaptainUser ? (
+                        /* Captain: initiate flow */
+                        hasVoted ? (
+                          <div className="text-center font-mono text-xs tracking-wider" style={{ color: tc.hex }}>✓ INITIATED</div>
+                        ) : (
+                          <>
+                            {isInitiating && wc.needsTarget && (
+                              <div className="mb-2 grid grid-cols-4 gap-1">
+                                {(["red","blue","pink","orange"] as const).filter(t => t !== hub.team).map(t => (
+                                  <button
+                                    key={t}
+                                    onClick={() => setWildcardTarget(powerUpTarget === t ? null : t)}
+                                    className="py-1.5 font-display text-[10px] tracking-widest border transition-all"
+                                    style={{
+                                      borderColor: powerUpTarget === t ? tc.hex : "rgba(255,255,255,0.15)",
+                                      background: powerUpTarget === t ? `${tc.hex}20` : "transparent",
+                                      color: powerUpTarget === t ? tc.hex : "rgba(255,255,255,0.4)",
+                                    }}
+                                  >
+                                    {t.toUpperCase()}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                            <button
+                              onClick={() => {
+                                hs('powerup');
+                                if (!isInitiating) { setWildcardInitiating(wc.id); return; }
+                                if (wc.needsTarget && !powerUpTarget) return;
+                                initiatePowerUpMutation.mutate({
+                                  registrationId: userId,
+                                  team: hub.team as "red"|"blue"|"pink"|"orange",
+                                  wildcardId: wc.id as "boost"|"sabotage"|"block"|"double_down"|"all_in",
+                                  targetTeam: powerUpTarget as "red"|"blue"|"pink"|"orange" | undefined,
+                                });
+                              }}
+                              disabled={initiatePowerUpMutation.isPending || (isInitiating && wc.needsTarget && !powerUpTarget)}
+                              className="w-full py-2.5 font-display text-sm tracking-widest transition-all active:scale-[0.99]"
+                              style={{
+                                background: isInitiating ? tc.hex : `${tc.hex}20`,
+                                color: isInitiating ? "#0A0A0A" : tc.hex,
+                                border: isInitiating ? "none" : `1px solid ${tc.hex}40`,
+                                opacity: (isInitiating && wc.needsTarget && !powerUpTarget) ? 0.4 : 1,
+                              }}
+                            >
+                              {initiatePowerUpMutation.isPending ? "INITIATING..." : isInitiating ? (wc.needsTarget ? (powerUpTarget ? `CONFIRM ${wc.name} →` : "SELECT TARGET FIRST") : `CONFIRM ${wc.name} →`) : `INITIATE →`}
+                            </button>
+                          </>
+                        )
                       ) : (
                         /* Member: vote on active cards only */
                         isActive ? (
@@ -2052,7 +2220,95 @@ export default function TeamHub() {
           </div>
         )}
 
+        {/* Captain Detail Modal */}
+        {selectedCaptain && (() => {
+          const teamKey = hub?.team ?? "red";
+          const capData = TEAM_CAPTAINS[teamKey] ?? TEAM_CAPTAINS.red;
+          const capMember = hub?.members.find(
+            (m) => m.fullName?.toLowerCase().includes(selectedCaptain.toLowerCase())
+          );
+          return (
+            <div
+              className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+              onClick={() => setSelectedCaptain(null)}
+            >
+              <div
+                className="relative bg-[#0A0A0A] border-2 rounded-lg p-8 max-w-sm w-full"
+                style={{ borderColor: tc.hex, boxShadow: `0 0 40px ${tc.glow}` }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Top accent bar */}
+                <div className="absolute top-0 left-0 right-0 h-1 rounded-t-lg" style={{ background: tc.hex }} />
 
+                {/* Close */}
+                <button
+                  onClick={() => setSelectedCaptain(null)}
+                  className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors"
+                >
+                  ✕
+                </button>
+
+                {/* Photo */}
+                <div className="flex justify-center mb-6 mt-2">
+                  <div
+                    className="w-32 h-32 rounded-full overflow-hidden border-2 flex items-center justify-center"
+                    style={{ borderColor: tc.hex, boxShadow: `0 0 24px ${tc.glow}` }}
+                  >
+                    {capMember?.photoUrl ? (
+                      <img src={capMember.photoUrl} alt={selectedCaptain} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-white/5 flex items-center justify-center">
+                        <span className="font-display text-4xl" style={{ color: tc.hex }}>C</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Name */}
+                <div className="text-center mb-1">
+                  <div className="font-display text-3xl tracking-widest" style={{ color: tc.hex, textShadow: `0 0 20px ${tc.glow}` }}>
+                    {selectedCaptain.toUpperCase()}
+                  </div>
+                </div>
+
+                {/* CO-CAPTAIN badge */}
+                <div className="flex justify-center mb-3">
+                  <span className="font-mono text-[10px] tracking-[0.3em] px-3 py-1 border" style={{ borderColor: tc.hex, color: tc.hex }}>
+                    CO-CAPTAIN · {capData.squadName}
+                  </span>
+                </div>
+
+                {/* IG handle if found */}
+                {capMember?.instagramHandle && (
+                   <div className="text-center mb-4">
+                     <a
+                       href={`https://instagram.com/${capMember.instagramHandle.replace(/^@/, '')}`}
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       className="font-mono text-white/50 text-sm hover:text-white/80 transition-colors underline underline-offset-2"
+                     >@{capMember.instagramHandle}</a>
+                   </div>
+                 )}
+
+                {/* Tagline if found */}
+                {capMember?.profileTagline && (
+                  <div className="text-center mb-4 border-t border-white/10 pt-4">
+                    <p className="font-mono text-white/40 text-xs italic">"{capMember.profileTagline}"</p>
+                  </div>
+                )}
+
+                {/* Close */}
+                <button
+                  onClick={() => setSelectedCaptain(null)}
+                  className="w-full mt-6 font-mono text-xs tracking-widest py-2 border transition-colors hover:opacity-80"
+                  style={{ borderColor: tc.hex, color: tc.hex }}
+                >
+                  CLOSE
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
       <TeamFairnessBot />
     </div>
