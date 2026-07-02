@@ -89,7 +89,7 @@ const EVENTS = [
 
 const POWER_UPS = [
   { id: "steal",       name: "STEAL",        short: "Borrow a player from another team for one event.",    desc: "Borrow a player from another team for one event.",    icon: "👤", captainOnly: true, needsTarget: true },
-  { id: "sabotage",    name: "SABOTAGE",     short: "Make a rival team compete with one fewer player.",     desc: "Make a rival team compete with one fewer player.",     icon: "💣", captainOnly: true, needsTarget: true },
+  { id: "sabotage",    name: "SABOTAGE",     short: "Deduct 5 points from a rival team.",     desc: "Choose a rival team. If your team votes YES and the Power Up activates, that team loses 5 points.",     icon: "💣", captainOnly: true, needsTarget: true },
   { id: "block",       name: "BLOCK",        short: "Cancel a power up that another team just played.",     desc: "Cancel a power up that another team just played.",     icon: "🛡️", captainOnly: true, needsTarget: true },
   { id: "double_down", name: "DOUBLE DOWN",  short: "Double your points for the next event.",              desc: "Double your points for the next event.",              icon: "×2", captainOnly: true, needsTarget: false },
   { id: "all_in",      name: "ALL IN",       short: "Stake everything on one event: win = double points, lose = zero.", desc: "Stake everything on one event: win = double points, lose = zero.", icon: "🎲", captainOnly: true, needsTarget: false },
@@ -1599,29 +1599,17 @@ export default function TeamHub() {
             {/* Interactive map — Endcliffe Park, Sheffield */}
             <div
               className="relative overflow-hidden border"
-              style={{ height: 260, borderColor: `${tc.hex}40` }}
+              style={{ borderColor: `${tc.hex}40` }}
             >
               <MapView
+                className="w-full h-[260px]"
                 initialCenter={{ lat: 53.3718, lng: -1.5046 }}
                 initialZoom={15}
                 onMapReady={(map: google.maps.Map) => {
-                  // Add a marker for Endcliffe Park
                   new google.maps.marker.AdvancedMarkerElement({
                     map,
                     position: { lat: 53.3718, lng: -1.5046 },
                     title: "Endcliffe Park — Sports Day 002",
-                  });
-                  // Dark style to match the app theme
-                  map.setOptions({
-                    styles: [
-                      { elementType: "geometry", stylers: [{ color: "#1a1a1a" }] },
-                      { elementType: "labels.text.fill", stylers: [{ color: "#666" }] },
-                      { elementType: "labels.text.stroke", stylers: [{ color: "#0a0a0a" }] },
-                      { featureType: "road", elementType: "geometry", stylers: [{ color: "#2a2a2a" }] },
-                      { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#888" }] },
-                      { featureType: "water", elementType: "geometry", stylers: [{ color: "#0d0d0d" }] },
-                      { featureType: "park", elementType: "geometry", stylers: [{ color: "#1a2a1a" }] },
-                    ],
                   });
                 }}
               />
