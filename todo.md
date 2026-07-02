@@ -544,3 +544,12 @@
 - [x] Phase 2: Seeded all 11 events with correct metadata (eventType, format, matchupLabel, setupBufferMinutes)
 - [x] Phase 3: Rebuilt TeamHub Events tab as single event stream timeline with type badges (M/W/Mixed/Team/Finale), format badges, matchup labels, status pills (upcoming/armed/briefing/live/delayed/complete), arena labels, setup buffer dividers, expanded card with AI insight + best-fit players + results
 - [x] TypeScript: 0 errors confirmed after all changes
+
+## AI Team Intel Rebuild (2 July 2026)
+- [x] Added competitiveness, fear, attendedBefore to getTeamHub member query (server/routers.ts)
+- [x] Rebuilt AI intel logic with 5-signal analysis: strongestEvent, teammateType, competitiveness, fear, attendedBefore
+- [x] Mapped event insights to numeric DB IDs (1–11) matching actual sd_events rows
+- [x] Added Team DNA panel: tag grid (WINNERS, STRATEGISTS, SPEED, STRENGTH, COORDINATION, ENDURANCE, WILDCARDS, SILENT ASSASSINS, VETERANS, FEARLESS), squad mindset bar (winner/balanced/vibes), veteran/first-timer/fearless line
+- [x] Per-event insights for all 11 events with multi-signal language (confidence prefix, count, fear signals, veteran signals)
+- [x] Best-fit member tags updated: Speed specialist, Competitor, Fear-proof, Veteran, Tactical mind, Steady performer, Composed under pressure, Drives the pair, Endurance specialist, Energy carrier, Chaos agent, Consistent performer, Unshakeable, Momentum driver, Relay veteran, Team engine, Driven by accountability, Tactical anchor, Fearless, Experienced
+- [x] TypeScript: 0 errors

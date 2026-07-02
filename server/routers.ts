@@ -686,6 +686,9 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
             profileTagline: sportsDayRegistrations.profileTagline,
             teammateType: sportsDayRegistrations.teammateType,
             strongestEvent: sportsDayRegistrations.strongestEvent,
+            competitiveness: sportsDayRegistrations.competitiveness,
+            fear: sportsDayRegistrations.fear,
+            attendedBefore: sportsDayRegistrations.attendedBefore,
           })
           .from(sportsDayRegistrations)
           .where(eq(sportsDayRegistrations.team, team as "red" | "blue" | "pink" | "orange"))
@@ -697,6 +700,9 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
             profileTagline: sportsDayRegistrations.profileTagline,
             teammateType: sportsDayRegistrations.teammateType,
             strongestEvent: sportsDayRegistrations.strongestEvent,
+            competitiveness: sportsDayRegistrations.competitiveness,
+            fear: sportsDayRegistrations.fear,
+            attendedBefore: sportsDayRegistrations.attendedBefore,
           })
           .from(sportsDayRegistrations)
           .where(

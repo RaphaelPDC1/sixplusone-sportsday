@@ -782,50 +782,80 @@ export default function TeamHub() {
 
         {/* ─── EVENTS TAB ─── */}
         {activeTab === "events" && (() => {
-          // Build AI insights from member data — always-on, scales from 1 member upward
+          // ────────────────────────────────────────────────────────────────────────────────
+          // AI TEAM INTEL — multi-signal analysis from questionnaire data
+          // Signals: strongestEvent, teammateType, competitiveness, fear, attendedBefore
+          // ────────────────────────────────────────────────────────────────────────────────
           const members = hub.members;
-          const teammateTypes: string[] = members.map((m) => m.teammateType).filter((x) => x != null) as string[];
-          const strongestEvents: string[] = members.map((m) => m.strongestEvent).filter((x) => x != null) as string[];
-          const countOf = (arr: string[], val: string) => arr.filter((x) => x === val).length;
-          const totalResponses = strongestEvents.length;
+          const n = members.length;
+          const countOf = (arr: (string | null | undefined)[], val: string) => arr.filter((x) => x === val).length;
 
-          // Helper: pick the right language tier based on count
-          const tier = (n: number) => {
-            if (n === 0) return null;
-            if (n === 1) return "1 member";
-            if (n === 2) return "2 members";
-            if (n <= 4) return `${n} members`;
-            return `${n} members`;
+          // ── Raw signal counts ────────────────────────────────────────────────────────────
+          const ses = members.map((m) => m.strongestEvent);
+          const tts = members.map((m) => m.teammateType);
+          const comps = members.map((m) => m.competitiveness);
+          const fears = members.map((m) => m.fear);
+
+          const speedCount      = countOf(ses, "speed");
+          const strengthCount   = countOf(ses, "strength");
+          const coordCount      = countOf(ses, "coordination");
+          const enduranceCount  = countOf(ses, "endurance");
+          const vibesCount      = countOf(ses, "vibes");
+
+          const motivatorCount  = countOf(tts, "motivator");
+          const strategistCount = countOf(tts, "strategist");
+          const wildcardCount   = countOf(tts, "wildcard");
+          const silentCount     = countOf(tts, "silent_assassin");
+          const energyCount     = countOf(tts, "energy_bringer");
+
+          const winnerCount     = countOf(comps, "winner");
+          const vibesOnlyCount  = countOf(comps, "vibes");
+          const balancedCount   = countOf(comps, "balanced");
+
+          const fearNothingCount = countOf(fears, "nothing");
+          const fearSprintCount  = countOf(fears, "sprinting");
+          const fearTeamCount    = countOf(fears, "team_events");
+          const fearLettingDown  = countOf(fears, "letting_team_down");
+
+          const veteranCount    = members.filter((m) => m.attendedBefore === true).length;
+          const firstTimerCount = members.filter((m) => m.attendedBefore === false).length;
+          const totalResponses  = members.filter((m) => m.strongestEvent != null).length;
+
+          // ── Helper: natural-language count ────────────────────────────────────────────────
+          const t = (num: number, singular = "member", plural = "members") =>
+            num === 1 ? `1 ${singular}` : `${num} ${plural}`;
+
+          // Confidence prefix based on count relative to squad size
+          const conf = (num: number) => {
+            if (num === 0) return "";
+            const pct = n > 0 ? num / n : 0;
+            if (pct >= 0.6) return "Dominant strength";
+            if (pct >= 0.4) return "Strong advantage";
+            if (num >= 2)   return "Growing edge";
+            return "Early signal";
           };
 
-          // Helper: confidence prefix based on count vs squad size
-          const confidence = (n: number) => {
-            if (n === 1) return "Early signal";
-            if (n === 2) return "Growing edge";
-            if (n <= 4) return "Strong advantage";
-            return "Dominant strength";
-          };
+          // ── Team DNA summary tags (shown in the overview panel) ────────────────────────────
+          const dnaTags: { label: string; value: string; color: string }[] = [];
+          if (winnerCount > 0) dnaTags.push({ label: "WINNERS", value: String(winnerCount), color: "#fbbf24" });
+          if (strategistCount > 0) dnaTags.push({ label: "STRATEGISTS", value: String(strategistCount), color: "#60a5fa" });
+          if (speedCount > 0) dnaTags.push({ label: "SPEED", value: String(speedCount), color: "#4ade80" });
+          if (strengthCount > 0) dnaTags.push({ label: "STRENGTH", value: String(strengthCount), color: "#f87171" });
+          if (coordCount > 0) dnaTags.push({ label: "COORDINATION", value: String(coordCount), color: "#c084fc" });
+          if (enduranceCount > 0) dnaTags.push({ label: "ENDURANCE", value: String(enduranceCount), color: "#fb923c" });
+          if (wildcardCount > 0) dnaTags.push({ label: "WILDCARDS", value: String(wildcardCount), color: "#f472b6" });
+          if (silentCount > 0) dnaTags.push({ label: "SILENT ASSASSINS", value: String(silentCount), color: "#94a3b8" });
+          if (veteranCount > 0) dnaTags.push({ label: "VETERANS", value: String(veteranCount), color: tc.hex });
+          if (fearNothingCount > 0) dnaTags.push({ label: "FEARLESS", value: String(fearNothingCount), color: "#4ade80" });
 
-          // Backend enums: strongestEvent = speed | strength | endurance | coordination | vibes
-          //                 teammateType  = motivator | strategist | wildcard | silent_assassin | energy_bringer
-          const speedCount      = countOf(strongestEvents, "speed");
-          const strengthCount   = countOf(strongestEvents, "strength");
-          const coordCount      = countOf(strongestEvents, "coordination");
-          const enduranceCount  = countOf(strongestEvents, "endurance");
-          const vibesCount      = countOf(strongestEvents, "vibes");
-          const motivatorCount  = countOf(teammateTypes, "motivator");
-          const strategistCount = countOf(teammateTypes, "strategist");
-          const wildcardCount   = countOf(teammateTypes, "wildcard");
-          const silentCount     = countOf(teammateTypes, "silent_assassin");
-          const energyCount     = countOf(teammateTypes, "energy_bringer");
-
-          // Map event ID → best-fit member IDs for that event
+          // ── Best-fit members per event (numeric DB IDs) ───────────────────────────────────
+          // Event IDs in DB: 1=60m Sprint M, 2=60m Sprint W, 3=Egg & Spoon, 4=Wheelbarrow,
+          //   5=400m M, 6=400m W, 7=Sack Race, 8=3-Legged Race, 9=60m Team Relay,
+          //   10=Chain Race, 11=Tug of War Finale
           const eventBestFit: Record<string, { member: typeof members[0]; reason: string }[]> = {};
 
-          // For each event, find members whose questionnaire answers make them a good fit
           const addFit = (eventId: string, member: typeof members[0], reason: string) => {
             if (!eventBestFit[eventId]) eventBestFit[eventId] = [];
-            // Avoid duplicates
             if (!eventBestFit[eventId].some((f) => f.member.id === member.id)) {
               eventBestFit[eventId].push({ member, reason });
             }
@@ -834,106 +864,194 @@ export default function TeamHub() {
           members.forEach((m) => {
             const se = m.strongestEvent;
             const tt = m.teammateType;
-            // Sprint: speed or motivator
-            if (se === "speed")      addFit("sprint", m, "Speed specialist");
-            if (tt === "motivator")  addFit("sprint", m, "Crowd energy carrier");
-            // Relay: speed or motivator
-            if (se === "speed")      addFit("relay", m, "Speed specialist");
-            if (tt === "motivator")  addFit("relay", m, "Momentum driver");
-            // Tug of War: strength or strategist
-            if (se === "strength")   addFit("tug_of_war", m, "Strength specialist");
-            if (tt === "strategist") addFit("tug_of_war", m, "Tactical anchor");
-            // Obstacle Course: coordination or wildcard
-            if (se === "coordination") addFit("obstacle", m, "Coordination specialist");
-            if (tt === "wildcard")     addFit("obstacle", m, "Chaos navigator");
-            // Long Jump: endurance or silent assassin
-            if (se === "endurance")       addFit("long_jump", m, "Endurance specialist");
-            if (tt === "silent_assassin") addFit("long_jump", m, "Clutch performer");
-            // Penalty Shootout: energy bringer or vibes
-            if (tt === "energy_bringer") addFit("penalty_shoot", m, "Energy bringer");
-            if (se === "vibes")          addFit("penalty_shoot", m, "Vibes specialist");
-            // Mystery Tiebreaker: wildcards always, then everyone else
-            if (tt === "wildcard")    addFit("tiebreaker", m, "Born for the unexpected");
+            const comp = m.competitiveness;
+            const fear = m.fear;
+            const vet = m.attendedBefore === true;
+
+            // ── Event 1: 60m Sprint (M) — speed, winners, fearless, veterans
+            if (se === "speed")        addFit("1", m, "Speed specialist");
+            if (comp === "winner")     addFit("1", m, "Competitor");
+            if (fear === "nothing")    addFit("1", m, "Fear-proof");
+            if (vet)                   addFit("1", m, "Veteran");
+
+            // ── Event 2: 60m Sprint (W) — same signals
+            if (se === "speed")        addFit("2", m, "Speed specialist");
+            if (comp === "winner")     addFit("2", m, "Competitor");
+            if (fear === "nothing")    addFit("2", m, "Fear-proof");
+            if (vet)                   addFit("2", m, "Veteran");
+
+            // ── Event 3: Egg & Spoon — coordination, strategists, vibes, balanced
+            if (se === "coordination") addFit("3", m, "Coordination specialist");
+            if (tt === "strategist")   addFit("3", m, "Tactical mind");
+            if (se === "vibes")        addFit("3", m, "Composed under pressure");
+            if (comp === "balanced")   addFit("3", m, "Steady performer");
+
+            // ── Event 4: Wheelbarrow — strength, coordination, pairs chemistry
+            if (se === "strength")     addFit("4", m, "Strength specialist");
+            if (se === "coordination") addFit("4", m, "Coordination specialist");
+            if (tt === "motivator")    addFit("4", m, "Drives the pair");
+
+            // ── Event 5: 400m (M) — endurance, speed, winners, veterans
+            if (se === "endurance")    addFit("5", m, "Endurance specialist");
+            if (se === "speed")        addFit("5", m, "Speed specialist");
+            if (comp === "winner")     addFit("5", m, "Competitor");
+            if (vet)                   addFit("5", m, "Veteran");
+
+            // ── Event 6: 400m (W) — same signals
+            if (se === "endurance")    addFit("6", m, "Endurance specialist");
+            if (se === "speed")        addFit("6", m, "Speed specialist");
+            if (comp === "winner")     addFit("6", m, "Competitor");
+            if (vet)                   addFit("6", m, "Veteran");
+
+            // ── Event 7: Sack Race — vibes, energy bringers, wildcards, balanced
+            if (se === "vibes")        addFit("7", m, "Vibes specialist");
+            if (tt === "energy_bringer") addFit("7", m, "Energy carrier");
+            if (tt === "wildcard")     addFit("7", m, "Chaos agent");
+            if (comp === "balanced")   addFit("7", m, "Consistent performer");
+
+            // ── Event 8: 3-Legged Race — coordination, strategists, pairs chemistry
+            if (se === "coordination") addFit("8", m, "Coordination specialist");
+            if (tt === "strategist")   addFit("8", m, "Tactical pairing");
+            if (tt === "motivator")    addFit("8", m, "Drives the pair");
+            if (fear === "nothing")    addFit("8", m, "Unshakeable");
+
+            // ── Event 9: 60m Team Relay — speed, motivators, winners, veterans
+            if (se === "speed")        addFit("9", m, "Speed specialist");
+            if (tt === "motivator")    addFit("9", m, "Momentum driver");
+            if (comp === "winner")     addFit("9", m, "Competitor");
+            if (vet)                   addFit("9", m, "Relay veteran");
+
+            // ── Event 10: Chain Race — endurance, team players, motivators
+            if (se === "endurance")    addFit("10", m, "Endurance specialist");
+            if (tt === "motivator")    addFit("10", m, "Team engine");
+            if (fear === "letting_team_down") addFit("10", m, "Driven by accountability");
+            if (comp === "winner")     addFit("10", m, "Competitor");
+
+            // ── Event 11: Tug of War (Finale) — strength, strategists, winners, fearless
+            if (se === "strength")     addFit("11", m, "Strength specialist");
+            if (tt === "strategist")   addFit("11", m, "Tactical anchor");
+            if (comp === "winner")     addFit("11", m, "Competitor");
+            if (fear === "nothing")    addFit("11", m, "Fearless");
+            if (vet)                   addFit("11", m, "Experienced");
           });
-          // Tiebreaker fallback: if no wildcards, include all members
-          if (!eventBestFit["tiebreaker"] || eventBestFit["tiebreaker"].length === 0) {
-            members.forEach((m) => addFit("tiebreaker", m, "Ready for anything"));
-          }
 
-          // Map event ID → AI insight — always generated, never empty
+          // ── Per-event AI insights (keyed by numeric DB ID as string) ────────────────────────
           const eventInsights: Record<string, string> = {};
+          const squadDesc = n > 0 ? `Your ${n}-person squad` : "Your squad";
 
-          // SPRINT — speed is the primary signal, motivators add crowd energy
-          if (speedCount > 0) {
-            eventInsights["sprint"] = `${confidence(speedCount)}: ${tier(speedCount)} rated speed as their strongest attribute. ${speedCount === 1 ? "That's your anchor — put them in the blocks." : "Line them up and let them fly — this is your event to own."}`;
-          } else if (motivatorCount > 0) {
-            eventInsights["sprint"] = `${tier(motivatorCount)} ${motivatorCount === 1 ? "is a natural motivator" : "are natural motivators"} — use that energy to push your sprinters past their limits.`;
-          } else {
-            eventInsights["sprint"] = `No speed specialists identified yet — but any team can win the sprint with the right mindset. Pick your fastest and back them fully.`;
-          }
+          // ─ Event 1 & 2: 60m Sprints (M/W) ──────────────────────────────────────────────
+          const sprintInsight = (() => {
+            const parts: string[] = [];
+            if (speedCount > 0) parts.push(`${conf(speedCount)}: ${t(speedCount)} rated speed as their top attribute`);
+            if (winnerCount > 0) parts.push(`${t(winnerCount)} here to win`);
+            if (fearNothingCount > 0) parts.push(`${t(fearNothingCount)} completely fearless`);
+            if (veteranCount > 0) parts.push(`${t(veteranCount)} returning ${veteranCount === 1 ? "veteran" : "veterans"} who know how to perform`);
+            if (fearSprintCount > 0) parts.push(`${t(fearSprintCount)} flagged sprinting as their fear — that's your psychological edge over them`);
+            if (parts.length === 0) return `No speed specialists flagged yet — but the sprint is won by whoever commits hardest. Pick your fastest and back them fully.`;
+            return parts.join(". ") + ". Put your speed specialists in the blocks and let the winners do what they do.";
+          })();
+          eventInsights["1"] = sprintInsight;
+          eventInsights["2"] = sprintInsight;
 
-          // RELAY — speed + motivators are the key signals
-          const relaySignal = speedCount + motivatorCount;
-          if (speedCount > 0 && motivatorCount > 0) {
-            eventInsights["relay"] = `${tier(speedCount)} speed-focused + ${tier(motivatorCount)} motivator${motivatorCount === 1 ? "" : "s"} — relay is where your team chemistry becomes a weapon. Nail the handoffs.`;
-          } else if (speedCount > 0) {
-            eventInsights["relay"] = `${confidence(speedCount)}: ${tier(speedCount)} built for speed. Relay rewards your fastest legs — coordinate the order and trust the baton.`;
-          } else if (motivatorCount > 0) {
-            eventInsights["relay"] = `${tier(motivatorCount)} motivator${motivatorCount === 1 ? "" : "s"} on your squad — relay is a team moment. Use that crowd energy to carry each other through.`;
-          } else {
-            eventInsights["relay"] = `Relay is about trust and timing above all else. No data yet, but the team that communicates best wins this one.`;
-          }
+          // ─ Event 3: Egg & Spoon ──────────────────────────────────────────────────────────────────
+          eventInsights["3"] = (() => {
+            const parts: string[] = [];
+            if (coordCount > 0) parts.push(`${conf(coordCount)}: ${t(coordCount)} rated coordination as their strongest attribute`);
+            if (strategistCount > 0) parts.push(`${t(strategistCount)} strategic thinker${strategistCount === 1 ? "" : "s"} who won't rush`);
+            if (balancedCount > 0) parts.push(`${t(balancedCount)} balanced competitor${balancedCount === 1 ? "" : "s"} built for composure`);
+            if (parts.length === 0) return `Egg & Spoon is pure composure. No coordination specialists flagged yet — but the team that stays calm and moves with purpose will take this.`;
+            return parts.join(". ") + ". Egg & Spoon rewards patience over pace — this is your event to control.";
+          })();
 
-          // TUG OF WAR — strength + strategists
-          if (strengthCount > 0 && strategistCount > 0) {
-            eventInsights["tug_of_war"] = `${tier(strengthCount)} strength-focused + ${tier(strategistCount)} strategist${strategistCount === 1 ? "" : "s"} — Tug of War is yours to dominate. Raw power meets smart anchoring.`;
-          } else if (strengthCount > 0) {
-            eventInsights["tug_of_war"] = `${confidence(strengthCount)}: ${tier(strengthCount)} rated strength as their top attribute. ${strengthCount === 1 ? "Build your line around them — they're your anchor." : "Stack them at the back and dig in — this is your event."}`;
-          } else if (strategistCount > 0) {
-            eventInsights["tug_of_war"] = `${tier(strategistCount)} strategist${strategistCount === 1 ? "" : "s"} on your team — Tug of War is won by coordination and timing, not just brute force. Outsmart them.`;
-          } else {
-            eventInsights["tug_of_war"] = `No strength specialists flagged yet — but positioning and timing win this. Get low, stay tight, and hold the line together.`;
-          }
+          // ─ Event 4: Wheelbarrow ─────────────────────────────────────────────────────────────────
+          eventInsights["4"] = (() => {
+            const parts: string[] = [];
+            if (strengthCount > 0) parts.push(`${conf(strengthCount)}: ${t(strengthCount)} built for strength`);
+            if (coordCount > 0) parts.push(`${t(coordCount)} coordination-focused`);
+            if (motivatorCount > 0) parts.push(`${t(motivatorCount)} motivator${motivatorCount === 1 ? "" : "s"} who drive their pair forward`);
+            if (parts.length === 0) return `Wheelbarrow is a pairs event — chemistry and communication win it. Pick pairs who trust each other completely.`;
+            return parts.join(". ") + ". Pair your strongest with your most coordinated and you've got a winning combination.";
+          })();
 
-          // OBSTACLE COURSE — coordination + wildcards
-          if (coordCount > 0 && wildcardCount > 0) {
-            eventInsights["obstacle"] = `${tier(coordCount)} coordination-focused + ${tier(wildcardCount)} wildcard${wildcardCount === 1 ? "" : "s"} — Obstacle Course was made for this mix. Precision meets chaos.`;
-          } else if (coordCount > 0) {
-            eventInsights["obstacle"] = `${confidence(coordCount)}: ${tier(coordCount)} rated coordination as their strength. ${coordCount === 1 ? "Lead with them on the technical sections." : "The Obstacle Course rewards exactly this — precision and timing."}`;
-          } else if (wildcardCount > 0) {
-            eventInsights["obstacle"] = `${tier(wildcardCount)} wildcard${wildcardCount === 1 ? "" : "s"} in your squad — unpredictable players thrive in chaos. This course is built for them.`;
-          } else {
-            eventInsights["obstacle"] = `Obstacle Course rewards adaptability over raw fitness. No specialists flagged yet — but a team that communicates through the chaos will always have the edge.`;
-          }
+          // ─ Event 5 & 6: 400m (M/W) ───────────────────────────────────────────────────────────
+          const fourHundredInsight = (() => {
+            const parts: string[] = [];
+            if (enduranceCount > 0) parts.push(`${conf(enduranceCount)}: ${t(enduranceCount)} built for endurance`);
+            if (speedCount > 0) parts.push(`${t(speedCount)} speed specialist${speedCount === 1 ? "" : "s"} who can hold pace`);
+            if (winnerCount > 0) parts.push(`${t(winnerCount)} here to win — the 400m is where that mindset matters most`);
+            if (veteranCount > 0) parts.push(`${t(veteranCount)} returning ${veteranCount === 1 ? "veteran" : "veterans"} who know how to pace themselves`);
+            if (parts.length === 0) return `400m is the ultimate test of controlled aggression. No endurance specialists flagged yet — pick your most mentally tough athlete.`;
+            return parts.join(". ") + ". The 400m is won in the final 100m — whoever trained their mind wins this.";
+          })();
+          eventInsights["5"] = fourHundredInsight;
+          eventInsights["6"] = fourHundredInsight;
 
-          // LONG JUMP — endurance + silent assassins (consistent performers)
-          if (enduranceCount > 0) {
-            eventInsights["long_jump"] = `${confidence(enduranceCount)}: ${tier(enduranceCount)} built for endurance. Long Jump rewards explosive consistency — ${enduranceCount === 1 ? "they're your best bet here." : "rotate your strongest athletes and keep the pressure on."}`;
-          } else if (silentCount > 0) {
-            eventInsights["long_jump"] = `${tier(silentCount)} silent assassin${silentCount === 1 ? "" : "s"} on your team — they perform when it matters most. Long Jump is a quiet event. Let them do their thing.`;
-          } else {
-            eventInsights["long_jump"] = `Long Jump is about commitment — no hesitation at the line. No specialists flagged yet, but the athlete who backs themselves fully will go furthest.`;
-          }
+          // ─ Event 7: Sack Race ───────────────────────────────────────────────────────────────────
+          eventInsights["7"] = (() => {
+            const parts: string[] = [];
+            if (vibesCount > 0) parts.push(`${conf(vibesCount)}: ${t(vibesCount)} who thrive on energy and vibes`);
+            if (energyCount > 0) parts.push(`${t(energyCount)} energy bringer${energyCount === 1 ? "" : "s"} who will bring the crowd`);
+            if (wildcardCount > 0) parts.push(`${t(wildcardCount)} wildcard${wildcardCount === 1 ? "" : "s"} who love chaos`);
+            if (fearNothingCount > 0) parts.push(`${t(fearNothingCount)} completely fearless`);
+            if (parts.length === 0) return `Sack Race is pure fun — but the team with the most energy wins. Get loud, get loose, and back your athlete.`;
+            return parts.join(". ") + ". Sack Race rewards rhythm and confidence — send your most fearless and let the crowd carry them.";
+          })();
 
-          // PENALTY SHOOTOUT — energy bringers + vibes
-          if (energyCount > 0 && vibesCount > 0) {
-            eventInsights["penalty_shoot"] = `${tier(energyCount)} energy bringer${energyCount === 1 ? "" : "s"} + ${tier(vibesCount)} vibes-focused — Penalty Shootout is a crowd moment. Your team's energy is a genuine advantage here.`;
-          } else if (energyCount > 0) {
-            eventInsights["penalty_shoot"] = `${confidence(energyCount)}: ${tier(energyCount)} energy bringer${energyCount === 1 ? "" : "s"} on your squad. Penalty shootout is 90% nerves — your team's atmosphere will carry the shooter.`;
-          } else if (vibesCount > 0) {
-            eventInsights["penalty_shoot"] = `${tier(vibesCount)} member${vibesCount === 1 ? "" : "s"} fuelled by vibes — Penalty Shootout rewards belief. Keep the energy high and back your shooter.`;
-          } else {
-            eventInsights["penalty_shoot"] = `Penalty Shootout is pure pressure. No specific signals yet — but the team that stays loud and backs their shooter will have the psychological edge.`;
-          }
+          // ─ Event 8: 3-Legged Race ───────────────────────────────────────────────────────────────
+          eventInsights["8"] = (() => {
+            const parts: string[] = [];
+            if (coordCount > 0) parts.push(`${conf(coordCount)}: ${t(coordCount)} rated coordination as their top attribute`);
+            if (strategistCount > 0) parts.push(`${t(strategistCount)} strategic thinker${strategistCount === 1 ? "" : "s"} who will plan the stride pattern`);
+            if (motivatorCount > 0) parts.push(`${t(motivatorCount)} motivator${motivatorCount === 1 ? "" : "s"} who will keep the pair in sync`);
+            if (fearNothingCount > 0) parts.push(`${t(fearNothingCount)} fearless athlete${fearNothingCount === 1 ? "" : "s"} who won't freeze under pressure`);
+            if (parts.length === 0) return `3-Legged Race is 100% chemistry. Pick pairs who communicate well and trust each other completely.`;
+            return parts.join(". ") + ". Pick your most coordinated pairs and drill the rhythm before the race.";
+          })();
 
-          // MYSTERY TIEBREAKER — always a wildcard message
-          if (wildcardCount > 0) {
-            eventInsights["tiebreaker"] = `${tier(wildcardCount)} wildcard${wildcardCount === 1 ? "" : "s"} on your team — whatever the mystery event is, they were born for the unexpected. Stay ready.`;
-          } else if (totalResponses > 0) {
-            eventInsights["tiebreaker"] = `Nobody knows what this is yet — but your squad has answered the call. Stay loose, stay ready, and trust the team.`;
-          } else {
-            eventInsights["tiebreaker"] = `The mystery tiebreaker is unknown — but every great team thrives in the unexpected. Whatever it is, bring the energy.`;
-          }
+          // ─ Event 9: 60m Team Relay ─────────────────────────────────────────────────────────────
+          eventInsights["9"] = (() => {
+            const parts: string[] = [];
+            if (speedCount > 0 && motivatorCount > 0) {
+              parts.push(`${t(speedCount)} speed specialist${speedCount === 1 ? "" : "s"} + ${t(motivatorCount)} motivator${motivatorCount === 1 ? "" : "s"} — relay is where your team chemistry becomes a weapon`);
+            } else if (speedCount > 0) {
+              parts.push(`${conf(speedCount)}: ${t(speedCount)} built for speed`);
+            } else if (motivatorCount > 0) {
+              parts.push(`${t(motivatorCount)} motivator${motivatorCount === 1 ? "" : "s"} who will drive the baton forward`);
+            }
+            if (winnerCount > 0) parts.push(`${t(winnerCount)} here to win — relay is where competitive squads pull away`);
+            if (veteranCount > 0) parts.push(`${t(veteranCount)} returning ${veteranCount === 1 ? "veteran" : "veterans"} who know how to handle pressure`);
+            if (parts.length === 0) return `Relay is about trust and timing. Coordinate your order, nail the handoffs, and let the team carry each other.`;
+            return parts.join(". ") + ". Nail the handoffs — the baton wins or loses this.";
+          })();
+
+          // ─ Event 10: Chain Race ─────────────────────────────────────────────────────────────────
+          eventInsights["10"] = (() => {
+            const parts: string[] = [];
+            if (enduranceCount > 0) parts.push(`${conf(enduranceCount)}: ${t(enduranceCount)} built for endurance`);
+            if (motivatorCount > 0) parts.push(`${t(motivatorCount)} motivator${motivatorCount === 1 ? "" : "s"} who will keep the chain moving`);
+            if (fearLettingDown > 0) parts.push(`${t(fearLettingDown)} driven by accountability — they won't let the chain break`);
+            if (winnerCount > 0) parts.push(`${t(winnerCount)} here to win`);
+            if (parts.length === 0) return `Chain Race is a team endurance test. Everyone runs, everyone matters. No weak links.`;
+            return parts.join(". ") + ". Chain Race rewards depth — every member counts, not just the fastest.";
+          })();
+
+          // ─ Event 11: Tug of War (Finale) ────────────────────────────────────────────────────────
+          eventInsights["11"] = (() => {
+            const parts: string[] = [];
+            if (strengthCount > 0 && strategistCount > 0) {
+              parts.push(`${t(strengthCount)} strength specialist${strengthCount === 1 ? "" : "s"} + ${t(strategistCount)} tactical anchor${strategistCount === 1 ? "" : "s"} — Tug of War is yours to dominate`);
+            } else if (strengthCount > 0) {
+              parts.push(`${conf(strengthCount)}: ${t(strengthCount)} rated strength as their top attribute`);
+            } else if (strategistCount > 0) {
+              parts.push(`${t(strategistCount)} strategist${strategistCount === 1 ? "" : "s"} — Tug of War is won by positioning and timing, not just brute force`);
+            }
+            if (winnerCount > 0) parts.push(`${t(winnerCount)} here to win — the Finale is where champions are made`);
+            if (fearNothingCount > 0) parts.push(`${t(fearNothingCount)} completely fearless`);
+            if (veteranCount > 0) parts.push(`${t(veteranCount)} returning ${veteranCount === 1 ? "veteran" : "veterans"} who know how to dig in`);
+            if (fearTeamCount > 0) parts.push(`${t(fearTeamCount)} flagged team events as their fear — use that tension as fuel, not a weakness`);
+            if (parts.length === 0) return `Tug of War is the Finale — everything comes down to this. Get low, stay tight, and hold the line as one.`;
+            return parts.join(". ") + ". Get low, stay tight, and hold the line. This is what you trained for.";
+          })();
 
           // ── Type badge config ──────────────────────────────────────────────
           const TYPE_BADGE: Record<string, { label: string; color: string; bg: string }> = {
@@ -961,17 +1079,89 @@ export default function TeamHub() {
 
           return (
           <div className="space-y-4">
-            {/* ─── AI INTEL HEADER ─── */}
+            {/* ─── TEAM DNA PANEL ─── */}
             <div
               className="p-4 border"
               style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
             >
-              <div className="flex items-center gap-2 mb-2">
+              {/* Header row */}
+              <div className="flex items-center gap-2 mb-3">
                 <span className="text-base">⚡</span>
-                <span className="font-display text-sm tracking-widest" style={{ color: tc.hex }}>AI TEAM INTEL</span>
+                <span className="font-display text-sm tracking-widest" style={{ color: tc.hex }}>TEAM DNA</span>
+                <span className="ml-auto font-mono text-white/30 text-[10px]">{n} SQUAD MEMBER{n !== 1 ? "S" : ""}</span>
               </div>
-              <p className="font-mono text-white/35 text-[10px] leading-relaxed">
-                Based on your squad's questionnaire — tap any event to see your team's AI-powered strategy and best-fit players.
+
+              {/* DNA tag grid */}
+              {dnaTags.length > 0 ? (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {dnaTags.map((tag) => (
+                    <div
+                      key={tag.label}
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-sm"
+                      style={{ background: `${tag.color}15`, border: `1px solid ${tag.color}30` }}
+                    >
+                      <span
+                        className="font-display text-[11px] tracking-widest"
+                        style={{ color: tag.color }}
+                      >
+                        {tag.value}
+                      </span>
+                      <span className="font-mono text-white/50 text-[9px] tracking-wider">{tag.label}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="font-mono text-white/25 text-[10px] mb-3">Questionnaire data loading…</p>
+              )}
+
+              {/* Competitiveness bar */}
+              {(winnerCount + balancedCount + vibesOnlyCount) > 0 && (
+                <div className="mb-3">
+                  <div className="flex justify-between font-mono text-[9px] text-white/30 mb-1">
+                    <span>SQUAD MINDSET</span>
+                    <span>{winnerCount > 0 ? `${winnerCount} WINNER${winnerCount !== 1 ? "S" : ""}` : ""}{balancedCount > 0 ? `${winnerCount > 0 ? " · " : ""}${balancedCount} BALANCED` : ""}{vibesOnlyCount > 0 ? `${(winnerCount + balancedCount) > 0 ? " · " : ""}${vibesOnlyCount} VIBES` : ""}</span>
+                  </div>
+                  <div className="flex h-1.5 rounded-full overflow-hidden gap-px">
+                    {winnerCount > 0 && (
+                      <div
+                        className="h-full transition-all"
+                        style={{ width: `${(winnerCount / n) * 100}%`, background: "#fbbf24" }}
+                      />
+                    )}
+                    {balancedCount > 0 && (
+                      <div
+                        className="h-full transition-all"
+                        style={{ width: `${(balancedCount / n) * 100}%`, background: "#60a5fa" }}
+                      />
+                    )}
+                    {vibesOnlyCount > 0 && (
+                      <div
+                        className="h-full transition-all"
+                        style={{ width: `${(vibesOnlyCount / n) * 100}%`, background: "#f472b6" }}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Veteran / first-timer line */}
+              {(veteranCount + firstTimerCount) > 0 && (
+                <div className="flex items-center gap-2 font-mono text-[9px] text-white/30">
+                  <span>🏆 {veteranCount} VETERAN{veteranCount !== 1 ? "S" : ""}</span>
+                  <span className="text-white/15">·</span>
+                  <span>✨ {firstTimerCount} FIRST-TIMER{firstTimerCount !== 1 ? "S" : ""}</span>
+                  {fearNothingCount > 0 && (
+                    <>
+                      <span className="text-white/15">·</span>
+                      <span>🟢 {fearNothingCount} FEARLESS</span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Footer hint */}
+              <p className="font-mono text-white/20 text-[9px] mt-3 pt-3 border-t" style={{ borderColor: `${tc.hex}20` }}>
+                Tap any event below to see your squad's AI-powered strategy and best-fit players.
               </p>
             </div>
 
