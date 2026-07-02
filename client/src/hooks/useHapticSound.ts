@@ -14,15 +14,47 @@ type SoundType =
 type HapticStrength = "light" | "medium" | "heavy";
 
 let audioCtx: AudioContext | null = null;
+let audioUnlocked = false;
 
-function getAudioCtx(): AudioContext {
+// Prime the AudioContext on first user gesture (browser autoplay policy)
+if (typeof window !== "undefined") {
+  const unlock = () => {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // Play a silent buffer to unlock
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    ctx.resume().then(() => {
+      audioCtx = ctx;
+    });
+    document.removeEventListener("touchstart", unlock, true);
+    document.removeEventListener("touchend", unlock, true);
+    document.removeEventListener("click", unlock, true);
+  };
+  document.addEventListener("touchstart", unlock, true);
+  document.addEventListener("touchend", unlock, true);
+  document.addEventListener("click", unlock, true);
+}
+
+function getAudioCtx(): AudioContext | null {
   if (!audioCtx) {
-    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // Try to create lazily (may be suspended until user gesture)
+    try {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    } catch {
+      return null;
+    }
   }
-  // Resume if suspended (browser autoplay policy)
+  // Resume if suspended
   if (audioCtx.state === "suspended") {
     audioCtx.resume();
   }
+  // Only play if running (not suspended)
+  if (audioCtx.state !== "running") return null;
   return audioCtx;
 }
 
@@ -34,6 +66,7 @@ function vibrate(pattern: number | number[]) {
 
 function playSoftClick() {
   const ctx = getAudioCtx();
+  if (!ctx) return;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.connect(gain);
@@ -49,6 +82,7 @@ function playSoftClick() {
 
 function playWhoosh() {
   const ctx = getAudioCtx();
+  if (!ctx) return;
   const bufferSize = ctx.sampleRate * 0.15;
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
   const data = buffer.getChannelData(0);
@@ -73,6 +107,7 @@ function playWhoosh() {
 
 function playPowerUpZap() {
   const ctx = getAudioCtx();
+  if (!ctx) return;
   // Layer 1: electric sweep
   const osc1 = ctx.createOscillator();
   const gain1 = ctx.createGain();
@@ -102,6 +137,7 @@ function playPowerUpZap() {
 
 function playUnlockChime() {
   const ctx = getAudioCtx();
+  if (!ctx) return;
   const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
   notes.forEach((freq, i) => {
     const osc = ctx.createOscillator();
@@ -121,6 +157,7 @@ function playUnlockChime() {
 
 function playConfirm() {
   const ctx = getAudioCtx();
+  if (!ctx) return;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.connect(gain);
@@ -136,6 +173,7 @@ function playConfirm() {
 
 function playError() {
   const ctx = getAudioCtx();
+  if (!ctx) return;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.connect(gain);
