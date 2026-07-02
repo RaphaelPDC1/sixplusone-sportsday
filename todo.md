@@ -538,3 +538,9 @@
 - [ ] DEFERRED — Security: Add rate limiting to getTeamRoster and markRevealSeen
 - [x] Security: Add sportsDaySessions table for server-side session ownership validation
 - [ ] DEFERRED — Security: Add rate limiting to public procedures
+
+## Events System Upgrade (2 July 2026)
+- [x] Phase 1: Additive DB migration — added 5 new columns to sd_events (eventType, format, competingTeams, matchupLabel, setupBufferMinutes) + extended status enum with 'briefing' and 'delayed'
+- [x] Phase 2: Seeded all 11 events with correct metadata (eventType, format, matchupLabel, setupBufferMinutes)
+- [x] Phase 3: Rebuilt TeamHub Events tab as single event stream timeline with type badges (M/W/Mixed/Team/Finale), format badges, matchup labels, status pills (upcoming/armed/briefing/live/delayed/complete), arena labels, setup buffer dividers, expanded card with AI insight + best-fit players + results
+- [x] TypeScript: 0 errors confirmed after all changes

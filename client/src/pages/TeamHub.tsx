@@ -344,8 +344,14 @@ export default function TeamHub() {
         status: e.status,
         pointsMultiplier: e.pointsMultiplier,
         wildcardsEnabled: e.wildcardsEnabled,
+        eventType: e.eventType,
+        format: e.format,
+        matchupLabel: e.matchupLabel,
+        setupBufferMinutes: e.setupBufferMinutes,
+        blockNo: e.blockNo,
+        sortOrder: e.sortOrder,
       }))
-    : EVENTS.map((e) => ({ ...e, arena: undefined, startTime: undefined, endTime: undefined, status: "upcoming" as const, pointsMultiplier: 1, wildcardsEnabled: false }));
+    : EVENTS.map((e) => ({ ...e, arena: undefined, startTime: undefined, endTime: undefined, status: "upcoming" as const, pointsMultiplier: 1, wildcardsEnabled: false, eventType: undefined as string | undefined, format: undefined as string | undefined, matchupLabel: undefined as string | undefined, setupBufferMinutes: 10, blockNo: undefined as number | undefined, sortOrder: 0 }));
 
   const TABS = [
     { id: "team" as const,           label: "TEAM",           icon: "👥" },
@@ -929,12 +935,33 @@ export default function TeamHub() {
             eventInsights["tiebreaker"] = `The mystery tiebreaker is unknown — but every great team thrives in the unexpected. Whatever it is, bring the energy.`;
           }
 
-          // All events always have an insight — topRecs shows all of them
-          const topRecs = liveEvents;
+          // ── Type badge config ──────────────────────────────────────────────
+          const TYPE_BADGE: Record<string, { label: string; color: string; bg: string }> = {
+            male:    { label: "M",      color: "#60a5fa", bg: "rgba(96,165,250,0.12)" },
+            female:  { label: "W",      color: "#f472b6", bg: "rgba(244,114,182,0.12)" },
+            mixed:   { label: "Mixed",  color: "#c084fc", bg: "rgba(192,132,252,0.12)" },
+            team:    { label: "Team",   color: "#fb923c", bg: "rgba(251,146,60,0.12)" },
+            finale:  { label: "Finale", color: "#fbbf24", bg: "rgba(251,191,36,0.15)" },
+          };
+          const FORMAT_BADGE: Record<string, string> = {
+            "all-teams":   "All Teams",
+            "head-to-head": "Head to Head",
+            bracket:       "Bracket",
+            relay:         "Relay",
+            pairs:         "Pairs",
+          };
+          const STATUS_PILL: Record<string, { label: string; color: string; bg: string; pulse?: boolean }> = {
+            upcoming:  { label: "UPCOMING",  color: "rgba(255,255,255,0.35)", bg: "rgba(255,255,255,0.06)" },
+            armed:     { label: "ARMED",     color: "#fbbf24",                bg: "rgba(251,191,36,0.12)",  pulse: true },
+            briefing:  { label: "BRIEFING",  color: "#fb923c",                bg: "rgba(251,146,60,0.12)",  pulse: true },
+            live:      { label: "● LIVE",    color: "#4ade80",                bg: "rgba(74,222,128,0.12)",  pulse: true },
+            delayed:   { label: "DELAYED",   color: "#f87171",                bg: "rgba(248,113,113,0.12)" },
+            complete:  { label: "DONE",      color: "rgba(255,255,255,0.25)", bg: "rgba(255,255,255,0.04)" },
+          };
 
           return (
           <div className="space-y-4">
-            {/* ─── AI RECOMMENDATIONS (top) ─── */}
+            {/* ─── AI INTEL HEADER ─── */}
             <div
               className="p-4 border"
               style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
@@ -944,185 +971,282 @@ export default function TeamHub() {
                 <span className="font-display text-sm tracking-widest" style={{ color: tc.hex }}>AI TEAM INTEL</span>
               </div>
               <p className="font-mono text-white/35 text-[10px] leading-relaxed">
-                Based on your squad's questionnaire — tap any event below to see your team's AI-powered strategy and best-fit players.
+                Based on your squad's questionnaire — tap any event to see your team's AI-powered strategy and best-fit players.
               </p>
             </div>
 
             <SectionHeader label="THE EVENTS" />
-            <div className="space-y-3">
-              {liveEvents.map((event) => {
-                // Look up results from the new scoring system (by numeric event id) or legacy leaderboard
-                const numericId = Number(event.id);
-                const eventResults = publicEventResults
-                  ? publicEventResults.filter((r) => r.eventId === numericId)
-                  : (hub.leaderboard as any[]).filter((e: any) => e.eventName === event.id);
-                // Normalise to a common shape for rendering
-                const myTeamResultRaw = publicEventResults
-                  ? publicEventResults.find((r) => r.eventId === numericId && r.team === hub.team)
-                  : (hub.leaderboard as any[]).find((e: any) => e.eventName === event.id && e.team === hub.team);
-                const myTeamResult = myTeamResultRaw
-                  ? {
-                      dnf: (myTeamResultRaw as any).dnf ?? false,
-                      position: (myTeamResultRaw as any).placement ?? (myTeamResultRaw as any).position ?? null,
-                      points: (myTeamResultRaw as any).finalPoints ?? (myTeamResultRaw as any).points ?? 0,
-                    }
-                  : null;
-                // Normalise eventResults for the mini leaderboard
-                const normalizedEventResults = eventResults.map((r: any) => ({
-                  team: r.team as "red" | "blue" | "pink" | "orange",
-                  dnf: r.dnf ?? false,
-                  position: r.placement ?? r.position ?? null,
-                  points: r.finalPoints ?? r.points ?? 0,
-                }));
-                const isExpanded = expandedEvent === event.id;
-                const aiInsight = eventInsights[event.id];
-                return (
-                  <div
-                    key={event.id}
-                    className="border transition-all cursor-pointer"
-                    style={{
-                      borderColor: isExpanded ? `${tc.hex}50` : "rgba(255,255,255,0.08)",
-                      background: isExpanded ? `${tc.hex}06` : "rgba(255,255,255,0.01)",
-                    }}
-                    onClick={() => setExpandedEvent(isExpanded ? null : event.id)}
-                  >
-                    <div className="p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{event.icon}</span>
-                          <div>
-                            <div className="font-display text-lg tracking-widest">{event.name}</div>
-                            <div className="font-mono text-white/30 text-xs mt-0.5">{event.desc}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {myTeamResult && (
-                            <div className="text-right">
-                              {myTeamResult.dnf ? (
-                                <span className="font-mono text-red-500/70 text-xs tracking-wider">DNF</span>
-                              ) : (
-                                <div>
-                                  <div className="font-display text-xl tracking-widest" style={{ color: tc.hex }}>
-                                    {myTeamResult.position ? `${myTeamResult.position}${ordinal(myTeamResult.position)}` : "—"}
-                                  </div>
-                                  <div className="font-mono text-white/30 text-xs">{myTeamResult.points ?? 0}pts</div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          <span className="font-mono text-white/20 text-xs">{isExpanded ? "▲" : "▼"}</span>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Expanded: AI insight + mini leaderboard */}
-                    {isExpanded && (
-                      <div className="px-4 pb-4 border-t" style={{ borderColor: `${tc.hex}20` }}>
-                        {/* Arena + time + wildcard availability */}
-                        <div className="flex flex-wrap gap-3 mt-3 mb-2">
-                          {event.arena && (
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-1 h-1 rounded-full" style={{ background: tc.hex }} />
-                              <span className="font-mono text-white/40 text-[10px] tracking-wider">{event.arena}</span>
-                            </div>
-                          )}
-                          {event.startTime && (
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-1 h-1 rounded-full" style={{ background: tc.hex }} />
-                              <span className="font-mono text-white/40 text-[10px] tracking-wider">
-                                {event.startTime}{event.endTime ? ` – ${event.endTime}` : ""}
-                              </span>
-                            </div>
-                          )}
-                          {(event as any).wildcardsEnabled && (
-                            <div
-                              className="flex items-center gap-1.5 px-2 py-0.5 border"
-                              style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}10` }}
-                            >
-                              <span className="text-[10px]">⚡</span>
-                              <span className="font-mono text-[9px] tracking-widest" style={{ color: tc.hex }}>POWER UPS ACTIVE</span>
-                            </div>
-                          )}
-                          {!(event as any).wildcardsEnabled && (
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 border border-white/10">
-                              <span className="text-[10px]">🔒</span>
-                              <span className="font-mono text-[9px] tracking-widest text-white/25">NO POWER UPS</span>
-                            </div>
-                          )}
+            {/* ─── TIMELINE ─── */}
+            <div className="relative">
+              {/* Vertical spine */}
+              <div className="absolute left-[19px] top-0 bottom-0 w-px bg-white/8" />
+
+              <div className="space-y-0">
+                {liveEvents.map((event, idx) => {
+                  const numericId = Number(event.id);
+                  const eventResults = publicEventResults
+                    ? publicEventResults.filter((r) => r.eventId === numericId)
+                    : (hub.leaderboard as any[]).filter((e: any) => e.eventName === event.id);
+                  const myTeamResultRaw = publicEventResults
+                    ? publicEventResults.find((r) => r.eventId === numericId && r.team === hub.team)
+                    : (hub.leaderboard as any[]).find((e: any) => e.eventName === event.id && e.team === hub.team);
+                  const myTeamResult = myTeamResultRaw
+                    ? {
+                        dnf: (myTeamResultRaw as any).dnf ?? false,
+                        position: (myTeamResultRaw as any).placement ?? (myTeamResultRaw as any).position ?? null,
+                        points: (myTeamResultRaw as any).finalPoints ?? (myTeamResultRaw as any).points ?? 0,
+                      }
+                    : null;
+                  const normalizedEventResults = eventResults.map((r: any) => ({
+                    team: r.team as "red" | "blue" | "pink" | "orange",
+                    dnf: r.dnf ?? false,
+                    position: r.placement ?? r.position ?? null,
+                    points: r.finalPoints ?? r.points ?? 0,
+                  }));
+                  const isExpanded = expandedEvent === event.id;
+                  const aiInsight = eventInsights[event.id];
+                  const typeBadge = event.eventType ? TYPE_BADGE[event.eventType] : null;
+                  const formatLabel = event.format ? FORMAT_BADGE[event.format] : null;
+                  const statusPill = STATUS_PILL[event.status ?? "upcoming"] ?? STATUS_PILL.upcoming;
+                  const isComplete = event.status === "complete";
+                  const isLive = event.status === "live";
+                  const bufferMins = event.setupBufferMinutes ?? 10;
+
+                  return (
+                    <div key={event.id}>
+                      {/* ── Event card ── */}
+                      <div className="flex gap-3 items-start">
+                        {/* Timeline node */}
+                        <div className="flex-shrink-0 flex flex-col items-center" style={{ width: 38 }}>
+                          <div
+                            className="w-[38px] h-[38px] rounded-full flex items-center justify-center border text-sm z-10 relative"
+                            style={{
+                              borderColor: isLive ? statusPill.color : isComplete ? "rgba(255,255,255,0.12)" : `${tc.hex}40`,
+                              background: isLive ? `rgba(74,222,128,0.1)` : isComplete ? "rgba(255,255,255,0.03)" : `${tc.hex}08`,
+                              boxShadow: isLive ? `0 0 12px rgba(74,222,128,0.3)` : "none",
+                            }}
+                          >
+                            {isComplete ? (
+                              <span className="text-white/25 text-xs">✓</span>
+                            ) : (
+                              <span>{event.icon}</span>
+                            )}
+                          </div>
                         </div>
-                        {aiInsight && (
-                          <div className="mt-3 flex items-start gap-2">
-                            <span className="text-sm mt-0.5">⚡</span>
-                            <p className="font-mono text-xs leading-relaxed" style={{ color: tc.hex }}>
-                              {aiInsight}
-                            </p>
-                          </div>
-                        )}
-                        {/* Mini leaderboard for this event */}
-                        {normalizedEventResults.length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-4 gap-2">
-                            {(["red","blue","pink","orange"] as const).map((team) => {
-                              const r = normalizedEventResults.find((e) => e.team === team);
-                              return (
-                                <div key={team} className="text-center">
-                                  <div className="w-2 h-2 rounded-full mx-auto mb-1" style={{ background: TEAM_COLORS[team]?.hex ?? "#fff" }} />
-                                  <div className="font-mono text-white/30 text-[9px]">
-                                    {r?.dnf ? "DNF" : r ? `${r.position ?? "—"}` : "—"}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                        {/* BEST FIT: squad members suited for this event */}
-                        {(() => {
-                          const fits = eventBestFit[event.id] ?? [];
-                          if (fits.length === 0) return null;
-                          return (
-                            <div className="mt-3 pt-3 border-t" style={{ borderColor: `${tc.hex}15` }}>
-                              <div className="font-mono text-[9px] tracking-[0.25em] text-white/30 mb-2">BEST FIT FOR THIS EVENT</div>
-                              <div className="flex flex-wrap gap-2">
-                                {fits.map(({ member, reason }) => (
-                                  <div
-                                    key={member.id}
-                                    className="flex items-center gap-2 px-2 py-1.5 border"
-                                    style={{ borderColor: `${tc.hex}30`, background: `${tc.hex}08` }}
-                                  >
-                                    {/* Avatar */}
-                                    <div
-                                      className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center border"
-                                      style={{ borderColor: `${tc.hex}50` }}
+
+                        {/* Card body */}
+                        <div
+                          className="flex-1 mb-3 border cursor-pointer transition-all"
+                          style={{
+                            borderColor: isExpanded ? `${tc.hex}50` : isLive ? "rgba(74,222,128,0.25)" : "rgba(255,255,255,0.08)",
+                            background: isExpanded ? `${tc.hex}06` : isLive ? "rgba(74,222,128,0.04)" : "rgba(255,255,255,0.01)",
+                          }}
+                          onClick={() => { hs('tap'); setExpandedEvent(isExpanded ? null : event.id); }}
+                        >
+                          {/* ── Card header ── */}
+                          <div className="p-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                {/* Badges row */}
+                                <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                                  {typeBadge && (
+                                    <span
+                                      className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 border"
+                                      style={{ color: typeBadge.color, borderColor: `${typeBadge.color}50`, background: typeBadge.bg }}
                                     >
-                                      {member.photoUrl ? (
-                                        <img src={member.photoUrl} alt={member.fullName ?? ""} className="w-full h-full object-cover" />
-                                      ) : (
-                                        <span className="text-[10px]">
-                                          {member.teammateType === "motivator" ? "📣"
-                                            : member.teammateType === "strategist" ? "🧠"
-                                            : member.teammateType === "wildcard" ? "🃏"
-                                            : member.teammateType === "silent_assassin" ? "🎯"
-                                            : "⚡"}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div>
-                                      <div className="font-display text-xs tracking-widest leading-none" style={{ color: member.id === userId ? tc.hex : "rgba(255,255,255,0.8)" }}>
-                                        {member.fullName?.split(" ")[0]?.toUpperCase()}
-                                        {member.id === userId && <span className="font-mono text-[8px] ml-1 opacity-60">YOU</span>}
-                                      </div>
-                                      <div className="font-mono text-[9px] text-white/30 mt-0.5">{reason}</div>
-                                    </div>
+                                      {typeBadge.label}
+                                    </span>
+                                  )}
+                                  {formatLabel && (
+                                    <span className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 border border-white/15 text-white/40">
+                                      {formatLabel}
+                                    </span>
+                                  )}
+                                  <span
+                                    className={`font-mono text-[9px] tracking-widest px-1.5 py-0.5 border ${statusPill.pulse ? "animate-pulse" : ""}`}
+                                    style={{ color: statusPill.color, borderColor: `${statusPill.color}40`, background: statusPill.bg }}
+                                  >
+                                    {statusPill.label}
+                                  </span>
+                                </div>
+
+                                {/* Event name */}
+                                <div
+                                  className="font-display text-base tracking-widest leading-tight"
+                                  style={{ color: isComplete ? "rgba(255,255,255,0.35)" : isLive ? "#4ade80" : "rgba(242,240,235,0.9)" }}
+                                >
+                                  {event.name}
+                                </div>
+
+                                {/* Matchup label */}
+                                {event.matchupLabel && (
+                                  <div className="font-mono text-[10px] text-white/30 mt-0.5 tracking-wide">
+                                    {event.matchupLabel}
                                   </div>
-                                ))}
+                                )}
+
+                                {/* Arena + time */}
+                                <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                                  {event.arena && (
+                                    <span className="font-mono text-[9px] text-white/25 tracking-wider">📍 {event.arena}</span>
+                                  )}
+                                  {event.startTime && (
+                                    <span className="font-mono text-[9px] text-white/25 tracking-wider">
+                                      🕐 {event.startTime}{event.endTime ? ` – ${event.endTime}` : ""}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Right: result or chevron */}
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {myTeamResult && (
+                                  <div className="text-right">
+                                    {myTeamResult.dnf ? (
+                                      <span className="font-mono text-red-500/70 text-xs tracking-wider">DNF</span>
+                                    ) : (
+                                      <div>
+                                        <div className="font-display text-lg tracking-widest" style={{ color: tc.hex }}>
+                                          {myTeamResult.position ? `${myTeamResult.position}${ordinal(myTeamResult.position)}` : "—"}
+                                        </div>
+                                        <div className="font-mono text-white/30 text-[10px]">{myTeamResult.points ?? 0}pts</div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                <span className="font-mono text-white/20 text-xs">{isExpanded ? "▲" : "▼"}</span>
                               </div>
                             </div>
-                          );
-                        })()}
+                          </div>
+
+                          {/* ── Expanded panel ── */}
+                          {isExpanded && (
+                            <div className="px-3 pb-3 border-t" style={{ borderColor: `${tc.hex}20` }}>
+                              {/* Points + wildcards row */}
+                              <div className="flex flex-wrap gap-2 mt-3">
+                                {event.pointsMultiplier > 1 && (
+                                  <div
+                                    className="flex items-center gap-1.5 px-2 py-0.5 border"
+                                    style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}10` }}
+                                  >
+                                    <span className="font-mono text-[9px] tracking-widest" style={{ color: tc.hex }}>×{event.pointsMultiplier} POINTS</span>
+                                  </div>
+                                )}
+                                {event.wildcardsEnabled ? (
+                                  <div
+                                    className="flex items-center gap-1.5 px-2 py-0.5 border"
+                                    style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}10` }}
+                                  >
+                                    <span className="text-[10px]">⚡</span>
+                                    <span className="font-mono text-[9px] tracking-widest" style={{ color: tc.hex }}>POWER UPS ACTIVE</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1.5 px-2 py-0.5 border border-white/10">
+                                    <span className="text-[10px]">🔒</span>
+                                    <span className="font-mono text-[9px] tracking-widest text-white/25">NO POWER UPS</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* AI insight */}
+                              {aiInsight && (
+                                <div className="mt-3 flex items-start gap-2">
+                                  <span className="text-sm mt-0.5">⚡</span>
+                                  <p className="font-mono text-xs leading-relaxed" style={{ color: tc.hex }}>
+                                    {aiInsight}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Mini results leaderboard */}
+                              {normalizedEventResults.length > 0 && (
+                                <div className="mt-3 pt-3 border-t border-white/10">
+                                  <div className="font-mono text-[9px] tracking-[0.25em] text-white/30 mb-2">RESULTS</div>
+                                  <div className="grid grid-cols-4 gap-2">
+                                    {(["red","blue","pink","orange"] as const).map((team) => {
+                                      const r = normalizedEventResults.find((e) => e.team === team);
+                                      return (
+                                        <div key={team} className="text-center">
+                                          <div className="w-2 h-2 rounded-full mx-auto mb-1" style={{ background: TEAM_COLORS[team]?.hex ?? "#fff" }} />
+                                          <div className="font-mono text-white/30 text-[9px]">
+                                            {r?.dnf ? "DNF" : r ? `${r.position ?? "—"}${r.position ? ordinal(r.position) : ""}` : "—"}
+                                          </div>
+                                          {r && !r.dnf && (
+                                            <div className="font-mono text-white/20 text-[8px]">{r.points}pts</div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Best fit squad members */}
+                              {(() => {
+                                const fits = eventBestFit[event.id] ?? [];
+                                if (fits.length === 0) return null;
+                                return (
+                                  <div className="mt-3 pt-3 border-t" style={{ borderColor: `${tc.hex}15` }}>
+                                    <div className="font-mono text-[9px] tracking-[0.25em] text-white/30 mb-2">BEST FIT FOR THIS EVENT</div>
+                                    <div className="flex flex-wrap gap-2">
+                                      {fits.map(({ member, reason }) => (
+                                        <div
+                                          key={member.id}
+                                          className="flex items-center gap-2 px-2 py-1.5 border"
+                                          style={{ borderColor: `${tc.hex}30`, background: `${tc.hex}08` }}
+                                        >
+                                          <div
+                                            className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center border"
+                                            style={{ borderColor: `${tc.hex}50` }}
+                                          >
+                                            {member.photoUrl ? (
+                                              <img src={member.photoUrl} alt={member.fullName ?? ""} className="w-full h-full object-cover" />
+                                            ) : (
+                                              <span className="text-[10px]">
+                                                {member.teammateType === "motivator" ? "📣"
+                                                  : member.teammateType === "strategist" ? "🧠"
+                                                  : member.teammateType === "wildcard" ? "🃏"
+                                                  : member.teammateType === "silent_assassin" ? "🎯"
+                                                  : "⚡"}
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div>
+                                            <div
+                                              className="font-display text-xs tracking-widest leading-none"
+                                              style={{ color: member.id === userId ? tc.hex : "rgba(255,255,255,0.8)" }}
+                                            >
+                                              {member.fullName?.split(" ")[0]?.toUpperCase()}
+                                              {member.id === userId && <span className="font-mono text-[8px] ml-1 opacity-60">YOU</span>}
+                                            </div>
+                                            <div className="font-mono text-[9px] text-white/30 mt-0.5">{reason}</div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+
+                      {/* ── Setup buffer divider (between cards, not after last) ── */}
+                      {idx < liveEvents.length - 1 && (
+                        <div className="flex items-center gap-2 pl-[50px] py-1 mb-1">
+                          <div className="flex-1 h-px bg-white/5" />
+                          <span className="font-mono text-[8px] tracking-widest text-white/15 flex-shrink-0">
+                            — {bufferMins} min setup —
+                          </span>
+                          <div className="flex-1 h-px bg-white/5" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
           </div>

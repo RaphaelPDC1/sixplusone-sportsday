@@ -297,10 +297,16 @@ export const sdEvents = mysqlTable("sd_events", {
   blockNo: int("blockNo"),                          // 1–5, F=6
   startTime: varchar("startTime", { length: 10 }), // "10:30"
   endTime: varchar("endTime", { length: 10 }),      // "11:00"
-  status: mysqlEnum("status", ["upcoming", "armed", "live", "complete"]).default("upcoming").notNull(),
+  status: mysqlEnum("status", ["upcoming", "armed", "briefing", "live", "delayed", "complete"]).default("upcoming").notNull(),
   wildcardsEnabled: boolean("wildcardsEnabled").default(false).notNull(),
   pointsMultiplier: int("pointsMultiplier").default(1).notNull(), // 2 for Tug of War finale
   sortOrder: int("sortOrder").default(0).notNull(),
+  // Phase 2 additions — event stream model
+  eventType: mysqlEnum("eventType", ["male", "female", "mixed", "team", "finale"]),
+  format: mysqlEnum("format", ["all-teams", "head-to-head", "bracket", "relay", "pairs"]),
+  competingTeams: varchar("competingTeams", { length: 100 }), // JSON string e.g. '["red","blue","pink","orange"]'
+  matchupLabel: varchar("matchupLabel", { length: 100 }),     // "All Teams" | "Bracket · 2 teams at a time"
+  setupBufferMinutes: int("setupBufferMinutes").default(10).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
