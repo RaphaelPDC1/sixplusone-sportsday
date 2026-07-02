@@ -1,13 +1,11 @@
 /**
- * useHapticSound — haptic vibration + Web Audio API sounds
+ * useHapticSound — haptic vibration + audio sounds
  *
- * iOS Safari REQUIRES:
- *   1. AudioContext created synchronously inside a user gesture handler
- *   2. Sound played synchronously in the same call stack as the tap
+ * Uses pre-loaded HTML Audio elements with MP3 files.
+ * This is the most reliable approach for iOS Safari — Web Audio API
+ * is unreliable on iOS but HTMLAudioElement works consistently.
  *
- * Strategy: create a new AudioContext per sound call (cheap, <1ms).
- * On iOS, each new AudioContext starts in "running" state when created
- * inside a user gesture, so sounds play immediately.
+ * Sounds are preloaded on first import so they play instantly on tap.
  */
 
 export type SoundType =
@@ -17,6 +15,38 @@ export type SoundType =
   | "unlock"    // chime — captain card, roster open
   | "confirm"   // two-tone — vote YES, login success
   | "error";    // buzz — failed actions
+
+const SOUND_URLS: Record<SoundType, string> = {
+  tap:     "/manus-storage/tap_175c98ca.mp3",
+  switch:  "/manus-storage/switch_60180a83.mp3",
+  powerup: "/manus-storage/powerup_e37ec19c.mp3",
+  unlock:  "/manus-storage/unlock_4ff389c4.mp3",
+  confirm: "/manus-storage/confirm_8a7df15d.mp3",
+  error:   "/manus-storage/error_d32667d8.mp3",
+};
+
+// Pre-create Audio elements so they're ready to play instantly
+const audioElements: Partial<Record<SoundType, HTMLAudioElement>> = {};
+
+function getAudio(type: SoundType): HTMLAudioElement | null {
+  if (typeof window === "undefined") return null;
+  if (!audioElements[type]) {
+    try {
+      const el = new Audio(SOUND_URLS[type]);
+      el.preload = "auto";
+      el.volume = 0.5;
+      audioElements[type] = el;
+    } catch {
+      return null;
+    }
+  }
+  return audioElements[type] ?? null;
+}
+
+// Preload all sounds on module import
+if (typeof window !== "undefined") {
+  (Object.keys(SOUND_URLS) as SoundType[]).forEach(getAudio);
+}
 
 function vibrate(pattern: number | number[]) {
   try {
@@ -30,147 +60,25 @@ function vibrate(pattern: number | number[]) {
 
 function playSound(type: SoundType) {
   try {
-    // Create a fresh AudioContext synchronously inside the gesture handler
-    const AudioContextClass =
-      window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
-
-    const ctx = new AudioContextClass();
-
-    // iOS may still start suspended — resume synchronously
-    if (ctx.state === "suspended") {
-      ctx.resume();
-    }
-
-    const now = ctx.currentTime;
-
-    switch (type) {
-      case "tap": {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(1200, now);
-        osc.frequency.exponentialRampToValueAtTime(800, now + 0.04);
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-        osc.start(now);
-        osc.stop(now + 0.07);
-        osc.onended = () => ctx.close();
-        break;
-      }
-
-      case "switch": {
-        const bufferSize = Math.floor(ctx.sampleRate * 0.12);
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2) * 0.5;
+    const el = getAudio(type);
+    if (!el) return;
+    // Reset to start so rapid taps replay immediately
+    el.currentTime = 0;
+    const promise = el.play();
+    if (promise) {
+      promise.catch(() => {
+        // Autoplay blocked — try cloning for iOS
+        try {
+          const clone = el.cloneNode() as HTMLAudioElement;
+          clone.volume = 0.5;
+          clone.play().catch(() => {});
+        } catch {
+          // silently ignore
         }
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        const filter = ctx.createBiquadFilter();
-        filter.type = "bandpass";
-        filter.frequency.setValueAtTime(2500, now);
-        filter.frequency.exponentialRampToValueAtTime(700, now + 0.12);
-        filter.Q.value = 0.8;
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.1, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-        source.connect(filter);
-        filter.connect(gain);
-        gain.connect(ctx.destination);
-        source.start(now);
-        source.onended = () => ctx.close();
-        break;
-      }
-
-      case "powerup": {
-        // Layer 1: electric sweep
-        const osc1 = ctx.createOscillator();
-        const gain1 = ctx.createGain();
-        osc1.connect(gain1);
-        gain1.connect(ctx.destination);
-        osc1.type = "sawtooth";
-        osc1.frequency.setValueAtTime(80, now);
-        osc1.frequency.exponentialRampToValueAtTime(2400, now + 0.12);
-        gain1.gain.setValueAtTime(0.15, now);
-        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-        osc1.start(now);
-        osc1.stop(now + 0.18);
-        // Layer 2: crackle
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
-        osc2.type = "square";
-        osc2.frequency.setValueAtTime(440, now + 0.05);
-        osc2.frequency.exponentialRampToValueAtTime(1760, now + 0.15);
-        gain2.gain.setValueAtTime(0.0, now);
-        gain2.gain.setValueAtTime(0.1, now + 0.05);
-        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-        osc2.start(now);
-        osc2.stop(now + 0.2);
-        osc2.onended = () => ctx.close();
-        break;
-      }
-
-      case "unlock": {
-        const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
-        notes.forEach((freq, i) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.type = "sine";
-          osc.frequency.value = freq;
-          const t = now + i * 0.07;
-          gain.gain.setValueAtTime(0.0, t);
-          gain.gain.linearRampToValueAtTime(0.12, t + 0.02);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-          osc.start(t);
-          osc.stop(t + 0.26);
-          if (i === notes.length - 1) osc.onended = () => ctx.close();
-        });
-        break;
-      }
-
-      case "confirm": {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(440, now);
-        osc.frequency.setValueAtTime(660, now + 0.08);
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-        osc.start(now);
-        osc.stop(now + 0.23);
-        osc.onended = () => ctx.close();
-        break;
-      }
-
-      case "error": {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = "square";
-        osc.frequency.setValueAtTime(220, now);
-        osc.frequency.setValueAtTime(180, now + 0.05);
-        osc.frequency.setValueAtTime(140, now + 0.1);
-        gain.gain.setValueAtTime(0.12, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-        osc.start(now);
-        osc.stop(now + 0.19);
-        osc.onended = () => ctx.close();
-        break;
-      }
+      });
     }
   } catch {
-    // silently ignore any audio errors
+    // silently ignore
   }
 }
 
