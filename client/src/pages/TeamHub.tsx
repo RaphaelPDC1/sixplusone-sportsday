@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { MapView } from "@/components/Map";
 import { useSEO } from "@/hooks/useSEO";
+import { useHapticSound } from "@/hooks/useHapticSound";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -129,6 +130,7 @@ export default function TeamHub() {
   const [squadExpanded, setSquadExpanded] = useState(false);
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hs = useHapticSound();
 
   const { data: hub, isLoading, error: hubError, refetch } = trpc.sportsday.getTeamHub.useQuery(
     { registrationId: userId },
@@ -1339,6 +1341,7 @@ export default function TeamHub() {
                             )}
                             <button
                               onClick={() => {
+                                hs('powerup');
                                 if (!isInitiating) { setWildcardInitiating(wc.id); return; }
                                 if (wc.needsTarget && !powerUpTarget) return;
                                 initiatePowerUpMutation.mutate({
@@ -1368,11 +1371,11 @@ export default function TeamHub() {
                             <div className="text-center font-mono text-xs tracking-wider" style={{ color: tc.hex }}>✓ VOTED</div>
                           ) : (
                             <button
-                              onClick={() => powerUpMutation.mutate({
+                              onClick={() => { hs('confirm'); powerUpMutation.mutate({
                                 voterId: userId,
                                 team: hub.team as "red"|"blue"|"pink"|"orange",
                                 wildcardId: wc.id as "boost"|"sabotage"|"block"|"double_down"|"all_in",
-                              })}
+                              }); }}
                               disabled={powerUpMutation.isPending}
                               className="w-full py-2.5 font-display text-sm tracking-widest transition-all active:scale-[0.99]"
                               style={{ background: `${tc.hex}20`, color: tc.hex, border: `1px solid ${tc.hex}40` }}
@@ -1631,6 +1634,7 @@ export default function TeamHub() {
               </div>
               <button
                 onClick={() => {
+                  hs('confirm');
                   localStorage.removeItem("sd_user_id");
                   localStorage.removeItem("userEmail");
                   sessionStorage.setItem("came_from_teamhub", "1");
@@ -1648,7 +1652,7 @@ export default function TeamHub() {
         {selectedMember && (
           <div
             className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-            onClick={() => setSelectedMember(null)}
+            onClick={() => { hs('tap'); setSelectedMember(null); }}
           >
             <div
               className="bg-[#0A0A0A] border-2 rounded-lg p-8 max-w-sm w-full"

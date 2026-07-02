@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSEO } from "@/hooks/useSEO";
+import { useHapticSound } from "@/hooks/useHapticSound";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -395,13 +396,16 @@ function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
   const [error, setError] = useState("");
   const [focused, setFocused] = useState(false);
   const emailLoginMutation = trpc.sportsday.emailLogin.useMutation();
+  const hs = useHapticSound();
 
   const handleSubmit = async () => {
     const trimmed = email.trim();
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      hs('error');
       setError("Enter a valid email address.");
       return;
     }
+    hs('confirm');
     setLoading(true);
     setError("");
     try {
@@ -501,6 +505,7 @@ function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
 // ─── Main Holding Page ─────────────────────────────────────────────────────────────
 export default function Holding() {
   const [, navigate] = useLocation();
+  const hs = useHapticSound();
 
   useSEO({
     title: "Your Team Is Waiting — 6+1 Sports Day 002 Player Hub",
@@ -945,7 +950,7 @@ export default function Holding() {
               </div>
               {/* Main unlock CTA */}
               <button
-                onClick={handleStartUnlock}
+                onClick={() => { hs('powerup'); handleStartUnlock(); }}
                 disabled={createPaymentIntent.isPending}
                 className="w-full bg-[#FF5500] text-[#0A0A0A] font-display tracking-widest py-5 hover:bg-[#F2F0EB] transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ fontSize: "clamp(1.1rem, 5vw, 1.4rem)" }}
@@ -962,6 +967,7 @@ export default function Holding() {
               <div className="flex justify-center pt-2">
                 <button
                   onClick={() => {
+                    hs('tap');
                     localStorage.removeItem("sd_user_id");
                     localStorage.removeItem("userEmail");
                     sessionStorage.removeItem("holding_splash_seen");
@@ -978,7 +984,7 @@ export default function Holding() {
           {/* ── Unlocked: See your team CTA ── */}
           {unlockStep === "idle" && isUnlocked && (
             <button
-              onClick={() => navigate("/team-hub")}
+              onClick={() => { hs('unlock'); navigate("/team-hub"); }}
               className="w-full border border-[#F2F0EB]/20 text-[#F2F0EB] font-display tracking-widest py-5 hover:bg-white/5 transition-all active:scale-[0.98]"
               style={{ fontSize: "clamp(1.1rem, 5vw, 1.4rem)" }}
             >
