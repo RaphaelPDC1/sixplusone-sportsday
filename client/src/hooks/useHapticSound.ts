@@ -1,22 +1,23 @@
 /**
- * useHapticSound — haptic vibration + audio sounds
+ * useHapticSound
  *
- * Uses pre-loaded HTML Audio elements with MP3 files.
- * This is the most reliable approach for iOS Safari — Web Audio API
- * is unreliable on iOS but HTMLAudioElement works consistently.
+ * iOS Safari rule: audio.play() MUST be called synchronously and directly
+ * inside a user gesture handler (touchstart/touchend/click).
+ * Any function call wrapping breaks the gesture chain on iOS.
  *
- * Sounds are preloaded on first import so they play instantly on tap.
+ * Solution: return a play() function that creates a fresh Audio element
+ * and calls .play() immediately — no async, no wrapper functions.
  */
 
 export type SoundType =
-  | "tap"       // soft click — nav tabs, standard buttons
-  | "switch"    // whoosh — tab switch
-  | "powerup"   // electric zap — power up initiate
-  | "unlock"    // chime — captain card, roster open
-  | "confirm"   // two-tone — vote YES, login success
-  | "error";    // buzz — failed actions
+  | "tap"
+  | "switch"
+  | "powerup"
+  | "unlock"
+  | "confirm"
+  | "error";
 
-const SOUND_URLS: Record<SoundType, string> = {
+const URLS: Record<SoundType, string> = {
   tap:     "/manus-storage/tap_175c98ca.mp3",
   switch:  "/manus-storage/switch_60180a83.mp3",
   powerup: "/manus-storage/powerup_e37ec19c.mp3",
@@ -25,64 +26,7 @@ const SOUND_URLS: Record<SoundType, string> = {
   error:   "/manus-storage/error_d32667d8.mp3",
 };
 
-// Pre-create Audio elements so they're ready to play instantly
-const audioElements: Partial<Record<SoundType, HTMLAudioElement>> = {};
-
-function getAudio(type: SoundType): HTMLAudioElement | null {
-  if (typeof window === "undefined") return null;
-  if (!audioElements[type]) {
-    try {
-      const el = new Audio(SOUND_URLS[type]);
-      el.preload = "auto";
-      el.volume = 0.5;
-      audioElements[type] = el;
-    } catch {
-      return null;
-    }
-  }
-  return audioElements[type] ?? null;
-}
-
-// Preload all sounds on module import
-if (typeof window !== "undefined") {
-  (Object.keys(SOUND_URLS) as SoundType[]).forEach(getAudio);
-}
-
-function vibrate(pattern: number | number[]) {
-  try {
-    if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate(pattern);
-    }
-  } catch {
-    // silently ignore — iOS blocks vibration
-  }
-}
-
-function playSound(type: SoundType) {
-  try {
-    const el = getAudio(type);
-    if (!el) return;
-    // Reset to start so rapid taps replay immediately
-    el.currentTime = 0;
-    const promise = el.play();
-    if (promise) {
-      promise.catch(() => {
-        // Autoplay blocked — try cloning for iOS
-        try {
-          const clone = el.cloneNode() as HTMLAudioElement;
-          clone.volume = 0.5;
-          clone.play().catch(() => {});
-        } catch {
-          // silently ignore
-        }
-      });
-    }
-  } catch {
-    // silently ignore
-  }
-}
-
-const VIBRATION_MAP: Record<SoundType, number | number[]> = {
+const VIBRATION: Record<SoundType, number | number[]> = {
   tap:     10,
   switch:  10,
   powerup: [30, 20, 30],
@@ -92,8 +36,20 @@ const VIBRATION_MAP: Record<SoundType, number | number[]> = {
 };
 
 export function useHapticSound() {
-  return (type: SoundType) => {
-    vibrate(VIBRATION_MAP[type]);
-    playSound(type);
+  return function play(type: SoundType) {
+    // Vibrate (Android only — iOS blocks this)
+    try {
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(VIBRATION[type]);
+      }
+    } catch { /* ignore */ }
+
+    // Play sound — create fresh Audio each time so rapid taps work
+    // This must stay synchronous and direct for iOS Safari
+    try {
+      const a = new Audio(URLS[type]);
+      a.volume = 1.0;
+      a.play().catch(() => { /* autoplay blocked — user hasn't interacted yet */ });
+    } catch { /* ignore */ }
   };
 }
