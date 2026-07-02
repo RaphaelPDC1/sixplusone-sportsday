@@ -129,20 +129,21 @@ export default function Home() {
           <span className="font-mono text-[#FF5500] text-xs tracking-[0.3em]">
             SPORTS DAY 002
           </span>
-          <button
-            onClick={() => navigate("/holding")}
-            title="Already registered? Log in"
-            className="flex items-center gap-2 bg-[#FF5500] hover:bg-[#ff6a1a] active:scale-95 text-white font-mono text-xs tracking-widest uppercase px-4 py-2 rounded font-bold transition-all"
-            style={{ boxShadow: '0 0 18px rgba(255,85,0,0.55), 0 0 6px rgba(255,85,0,0.3)', animation: 'loginPulse 2.5s ease-in-out infinite' }}
-            aria-label="Returning player login"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-              <polyline points="10 17 15 12 10 7" />
-              <line x1="15" y1="12" x2="3" y2="12" />
-            </svg>
-            ALREADY IN? →
-          </button>
+          {!closed && (
+            <button
+              onClick={() => navigate("/holding")}
+              title="Already registered? Log in"
+              className="flex items-center gap-2 bg-transparent border border-[#FF5500] hover:bg-[#FF5500]/10 active:scale-95 text-[#FF5500] font-mono text-xs tracking-widest uppercase px-4 py-2 rounded font-bold transition-all"
+              aria-label="Returning player login"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+              </svg>
+              ALREADY IN? →
+            </button>
+          )}
         </div>
       </nav>
 
@@ -168,7 +169,11 @@ export default function Home() {
             }
           : {
               primary: {
-                text: "ALREADY IN? LOG IN →",
+                text: "REGISTER NOW →",
+                onClick: () => navigate("/enter"),
+              },
+              secondary: {
+                text: "ALREADY IN? →",
                 onClick: () => navigate("/holding"),
               },
             }

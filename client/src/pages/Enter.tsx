@@ -56,25 +56,39 @@ const STEP_PALETTES: string[][] = [
   ["hsl(0,0%,3%)","hsl(20,60%,8%)","hsl(0,0%,5%)","hsl(20,50%,6%)"],
 ];
 
+// Registration closes at 3pm BST on 2 July 2026 (14:00 UTC)
+const REGISTRATION_CLOSE_TIME = new Date("2026-07-02T14:00:00Z");
+
 export default function Enter() {
+  const registrationClosed = Date.now() >= REGISTRATION_CLOSE_TIME.getTime();
+
   useSEO({
-    title: "Registration Closed — 6+1 Sports Day 002",
-    description: "Registration for Sports Day 002 is now closed. Already registered? Log in to access your team hub.",
-    keywords: "sports day 002, 6+1 event, Sheffield, July 2026",
+    title: registrationClosed
+      ? "Registration Closed — 6+1 Sports Day 002"
+      : "Register for 6+1 Sports Day 002 — Team Building Event July 2026",
+    description: registrationClosed
+      ? "Registration for Sports Day 002 is now closed. Already registered? Log in to access your team hub."
+      : "Sign up for 6+1 Sports Day 002 on 11 July 2026 in Sheffield. Answer your profile questions, get assigned to a team, and unlock your reveal.",
+    keywords: "register sports day, 6+1 event registration, team building Sheffield, July 2026 event, sports day signup",
   });
 
   const [, navigate] = useLocation();
 
-  // ── REGISTRATION CLOSED — redirect all visitors to holding ──────────────
+  // Redirect to holding if registration is closed
   useEffect(() => {
-    navigate("/holding");
-  }, [navigate]);
+    if (registrationClosed) {
+      navigate("/holding");
+    }
+  }, [registrationClosed, navigate]);
 
-  return (
-    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-      <p className="font-mono text-white/30 text-sm tracking-widest">REGISTRATION CLOSED</p>
-    </div>
-  );
+  // Show closed message briefly while redirecting
+  if (registrationClosed) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <p className="font-mono text-white/30 text-sm tracking-widest">REGISTRATION CLOSED</p>
+      </div>
+    );
+  }
   const [showSplash, setShowSplash] = useState(
     () => sessionStorage.getItem("enter_splash_seen") !== "true"
   );
