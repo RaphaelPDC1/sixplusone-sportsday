@@ -12,6 +12,8 @@ import { HeroWave } from "@/components/ui/hero-wave";
 import { TeamLiveFeatures } from "@/components/ui/team-live-features";
 import { resetRevealJourneyForReplay } from "@/lib/revealJourney";
 import { TeamFairnessBot } from "@/components/TeamFairnessBot";
+import { useTips, TIPS } from "@/hooks/useTips";
+import { TipCard } from "@/components/TipCard";
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -132,6 +134,7 @@ export default function TeamHub() {
   const [dnaExpanded, setDnaExpanded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hs = useHapticSound();
+  const { isSeen, dismiss, dismissAll, hasAnyVisible } = useTips();
 
   const { data: hub, isLoading, error: hubError, refetch } = trpc.sportsday.getTeamHub.useQuery(
     { registrationId: userId },
@@ -502,6 +505,18 @@ export default function TeamHub() {
           )}
         </div>
 
+        {/* ── Tip: share-reveal (shown above tab bar, visible on first visit) ── */}
+        {!isSeen("share-reveal") && (
+          <div className="px-5 pb-3">
+            <TipCard
+              tip={TIPS.find((t) => t.id === "share-reveal")!}
+              onDismiss={(id) => { hs("tap"); dismiss(id); }}
+              onDismissAll={() => { hs("tap"); dismissAll(); }}
+              showDismissAll={false}
+              accentColor={tc.hex}
+            />
+          </div>
+        )}
         {/* Tab bar */}
         <div className="flex border-t border-white/10 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {TABS.map((tab) => (
@@ -531,10 +546,28 @@ export default function TeamHub() {
       <div className="relative z-10 px-5 py-6 max-w-2xl mx-auto">
 
         {/* ─── TEAM TAB ─── */}
-        {activeTab === "team" && (
+                {activeTab === "team" && (
           <div className="space-y-4">
+            {/* ── Tips: team-hub-intro + team-shirt ── */}
+            {!isSeen("team-hub-intro") && (
+              <TipCard
+                tip={TIPS.find((t) => t.id === "team-hub-intro")!}
+                onDismiss={(id) => { hs("tap"); dismiss(id); }}
+                onDismissAll={() => { hs("tap"); dismissAll(); }}
+                showDismissAll={hasAnyVisible}
+                accentColor={tc.hex}
+              />
+            )}
+            {!isSeen("team-shirt") && (
+              <TipCard
+                tip={TIPS.find((t) => t.id === "team-shirt")!}
+                onDismiss={(id) => { hs("tap"); dismiss(id); }}
+                onDismissAll={() => { hs("tap"); dismissAll(); }}
+                showDismissAll={false}
+                accentColor={tc.hex}
+              />
+            )}
             <SectionHeader label="YOUR SQUAD" />
-            
             {/* Team Co-Captains */}
             {(() => {
               const teamKey = hub.team ?? "red";
@@ -1178,8 +1211,26 @@ export default function TeamHub() {
               )}
             </div>
 
-            <SectionHeader label="THE EVENTS" />
-
+                        <SectionHeader label="THE EVENTS" />
+            {/* ── Tips: events + ai-intel ── */}
+            {!isSeen("events") && (
+              <TipCard
+                tip={TIPS.find((t) => t.id === "events")!}
+                onDismiss={(id) => { hs("tap"); dismiss(id); }}
+                onDismissAll={() => { hs("tap"); dismissAll(); }}
+                showDismissAll={false}
+                accentColor={tc.hex}
+              />
+            )}
+            {!isSeen("ai-intel") && (
+              <TipCard
+                tip={TIPS.find((t) => t.id === "ai-intel")!}
+                onDismiss={(id) => { hs("tap"); dismiss(id); }}
+                onDismissAll={() => { hs("tap"); dismissAll(); }}
+                showDismissAll={false}
+                accentColor={tc.hex}
+              />
+            )}
             {/* ─── TIMELINE ─── */}
             <div className="relative">
               {/* Vertical spine */}
@@ -1460,6 +1511,25 @@ export default function TeamHub() {
         {activeTab === "leaderboard" && (
           <div className="space-y-4">
             <SectionHeader label="TEAM STANDINGS" />
+            {/* ── Tips: leaderboard + leaderboard-live ── */}
+            {!isSeen("leaderboard") && (
+              <TipCard
+                tip={TIPS.find((t) => t.id === "leaderboard")!}
+                onDismiss={(id) => { hs("tap"); dismiss(id); }}
+                onDismissAll={() => { hs("tap"); dismissAll(); }}
+                showDismissAll={false}
+                accentColor={tc.hex}
+              />
+            )}
+            {!isSeen("leaderboard-live") && (
+              <TipCard
+                tip={TIPS.find((t) => t.id === "leaderboard-live")!}
+                onDismiss={(id) => { hs("tap"); dismiss(id); }}
+                onDismissAll={() => { hs("tap"); dismissAll(); }}
+                showDismissAll={false}
+                accentColor={tc.hex}
+              />
+            )}
             {sortedTeams.length === 0 ? (
               <p className="font-mono text-white/30 text-xs tracking-wider">
               No results yet. Check back on the day.
@@ -1584,6 +1654,25 @@ export default function TeamHub() {
         {activeTab === "power-ups" && (
           <div className="space-y-4">
             <SectionHeader label="POWER UPS" />
+            {/* ── Tips: power-ups + power-up-voting ── */}
+            {!isSeen("power-ups") && (
+              <TipCard
+                tip={TIPS.find((t) => t.id === "power-ups")!}
+                onDismiss={(id) => { hs("tap"); dismiss(id); }}
+                onDismissAll={() => { hs("tap"); dismissAll(); }}
+                showDismissAll={false}
+                accentColor={tc.hex}
+              />
+            )}
+            {!isSeen("power-up-voting") && (
+              <TipCard
+                tip={TIPS.find((t) => t.id === "power-up-voting")!}
+                onDismiss={(id) => { hs("tap"); dismiss(id); }}
+                onDismissAll={() => { hs("tap"); dismissAll(); }}
+                showDismissAll={false}
+                accentColor={tc.hex}
+              />
+            )}
             {/* Day-of banner — visible but not blocking */}
             {!votingEnabled && (
               <div
@@ -1888,6 +1977,16 @@ export default function TeamHub() {
         {activeTab === "location" && (
           <div className="space-y-4">
             <SectionHeader label="THE VENUE" />
+            {/* ── Tip: location ── */}
+            {!isSeen("location") && (
+              <TipCard
+                tip={TIPS.find((t) => t.id === "location")!}
+                onDismiss={(id) => { hs("tap"); dismiss(id); }}
+                onDismissAll={() => { hs("tap"); dismissAll(); }}
+                showDismissAll={false}
+                accentColor={tc.hex}
+              />
+            )}
             <div
               className="p-6 border"
               style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
