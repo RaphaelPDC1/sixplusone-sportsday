@@ -762,12 +762,9 @@ export default function TeamHub() {
             })()}
 
             {(() => {
-              // Captains use rosterData (all members incl. locked); regular members use hub.members (unlocked only)
-              const displayMembers = rosterData
-                ? rosterData.members.map((m) => ({ ...m, isLocked: m.isLocked }))
-                : hub.members.map((m) => ({ ...m, isLocked: false }));
-              const totalCount = rosterData ? rosterData.totalMembers : hub.members.length;
-              const unlockedCount = rosterData ? rosterData.unlockedCount : hub.members.length;
+              // All users see the same team view
+              const displayMembers = hub.members.map((m) => ({ ...m, isLocked: false }));
+              const totalCount = hub.members.length;
 
               if (displayMembers.length === 0) return (
                 <p className="font-mono text-white/30 text-sm text-center py-8">
@@ -783,7 +780,7 @@ export default function TeamHub() {
                     className="w-full flex items-center justify-between py-3 px-4 border border-white/10 bg-white/[0.02] transition-all hover:border-white/20 mt-2"
                   >
                     <span className="font-mono text-xs tracking-[0.25em] text-white/50">
-                      {rosterData ? `${unlockedCount}/${totalCount} UNLOCKED` : `${totalCount} TEAMMATES`}
+                      {totalCount} TEAMMATES
                     </span>
                     <span className="font-mono text-xs tracking-widest" style={{ color: tc.hex }}>
                       {squadExpanded ? "COLLAPSE ▲" : "VIEW SQUAD ▼"}
