@@ -288,6 +288,11 @@ const sportsDayRouter = router({
     .query(async ({ input }) => {
       const reg = await getRegistrationById(input.id);
       if (!reg) throw new TRPCError({ code: "NOT_FOUND" });
+      // Check if PUBLIC_REVEAL is active so free users can see their team on July 11th
+      const { buildSportsDayDashboard } = await import("./sportsday.dashboard");
+      const dashboard = await buildSportsDayDashboard(input.id);
+      const isPublicReveal = dashboard?.state === "PUBLIC_REVEAL";
+      const isUnlocked = reg.revealStatus === "unlocked" || isPublicReveal;
       return {
         id: reg.id,
         fullName: reg.fullName,
@@ -295,7 +300,7 @@ const sportsDayRouter = router({
         revealStatus: reg.revealStatus,
         paymentStatus: reg.paymentStatus,
         accessType: reg.accessType,
-        team: reg.revealStatus === "unlocked" ? reg.team : null,
+        team: isUnlocked ? reg.team : null,
         sportsDayProfile: reg.sportsDayProfile,
         profileTagline: reg.profileTagline,
         referralCode: reg.referralCode,
@@ -303,7 +308,7 @@ const sportsDayRouter = router({
         referralRewardUnlocked: reg.referralRewardUnlocked,
         groupCode: reg.groupCode,
         groupRole: reg.groupRole,
-        aiTeamIdentity: reg.revealStatus === "unlocked" ? reg.aiTeamIdentity : null,
+        aiTeamIdentity: isUnlocked ? reg.aiTeamIdentity : null,
         revealSeen: reg.revealSeen ?? false,
       };
     }),
