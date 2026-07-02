@@ -514,6 +514,7 @@ export default function TeamHub() {
               onDismissAll={() => { hs("tap"); dismissAll(); }}
               showDismissAll={false}
               accentColor={tc.hex}
+              arrowDir="none"
             />
           </div>
         )}
@@ -556,6 +557,7 @@ export default function TeamHub() {
                 onDismissAll={() => { hs("tap"); dismissAll(); }}
                 showDismissAll={hasAnyVisible}
                 accentColor={tc.hex}
+                arrowDir="down"
               />
             )}
             {!isSeen("team-shirt") && (
@@ -565,6 +567,7 @@ export default function TeamHub() {
                 onDismissAll={() => { hs("tap"); dismissAll(); }}
                 showDismissAll={false}
                 accentColor={tc.hex}
+                arrowDir="down"
               />
             )}
             <SectionHeader label="YOUR SQUAD" />
@@ -1220,6 +1223,7 @@ export default function TeamHub() {
                 onDismissAll={() => { hs("tap"); dismissAll(); }}
                 showDismissAll={false}
                 accentColor={tc.hex}
+                arrowDir="down"
               />
             )}
             {!isSeen("ai-intel") && (
@@ -1229,6 +1233,7 @@ export default function TeamHub() {
                 onDismissAll={() => { hs("tap"); dismissAll(); }}
                 showDismissAll={false}
                 accentColor={tc.hex}
+                arrowDir="down"
               />
             )}
             {/* ─── TIMELINE ─── */}
@@ -1519,6 +1524,7 @@ export default function TeamHub() {
                 onDismissAll={() => { hs("tap"); dismissAll(); }}
                 showDismissAll={false}
                 accentColor={tc.hex}
+                arrowDir="down"
               />
             )}
             {!isSeen("leaderboard-live") && (
@@ -1528,6 +1534,7 @@ export default function TeamHub() {
                 onDismissAll={() => { hs("tap"); dismissAll(); }}
                 showDismissAll={false}
                 accentColor={tc.hex}
+                arrowDir="down"
               />
             )}
             {sortedTeams.length === 0 ? (
@@ -1662,6 +1669,7 @@ export default function TeamHub() {
                 onDismissAll={() => { hs("tap"); dismissAll(); }}
                 showDismissAll={false}
                 accentColor={tc.hex}
+                arrowDir="down"
               />
             )}
             {!isSeen("power-up-voting") && (
@@ -1671,6 +1679,7 @@ export default function TeamHub() {
                 onDismissAll={() => { hs("tap"); dismissAll(); }}
                 showDismissAll={false}
                 accentColor={tc.hex}
+                arrowDir="down"
               />
             )}
             {/* Day-of banner — visible but not blocking */}
@@ -1985,6 +1994,7 @@ export default function TeamHub() {
                 onDismissAll={() => { hs("tap"); dismissAll(); }}
                 showDismissAll={false}
                 accentColor={tc.hex}
+                arrowDir="down"
               />
             )}
             <div
