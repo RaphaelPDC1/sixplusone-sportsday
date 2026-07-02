@@ -14,7 +14,7 @@ const TEAM_COLORS: Record<string, string> = {
 };
 
 const POWER_UP_LABELS: Record<string, string> = {
-  steal: "👤 STEAL",
+  boost: "⚡ BOOST",
   sabotage: "💣 SABOTAGE",
   block: "🛡️ BLOCK",
   double_down: "×2 DOUBLE DOWN",

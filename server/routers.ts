@@ -1382,7 +1382,7 @@ Return ONLY valid JSON with this exact shape:
     .input(z.object({
       registrationId: z.string(),
       team: z.enum(["red","blue","pink","orange"]),
-      wildcardId: z.enum(["steal","sabotage","block","double_down","all_in"]),
+      wildcardId: z.enum(["boost","sabotage","block","double_down","all_in"]),
       targetTeam: z.enum(["red","blue","pink","orange"]).optional(),
     }))
     .mutation(async ({ input, ctx }) => {

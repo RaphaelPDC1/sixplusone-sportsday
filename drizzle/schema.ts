@@ -203,7 +203,7 @@ export const powerUpVotes = mysqlTable("power_up_votes", {
   id: int("id").autoincrement().primaryKey(),
   voterId: varchar("voterId", { length: 36 }).notNull(),
   team: mysqlEnum("team", ["red", "blue", "pink", "orange"]).notNull(),
-  powerUpId: varchar("powerUpId", { length: 50 }).notNull(), // e.g. "double_points", "steal_a_player", "bonus_round"
+  powerUpId: varchar("powerUpId", { length: 50 }).notNull(), // e.g. "boost", "sabotage", "double_down", "all_in"
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (t) => ({
   // One vote per voter per wildcard
@@ -349,12 +349,12 @@ export type InsertSdPointsLog = typeof sdPointsLog.$inferInsert;
 // Power up activations — one per team per event (mostly)
 export const sdPowerUps = mysqlTable("sd_power_ups", {
   id: int("id").autoincrement().primaryKey(),
-  type: mysqlEnum("type", ["steal", "sabotage", "block", "double_down", "all_in"]).notNull(),
+  type: mysqlEnum("type", ["boost", "sabotage", "block", "double_down", "all_in"]).notNull(),
   ownerTeam: mysqlEnum("ownerTeam", ["red", "blue", "pink", "orange"]).notNull(),
   eventId: int("eventId").notNull(),
   status: mysqlEnum("status", ["pending", "active", "resolved", "blocked", "failed"]).notNull().default("pending"),
-  targetTeam: mysqlEnum("targetTeam", ["red", "blue", "pink", "orange"]), // for steal/sabotage
-  targetPlayerId: int("targetPlayerId"),                                  // for steal (player being stolen)
+  targetTeam: mysqlEnum("targetTeam", ["red", "blue", "pink", "orange"]), // for sabotage/block
+  targetPlayerId: int("targetPlayerId"),                                  // reserved for future use
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   resolvedAt: timestamp("resolvedAt"),                                    // when vote closed or activation resolved
 });

@@ -1,6 +1,6 @@
 /**
  * Power Up system backend
- * Vote engine, Steal/Block logic, vote weight calculation, card tracking
+ * Vote engine, Boost/Sabotage/Block logic, vote weight calculation, card tracking
  */
 import { z } from "zod";
 import { and, eq, desc } from "drizzle-orm";
@@ -48,7 +48,7 @@ export const wildcardsRouter = router({
       z.object({
         teamName: z.enum(["red", "blue", "pink", "orange"]),
         eventId: z.number().int(),
-        wildcardType: z.enum(["steal", "sabotage", "double_down", "all_in"]),
+        wildcardType: z.enum(["boost", "sabotage", "double_down", "all_in"]),
         targetTeam: z.enum(["red", "blue", "pink", "orange"]).optional(),
         targetPlayerId: z.number().int().optional(),
       })

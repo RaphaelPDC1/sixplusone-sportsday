@@ -88,7 +88,7 @@ const EVENTS = [
 ];
 
 const POWER_UPS = [
-  { id: "steal",       name: "STEAL",        short: "Borrow a player from another team for one event.",    desc: "Borrow a player from another team for one event.",    icon: "👤", captainOnly: true, needsTarget: true },
+  { id: "boost",       name: "BOOST",        short: "Add +3 points to your next event score.",    desc: "Add +3 points to your next event score. No target needed — captain initiates and team votes YES to confirm.",    icon: "⚡", captainOnly: true, needsTarget: false },
   { id: "sabotage",    name: "SABOTAGE",     short: "Deduct 5 points from a rival team.",     desc: "Choose a rival team. If your team votes YES and the Power Up activates, that team loses 5 points.",     icon: "💣", captainOnly: true, needsTarget: true },
   { id: "block",       name: "BLOCK",        short: "Cancel a power up that another team just played.",     desc: "Cancel a power up that another team just played.",     icon: "🛡️", captainOnly: true, needsTarget: true },
   { id: "double_down", name: "DOUBLE DOWN",  short: "Double your points for the next event.",              desc: "Double your points for the next event.",              icon: "×2", captainOnly: true, needsTarget: false },
@@ -1344,7 +1344,7 @@ export default function TeamHub() {
                                 initiatePowerUpMutation.mutate({
                                   registrationId: userId,
                                   team: hub.team as "red"|"blue"|"pink"|"orange",
-                                  wildcardId: wc.id as "steal"|"sabotage"|"block"|"double_down"|"all_in",
+                                  wildcardId: wc.id as "boost"|"sabotage"|"block"|"double_down"|"all_in",
                                   targetTeam: powerUpTarget as "red"|"blue"|"pink"|"orange" | undefined,
                                 });
                               }}
@@ -1371,7 +1371,7 @@ export default function TeamHub() {
                               onClick={() => powerUpMutation.mutate({
                                 voterId: userId,
                                 team: hub.team as "red"|"blue"|"pink"|"orange",
-                                wildcardId: wc.id as "steal"|"sabotage"|"block"|"double_down"|"all_in",
+                                wildcardId: wc.id as "boost"|"sabotage"|"block"|"double_down"|"all_in",
                               })}
                               disabled={powerUpMutation.isPending}
                               className="w-full py-2.5 font-display text-sm tracking-widest transition-all active:scale-[0.99]"

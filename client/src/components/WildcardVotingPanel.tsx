@@ -1,6 +1,6 @@
 /**
  * Wildcard Voting Panel
- * Displays available wildcards, vote interface, and Steal/Block response window
+ * Displays available wildcards, vote interface, and Boost/Sabotage/Block response window
  */
 import React, { useState } from "react";
 import { trpc } from "@/lib/trpc";
@@ -15,7 +15,7 @@ interface WildcardVotingPanelProps {
 }
 
 export function WildcardVotingPanel({ teamName, eventId }: WildcardVotingPanelProps) {
-  const [selectedWildcard, setSelectedWildcard] = useState<"steal" | "sabotage" | "double_down" | "all_in" | null>(null);
+  const [selectedWildcard, setSelectedWildcard] = useState<"boost" | "sabotage" | "double_down" | "all_in" | null>(null);
   const [targetTeam, setTargetTeam] = useState<"red" | "blue" | "pink" | "orange" | null>(null);
   const [voting, setVoting] = useState(false);
 
@@ -45,9 +45,9 @@ export function WildcardVotingPanel({ teamName, eventId }: WildcardVotingPanelPr
   const otherTeams = teams.filter((t) => t !== teamName);
 
   const wildcardDescriptions: Record<string, { title: string; description: string; icon: React.ReactNode }> = {
-    steal: {
-      title: "🎯 Steal",
-      description: "Vote to steal a player from another team for this event.",
+    boost: {
+      title: "⚡ Boost",
+      description: "Vote to add +3 points to your next event score.",
       icon: <Zap className="w-5 h-5" />,
     },
     sabotage: {
@@ -103,7 +103,7 @@ export function WildcardVotingPanel({ teamName, eventId }: WildcardVotingPanelPr
 
           {/* Wildcard Options */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {(["steal", "sabotage", "double_down", "all_in"] as const).map((type) => {
+            {(["boost", "sabotage", "double_down", "all_in"] as const).map((type) => {
               const desc = wildcardDescriptions[type];
               return (
                 <button
@@ -127,8 +127,8 @@ export function WildcardVotingPanel({ teamName, eventId }: WildcardVotingPanelPr
             })}
           </div>
 
-          {/* Target Team Selection (for Steal/Sabotage) */}
-          {selectedWildcard && ["steal", "sabotage"].includes(selectedWildcard) && (
+          {/* Target Team Selection (for Sabotage) */}
+          {selectedWildcard && ["sabotage"].includes(selectedWildcard) && (
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-900">Target Team</label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -161,7 +161,7 @@ export function WildcardVotingPanel({ teamName, eventId }: WildcardVotingPanelPr
                 });
               }
             }}
-            disabled={!selectedWildcard || (["steal", "sabotage"].includes(selectedWildcard) && !targetTeam) || openVote.isPending}
+            disabled={!selectedWildcard || (["sabotage"].includes(selectedWildcard) && !targetTeam) || openVote.isPending}
             className="w-full bg-purple-600 hover:bg-purple-700 text-white"
           >
             {openVote.isPending ? "Opening vote..." : "Open Vote"}

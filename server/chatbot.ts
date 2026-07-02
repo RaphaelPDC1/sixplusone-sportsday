@@ -61,9 +61,9 @@ ${eventList || "(Loading...)"}
 
 ## WILDCARDS
 Each team gets **3 wildcard activations** per event. Types:
-- **Steal** — Vote to borrow one player from a rival team for one event
+- **Boost** — Vote to add +3 points to your team's next event score
 - **Sabotage** — Vote to deduct 5 points from a rival team's total
-- **Block** — Instantly counter an incoming Steal
+- **Block** — Instantly cancel a Power Up that another team just played
 - **Double Down** — Double your team's points for one event
 - **All In** — Triple points if you place, zero if you don't
 
