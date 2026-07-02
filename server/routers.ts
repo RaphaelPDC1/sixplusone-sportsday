@@ -712,12 +712,8 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
             attendedBefore: sportsDayRegistrations.attendedBefore,
           })
           .from(sportsDayRegistrations)
-          .where(
-            and(
-              eq(sportsDayRegistrations.team, team as "red" | "blue" | "pink" | "orange"),
-              eq(sportsDayRegistrations.revealStatus, "unlocked") // Only paid/unlocked users before Sports Day
-            )
-          );
+          .where(eq(sportsDayRegistrations.team, team as "red" | "blue" | "pink" | "orange")) // Return all team members; UI filters by revealStatus
+          ;
       const members = await memberQuery;
       // Profile photos
       const photos = await db.select().from(profilePhotos);
