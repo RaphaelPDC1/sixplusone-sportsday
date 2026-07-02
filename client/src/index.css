@@ -220,3 +220,16 @@
   0%, 100% { box-shadow: 0 0 18px rgba(255,85,0,0.55), 0 0 6px rgba(255,85,0,0.3); }
   50% { box-shadow: 0 0 32px rgba(255,85,0,0.85), 0 0 12px rgba(255,85,0,0.5); }
 }
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

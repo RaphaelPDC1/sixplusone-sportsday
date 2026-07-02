@@ -423,9 +423,17 @@ export default function TeamHub() {
                 TEAM {(hub.team ?? "red").toUpperCase()}
               </div>
               {myMember?.profileTagline && (
-                <p className="font-mono text-white/30 text-[10px] tracking-wider mt-1 truncate italic">
-                  "{myMember.profileTagline}"
-                </p>
+                <div className="mt-1 overflow-hidden w-full" style={{ maxWidth: '100%' }}>
+                  <div
+                    className="font-mono text-white/30 text-[10px] tracking-wider italic whitespace-nowrap"
+                    style={{
+                      display: 'inline-block',
+                      animation: 'marqueeScroll 18s linear infinite',
+                    }}
+                  >
+                    “{myMember.profileTagline}” &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; “{myMember.profileTagline}”
+                  </div>
+                </div>
               )}
               <p className="font-mono text-white/20 text-[10px] mt-1">
                 {hub.totalMembers} MEMBERS
@@ -464,20 +472,25 @@ export default function TeamHub() {
         </div>
 
         {/* Tab bar */}
-        <div className="flex border-t border-white/10 overflow-x-auto">
+        <div className="flex border-t border-white/10 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 py-3 px-2 font-mono text-[10px] tracking-widest transition-all ${
+              className={`flex-shrink-0 flex flex-col items-center gap-0.5 py-3 font-mono text-[10px] tracking-widest transition-all ${
                 activeTab === tab.id
                   ? "text-[#F2F0EB]"
                   : "text-white/30 hover:text-white/50"
               }`}
-              style={activeTab === tab.id ? { borderBottom: `2px solid ${tc.hex}` } : {}}
+              style={{
+                minWidth: '60px',
+                paddingLeft: '10px',
+                paddingRight: '10px',
+                ...(activeTab === tab.id ? { borderBottom: `2px solid ${tc.hex}` } : {})
+              }}
             >
               <span className="text-base">{tab.icon}</span>
-              <span>{tab.label}</span>
+              <span className="text-center leading-tight">{tab.label}</span>
             </button>
           ))}
         </div>

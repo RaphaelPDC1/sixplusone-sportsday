@@ -1,11 +1,32 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import AnimatedShaderHero from "@/components/ui/animated-shader-hero";
 import { ShootingStarCanvas } from "@/components/ui/shooting-star-canvas";
-import { AdPopup } from "@/components/AdPopup";
-
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
+
+// Registration closes at 3pm BST on 2 July 2026
+// BST = UTC+1, so 3pm BST = 14:00 UTC
+const CLOSE_TIME = new Date("2026-07-02T14:00:00Z");
+
+function useCountdown(target: Date) {
+  const [timeLeft, setTimeLeft] = useState(() => Math.max(0, target.getTime() - Date.now()));
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+    const id = setInterval(() => {
+      const remaining = Math.max(0, target.getTime() - Date.now());
+      setTimeLeft(remaining);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [target, timeLeft]);
+
+  const closed = timeLeft <= 0;
+  const hours = Math.floor(timeLeft / 3600000);
+  const minutes = Math.floor((timeLeft % 3600000) / 60000);
+  const seconds = Math.floor((timeLeft % 60000) / 1000);
+  return { closed, hours, minutes, seconds, timeLeft };
+}
 
 function InfoBlock({ number, title, body }: { number: string; title: string; body: string }) {
   return (
@@ -19,30 +40,25 @@ function InfoBlock({ number, title, body }: { number: string; title: string; bod
 
 export default function Home() {
   const [, navigate] = useLocation();
+  const { closed, hours, minutes, seconds } = useCountdown(CLOSE_TIME);
 
-  // Set SEO title and meta description + fire Meta Pixel ViewContent
+  // SEO + Meta Pixel
   useEffect(() => {
-    document.title = "Sports Day 002 | 6+1 Team Building Event July 2026";
-    
-    // Set meta description
+    document.title = closed
+      ? "Sports Day 002 | 6+1 — Registration Closed"
+      : "Sports Day 002 | 6+1 — Registration Closes Today at 3pm";
+
     let metaDescription = document.querySelector('meta[name="description"]');
     if (!metaDescription) {
       metaDescription = document.createElement('meta');
       metaDescription.setAttribute('name', 'description');
       document.head.appendChild(metaDescription);
     }
-    metaDescription.setAttribute('content', 'Sports Day 002 — July 11th 2026, Sheffield. Registration is now closed. Already registered? Log in to access your team hub.');
-    
-    // Set keywords
-    let metaKeywords = document.querySelector('meta[name="keywords"]');
-    if (!metaKeywords) {
-      metaKeywords = document.createElement('meta');
-      metaKeywords.setAttribute('name', 'keywords');
-      document.head.appendChild(metaKeywords);
-    }
-    metaKeywords.setAttribute('content', 'sports day, team building, 6+1, Sheffield, July 2026, event, team competition');
-    
-    // Fire Meta Pixel ViewContent event
+    metaDescription.setAttribute('content', closed
+      ? 'Sports Day 002 — July 11th 2026, Sheffield. Registration is now closed. Already registered? Log in to access your team hub.'
+      : 'Sports Day 002 — July 11th 2026, Sheffield. Registration closes today at 3pm. Already registered? Log in to access your team hub.'
+    );
+
     if (typeof (window as any).fbq !== 'undefined') {
       (window as any).fbq('track', 'ViewContent', {
         content_name: 'Sports Day 002 Landing',
@@ -51,9 +67,9 @@ export default function Home() {
         currency: 'GBP'
       });
     }
-  }, []);
+  }, [closed]);
 
-  // Shooting star easter egg state
+  // Shooting star easter egg
   const logoRef = useRef<HTMLImageElement>(null);
   const [starActive, setStarActive] = useState<{ x: number; y: number } | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -69,7 +85,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // First trigger: 10–20s after load
     const initialDelay = 10000 + Math.random() * 10000;
     timerRef.current = setTimeout(() => {
       const logo = logoRef.current;
@@ -85,11 +100,13 @@ export default function Home() {
     scheduleNext();
   }, [scheduleNext]);
 
+  // Countdown badge text
+  const countdownBadge = closed
+    ? "◈ REGISTRATION CLOSED"
+    : `◈ REGISTRATION CLOSES IN ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
-      {/* Registration closed — AdPopup for new visitors removed */}
-
-      {/* Shooting star canvas overlay — renders above everything */}
       {starActive && (
         <ShootingStarCanvas
           logoStartX={starActive.x}
@@ -132,42 +149,54 @@ export default function Home() {
       {/* Shader Hero — full screen */}
       <AnimatedShaderHero
         trustBadge={{
-          text: "REGISTRATION CLOSED",
-          icons: ["◈"],
+          text: countdownBadge,
+          icons: [],
         }}
         headline={{
           line1: "SPORTS DAY",
           line2: "002",
         }}
-        subtitle="Your team is waiting. Your identity is hidden. Show up and earn it."
-        buttons={{
-          primary: {
-            text: "ALREADY IN? LOG IN →",
-            onClick: () => navigate("/holding"),
-          },
-        }}
+        subtitle={closed
+          ? "Registration is closed. If you're already in, log in below."
+          : "Your team is waiting. Your identity is hidden. Show up and earn it."}
+        buttons={closed
+          ? {
+              primary: {
+                text: "ALREADY IN? LOG IN →",
+                onClick: () => navigate("/holding"),
+              },
+            }
+          : {
+              primary: {
+                text: "ALREADY IN? LOG IN →",
+                onClick: () => navigate("/holding"),
+              },
+            }
+        }
       />
 
       {/* Below-fold info strip */}
       <div className="bg-[#0A0A0A] border-t border-[#1A1A1A]">
         <div className="max-w-4xl mx-auto px-6 py-16">
-          <h2 className="font-display text-3xl text-white mb-12 tracking-widest">HOW IT WORKS</h2>
+          <h2 className="font-display text-3xl text-white mb-12 tracking-widest">
+            {closed ? "WHAT HAPPENS NOW" : "HOW IT WORKS"}
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          <InfoBlock
-            number="01"
-            title="YOUR TEAM"
-            body="You've been assigned. Log in to see your teammates, your team identity, and your role."
-          />
-          <InfoBlock
-            number="02"
-            title="THE DAY"
-            body="Four teams. One day. Saturday 11 July 2026. Sheffield. Come ready."
-          />
-          <InfoBlock
-            number="03"
-            title="COMPETE"
-            body="Sprints, relays, tug of war, and more. One team wins. Make sure it's yours."
-          />
+            <InfoBlock
+              number="01"
+              title="YOUR TEAM"
+              body="You've been assigned. Log in to see your teammates, your team identity, and your role."
+            />
+            <InfoBlock
+              number="02"
+              title="THE DAY"
+              body="Four teams. One day. Saturday 11 July 2026. Sheffield. Come ready."
+            />
+            <InfoBlock
+              number="03"
+              title="COMPETE"
+              body="Sprints, relays, tug of war, and more. One team wins. Make sure it's yours."
+            />
           </div>
         </div>
 
