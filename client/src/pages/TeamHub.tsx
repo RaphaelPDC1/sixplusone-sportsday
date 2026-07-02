@@ -129,6 +129,7 @@ export default function TeamHub() {
   const [selectedCaptain, setSelectedCaptain] = useState<string | null>(null);
   const [squadExpanded, setSquadExpanded] = useState(false);
   const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
+  const [dnaExpanded, setDnaExpanded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hs = useHapticSound();
 
@@ -1079,90 +1080,102 @@ export default function TeamHub() {
 
           return (
           <div className="space-y-4">
-            {/* ─── TEAM DNA PANEL ─── */}
+            {/* ─── TEAM DNA PANEL (collapsible) ─── */}
             <div
-              className="p-4 border"
+              className="border cursor-pointer select-none"
               style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
+              onClick={() => { hs('tap'); setDnaExpanded((v) => !v); }}
             >
-              {/* Header row */}
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-base">⚡</span>
-                <span className="font-display text-sm tracking-widest" style={{ color: tc.hex }}>TEAM DNA</span>
-                <span className="ml-auto font-mono text-white/30 text-[10px]">{n} SQUAD MEMBER{n !== 1 ? "S" : ""}</span>
+              {/* Always-visible: header + mindset bar */}
+              <div className="p-4">
+                {/* Header row */}
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-base">⚡</span>
+                  <span className="font-display text-sm tracking-widest" style={{ color: tc.hex }}>TEAM DNA</span>
+                  <span className="ml-auto flex items-center gap-2">
+                    <span className="font-mono text-white/30 text-[10px]">{n} SQUAD MEMBER{n !== 1 ? "S" : ""}</span>
+                    <span className="font-mono text-white/25 text-[10px]">{dnaExpanded ? "▲" : "▼"}</span>
+                  </span>
+                </div>
+
+                {/* Competitiveness bar — always visible */}
+                {(winnerCount + balancedCount + vibesOnlyCount) > 0 && (
+                  <div>
+                    <div className="flex justify-between font-mono text-[9px] text-white/30 mb-1">
+                      <span>SQUAD MINDSET</span>
+                      <span>{winnerCount > 0 ? `${winnerCount} WINNER${winnerCount !== 1 ? "S" : ""}` : ""}{balancedCount > 0 ? `${winnerCount > 0 ? " · " : ""}${balancedCount} BALANCED` : ""}{vibesOnlyCount > 0 ? `${(winnerCount + balancedCount) > 0 ? " · " : ""}${vibesOnlyCount} VIBES` : ""}</span>
+                    </div>
+                    <div className="flex h-1.5 rounded-full overflow-hidden gap-px">
+                      {winnerCount > 0 && (
+                        <div
+                          className="h-full transition-all"
+                          style={{ width: `${(winnerCount / n) * 100}%`, background: "#fbbf24" }}
+                        />
+                      )}
+                      {balancedCount > 0 && (
+                        <div
+                          className="h-full transition-all"
+                          style={{ width: `${(balancedCount / n) * 100}%`, background: "#60a5fa" }}
+                        />
+                      )}
+                      {vibesOnlyCount > 0 && (
+                        <div
+                          className="h-full transition-all"
+                          style={{ width: `${(vibesOnlyCount / n) * 100}%`, background: "#f472b6" }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* DNA tag grid */}
-              {dnaTags.length > 0 ? (
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {dnaTags.map((tag) => (
-                    <div
-                      key={tag.label}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-sm"
-                      style={{ background: `${tag.color}15`, border: `1px solid ${tag.color}30` }}
-                    >
-                      <span
-                        className="font-display text-[11px] tracking-widest"
-                        style={{ color: tag.color }}
-                      >
-                        {tag.value}
-                      </span>
-                      <span className="font-mono text-white/50 text-[9px] tracking-wider">{tag.label}</span>
+              {/* Expandable section */}
+              {dnaExpanded && (
+                <div className="px-4 pb-4 border-t" style={{ borderColor: `${tc.hex}20` }}>
+                  {/* DNA tag grid */}
+                  {dnaTags.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 mt-3 mb-3">
+                      {dnaTags.map((tag) => (
+                        <div
+                          key={tag.label}
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-sm"
+                          style={{ background: `${tag.color}15`, border: `1px solid ${tag.color}30` }}
+                        >
+                          <span
+                            className="font-display text-[11px] tracking-widest"
+                            style={{ color: tag.color }}
+                          >
+                            {tag.value}
+                          </span>
+                          <span className="font-mono text-white/50 text-[9px] tracking-wider">{tag.label}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="font-mono text-white/25 text-[10px] mb-3">Questionnaire data loading…</p>
-              )}
-
-              {/* Competitiveness bar */}
-              {(winnerCount + balancedCount + vibesOnlyCount) > 0 && (
-                <div className="mb-3">
-                  <div className="flex justify-between font-mono text-[9px] text-white/30 mb-1">
-                    <span>SQUAD MINDSET</span>
-                    <span>{winnerCount > 0 ? `${winnerCount} WINNER${winnerCount !== 1 ? "S" : ""}` : ""}{balancedCount > 0 ? `${winnerCount > 0 ? " · " : ""}${balancedCount} BALANCED` : ""}{vibesOnlyCount > 0 ? `${(winnerCount + balancedCount) > 0 ? " · " : ""}${vibesOnlyCount} VIBES` : ""}</span>
-                  </div>
-                  <div className="flex h-1.5 rounded-full overflow-hidden gap-px">
-                    {winnerCount > 0 && (
-                      <div
-                        className="h-full transition-all"
-                        style={{ width: `${(winnerCount / n) * 100}%`, background: "#fbbf24" }}
-                      />
-                    )}
-                    {balancedCount > 0 && (
-                      <div
-                        className="h-full transition-all"
-                        style={{ width: `${(balancedCount / n) * 100}%`, background: "#60a5fa" }}
-                      />
-                    )}
-                    {vibesOnlyCount > 0 && (
-                      <div
-                        className="h-full transition-all"
-                        style={{ width: `${(vibesOnlyCount / n) * 100}%`, background: "#f472b6" }}
-                      />
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Veteran / first-timer line */}
-              {(veteranCount + firstTimerCount) > 0 && (
-                <div className="flex items-center gap-2 font-mono text-[9px] text-white/30">
-                  <span>🏆 {veteranCount} VETERAN{veteranCount !== 1 ? "S" : ""}</span>
-                  <span className="text-white/15">·</span>
-                  <span>✨ {firstTimerCount} FIRST-TIMER{firstTimerCount !== 1 ? "S" : ""}</span>
-                  {fearNothingCount > 0 && (
-                    <>
-                      <span className="text-white/15">·</span>
-                      <span>🟢 {fearNothingCount} FEARLESS</span>
-                    </>
+                  ) : (
+                    <p className="font-mono text-white/25 text-[10px] mt-3 mb-3">Questionnaire data loading…</p>
                   )}
+
+                  {/* Veteran / first-timer line */}
+                  {(veteranCount + firstTimerCount) > 0 && (
+                    <div className="flex flex-wrap items-center gap-2 font-mono text-[9px] text-white/30">
+                      <span>🏆 {veteranCount} VETERAN{veteranCount !== 1 ? "S" : ""}</span>
+                      <span className="text-white/15">·</span>
+                      <span>✨ {firstTimerCount} FIRST-TIMER{firstTimerCount !== 1 ? "S" : ""}</span>
+                      {fearNothingCount > 0 && (
+                        <>
+                          <span className="text-white/15">·</span>
+                          <span>🟢 {fearNothingCount} FEARLESS</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Footer hint */}
+                  <p className="font-mono text-white/20 text-[9px] mt-3 pt-3 border-t" style={{ borderColor: `${tc.hex}20` }}>
+                    Tap any event below to see your squad's AI-powered strategy and best-fit players.
+                  </p>
                 </div>
               )}
-
-              {/* Footer hint */}
-              <p className="font-mono text-white/20 text-[9px] mt-3 pt-3 border-t" style={{ borderColor: `${tc.hex}20` }}>
-                Tap any event below to see your squad's AI-powered strategy and best-fit players.
-              </p>
             </div>
 
             <SectionHeader label="THE EVENTS" />
