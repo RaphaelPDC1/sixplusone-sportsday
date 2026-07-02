@@ -357,7 +357,7 @@ export default function TeamHub() {
       }))
     : EVENTS.map((e) => ({ ...e, arena: undefined, startTime: undefined, endTime: undefined, status: "upcoming" as const, pointsMultiplier: 1, wildcardsEnabled: false, eventType: undefined as string | undefined, format: undefined as string | undefined, matchupLabel: undefined as string | undefined, setupBufferMinutes: 10, blockNo: undefined as number | undefined, sortOrder: 0 }));
 
-  const TABS = [
+    const TABS = [
     { id: "team" as const,           label: "TEAM",           icon: "👥" },
     { id: "events" as const,         label: "EVENTS",         icon: "🏃" },
     { id: "leaderboard" as const,    label: "LEADERBOARD",    icon: "📊" },
@@ -366,6 +366,29 @@ export default function TeamHub() {
     { id: "sponsors" as const,       label: "SPONSORS",       icon: "🤟" },
     { id: "location" as const,       label: "LOCATION",       icon: "📍" },
   ];
+
+  const TYPE_BADGE: Record<string, { label: string; color: string; bg: string }> = {
+    male:    { label: "M",      color: "#60a5fa", bg: "rgba(96,165,250,0.12)" },
+    female:  { label: "W",      color: "#f472b6", bg: "rgba(244,114,182,0.12)" },
+    mixed:   { label: "Mixed",  color: "#c084fc", bg: "rgba(192,132,252,0.12)" },
+    team:    { label: "Team",   color: "#fb923c", bg: "rgba(251,146,60,0.12)" },
+    finale:  { label: "Finale", color: "#fbbf24", bg: "rgba(251,191,36,0.15)" },
+  };
+  const FORMAT_BADGE: Record<string, string> = {
+    "all-teams":   "All Teams",
+    "head-to-head": "Head to Head",
+    bracket:       "Bracket",
+    relay:         "Relay",
+    pairs:         "Pairs",
+  };
+  const STATUS_PILL: Record<string, { label: string; color: string; bg: string; pulse?: boolean }> = {
+    upcoming:  { label: "UPCOMING",  color: "rgba(255,255,255,0.35)", bg: "rgba(255,255,255,0.06)" },
+    armed:     { label: "ARMED",     color: "#fbbf24",                bg: "rgba(251,191,36,0.12)",  pulse: true },
+    briefing:  { label: "BRIEFING",  color: "#fb923c",                bg: "rgba(251,146,60,0.12)",  pulse: true },
+    live:      { label: "● LIVE",    color: "#4ade80",                bg: "rgba(74,222,128,0.12)",  pulse: true },
+    delayed:   { label: "DELAYED",   color: "#f87171",                bg: "rgba(248,113,113,0.12)" },
+    complete:  { label: "DONE",      color: "rgba(255,255,255,0.25)", bg: "rgba(255,255,255,0.04)" },
+  };
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden">
@@ -505,19 +528,7 @@ export default function TeamHub() {
           )}
         </div>
 
-        {/* ── Tip: share-reveal (shown above tab bar, visible on first visit) ── */}
-        {!isSeen("share-reveal") && (
-          <div className="px-5 pb-3">
-            <TipCard
-              tip={TIPS.find((t) => t.id === "share-reveal")!}
-              onDismiss={(id) => { hs("tap"); dismiss(id); }}
-              onDismissAll={() => { hs("tap"); dismissAll(); }}
-              showDismissAll={false}
-              accentColor={tc.hex}
-              arrowDir="none"
-            />
-          </div>
-        )}
+
         {/* Tab bar */}
         <div className="flex border-t border-white/10 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {TABS.map((tab) => (
@@ -645,6 +656,25 @@ export default function TeamHub() {
               const liveEvt = liveEvents?.find((e) => e.status === "live");
               const upNextEvt = liveEvents?.find((e) => e.status === "armed" || e.status === "upcoming");
               if (!liveEvt && !upNextEvt) return null;
+              
+              // Helper to get type badge for event
+              const getTypeBadge = (eventName: string) => {
+                const eventId = liveEvents?.find(e => e.name === eventName)?.id;
+                if (!eventId) return null;
+                const eventType = liveEvents?.find(e => e.id === eventId)?.eventType;
+                if (!eventType) return null;
+                return TYPE_BADGE[eventType] || null;
+              };
+              
+              // Helper to get format badge
+              const getFormatBadge = (eventName: string) => {
+                const eventId = liveEvents?.find(e => e.name === eventName)?.id;
+                if (!eventId) return null;
+                const format = liveEvents?.find(e => e.id === eventId)?.format;
+                if (!format) return null;
+                return FORMAT_BADGE[format];
+              };
+              
               return (
                 <div
                   className="p-4 border mb-2"
@@ -673,7 +703,32 @@ export default function TeamHub() {
                   {upNextEvt && (
                     <div className={`${liveEvt ? "mt-3 pt-3 border-t border-white/10" : ""}`}>
                       <div className="font-mono text-[9px] tracking-[0.25em] text-white/30 mb-1">UP NEXT</div>
-                      <div className="flex items-center gap-2">
+                      {/* Badges row — type, format, status */}
+                      <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                        {getTypeBadge(upNextEvt.name) && (
+                          <span
+                            className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 border"
+                            style={{ color: getTypeBadge(upNextEvt.name)?.color, borderColor: `${getTypeBadge(upNextEvt.name)?.color}50`, background: getTypeBadge(upNextEvt.name)?.bg }}
+                          >
+                            {getTypeBadge(upNextEvt.name)?.label}
+                          </span>
+                        )}
+                        {getFormatBadge(upNextEvt.name) && (
+                          <span className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 border border-white/15 text-white/40">
+                            {getFormatBadge(upNextEvt.name)}
+                          </span>
+                        )}
+                        {upNextEvt.status && (
+                          <span
+                            className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 border"
+                            style={{ color: STATUS_PILL[upNextEvt.status]?.color || "rgba(255,255,255,0.35)", borderColor: `${STATUS_PILL[upNextEvt.status]?.color || "rgba(255,255,255,0.35)"}40`, background: STATUS_PILL[upNextEvt.status]?.bg || "rgba(255,255,255,0.06)" }}
+                          >
+                            {STATUS_PILL[upNextEvt.status]?.label || "UPCOMING"}
+                          </span>
+                        )}
+                      </div>
+                      {/* Event name + time */}
+                      <div className="flex items-center gap-2 mb-1">
                         <span className="text-base">{getEventEmoji(upNextEvt.name)}</span>
                         <span className="font-display text-base tracking-widest text-white/80">{upNextEvt.name.toUpperCase()}</span>
                         {upNextEvt.startTime && (
@@ -683,6 +738,21 @@ export default function TeamHub() {
                           >
                             {upNextEvt.startTime}
                           </span>
+                        )}
+                      </div>
+                      {/* Matchup label */}
+                      {upNextEvt.matchupLabel && (
+                        <div className="font-mono text-[10px] text-white/30 tracking-wide mb-1">
+                          {upNextEvt.matchupLabel}
+                        </div>
+                      )}
+                      {/* Arena + setup buffer */}
+                      <div className="flex flex-wrap items-center gap-2 text-xs">
+                        {upNextEvt.arena && (
+                          <span className="font-mono text-white/40">📍 {upNextEvt.arena}</span>
+                        )}
+                        {upNextEvt.setupBufferMinutes && (
+                          <span className="font-mono text-white/30 text-[9px]">— {upNextEvt.setupBufferMinutes} min setup —</span>
                         )}
                       </div>
                     </div>
@@ -1090,29 +1160,7 @@ export default function TeamHub() {
             return parts.join(". ") + ". Get low, stay tight, and hold the line. This is what you trained for.";
           })();
 
-          // ── Type badge config ──────────────────────────────────────────────
-          const TYPE_BADGE: Record<string, { label: string; color: string; bg: string }> = {
-            male:    { label: "M",      color: "#60a5fa", bg: "rgba(96,165,250,0.12)" },
-            female:  { label: "W",      color: "#f472b6", bg: "rgba(244,114,182,0.12)" },
-            mixed:   { label: "Mixed",  color: "#c084fc", bg: "rgba(192,132,252,0.12)" },
-            team:    { label: "Team",   color: "#fb923c", bg: "rgba(251,146,60,0.12)" },
-            finale:  { label: "Finale", color: "#fbbf24", bg: "rgba(251,191,36,0.15)" },
-          };
-          const FORMAT_BADGE: Record<string, string> = {
-            "all-teams":   "All Teams",
-            "head-to-head": "Head to Head",
-            bracket:       "Bracket",
-            relay:         "Relay",
-            pairs:         "Pairs",
-          };
-          const STATUS_PILL: Record<string, { label: string; color: string; bg: string; pulse?: boolean }> = {
-            upcoming:  { label: "UPCOMING",  color: "rgba(255,255,255,0.35)", bg: "rgba(255,255,255,0.06)" },
-            armed:     { label: "ARMED",     color: "#fbbf24",                bg: "rgba(251,191,36,0.12)",  pulse: true },
-            briefing:  { label: "BRIEFING",  color: "#fb923c",                bg: "rgba(251,146,60,0.12)",  pulse: true },
-            live:      { label: "● LIVE",    color: "#4ade80",                bg: "rgba(74,222,128,0.12)",  pulse: true },
-            delayed:   { label: "DELAYED",   color: "#f87171",                bg: "rgba(248,113,113,0.12)" },
-            complete:  { label: "DONE",      color: "rgba(255,255,255,0.25)", bg: "rgba(255,255,255,0.04)" },
-          };
+
 
           return (
           <div className="space-y-4">
