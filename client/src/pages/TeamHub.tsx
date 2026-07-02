@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { MapView } from "@/components/Map";
 import { useSEO } from "@/hooks/useSEO";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -151,6 +152,27 @@ export default function TeamHub() {
     refetchInterval: 30_000,
   });
   const votingEnabled = votingGate?.enabled ?? false;
+
+  // Voting opens at 10am BST on 11 July 2026 (09:00 UTC)
+  const VOTING_OPEN_TIME = new Date("2026-07-11T09:00:00Z");
+  const [votingCountdown, setVotingCountdown] = useState(() => Math.max(0, VOTING_OPEN_TIME.getTime() - Date.now()));
+  const votingTimeReached = votingCountdown <= 0;
+  useEffect(() => {
+    if (votingTimeReached) return;
+    const id = setInterval(() => {
+      setVotingCountdown(Math.max(0, VOTING_OPEN_TIME.getTime() - Date.now()));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [votingTimeReached]);
+  // canVote = time has passed AND admin has enabled voting
+  const canVote = votingTimeReached && votingEnabled;
+  const votingDaysLeft = Math.floor(votingCountdown / 86400000);
+  const votingHoursLeft = Math.floor((votingCountdown % 86400000) / 3600000);
+  const votingMinsLeft = Math.floor((votingCountdown % 3600000) / 60000);
+  const votingSecsLeft = Math.floor((votingCountdown % 60000) / 1000);
+  const votingCountdownStr = votingDaysLeft > 0
+    ? `${votingDaysLeft}D ${String(votingHoursLeft).padStart(2,'0')}H ${String(votingMinsLeft).padStart(2,'0')}M`
+    : `${String(votingHoursLeft).padStart(2,'0')}:${String(votingMinsLeft).padStart(2,'0')}:${String(votingSecsLeft).padStart(2,'0')}`;
 
   // Power Up initiation state
   const [powerUpInitiating, setWildcardInitiating] = useState<string | null>(null);
@@ -1376,23 +1398,28 @@ export default function TeamHub() {
           <div className="space-y-4">
             <SectionHeader label="FUN AWARDS" />
 
-            {/* Day-of gate */}
-            {!votingEnabled ? (
+            {/* Voting countdown banner — shown until voting opens */}
+            {!canVote && (
               <div
-                className="p-6 border text-center"
-                style={{ borderColor: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.02)" }}
+                className="p-4 border text-center"
+                style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
               >
-                <div className="text-3xl mb-3">🏆</div>
-                <div className="font-display text-xl tracking-widest text-white/60 mb-2">AWARDS LOCKED</div>
-                <div className="font-mono text-white/30 text-xs tracking-wider">
-                  Voting opens on the day. One vote per category.
+                <div className="font-mono text-white/40 text-[10px] tracking-[0.3em] mb-1">VOTING OPENS IN</div>
+                <div className="font-display text-3xl tracking-widest" style={{ color: tc.hex }}>
+                  {votingCountdownStr}
+                </div>
+                <div className="font-mono text-white/25 text-[10px] tracking-wider mt-1">
+                  10:00 AM · SAT 11 JULY 2026
                 </div>
               </div>
-            ) : (
-              <>
-                <p className="font-mono text-white/30 text-xs tracking-wider">
-                  One vote per category. Make it count.
-                </p>
+            )}
+
+            {canVote && (
+              <p className="font-mono text-white/30 text-xs tracking-wider">
+                One vote per category. Make it count.
+              </p>
+            )}
+
             {AWARD_CATEGORIES.map((cat) => {
               const myVote = awardData?.myVotes.find((v) => v.category === cat.id);
               const votedFor = myVote ? hub.members.find((m) => m.id === myVote.nomineeId) : null;
@@ -1404,7 +1431,9 @@ export default function TeamHub() {
                       <span className="text-xl">{cat.icon}</span>
                       <span className="font-display text-base tracking-widest">{cat.label}</span>
                     </div>
-                    {votedFor ? (
+                    {!canVote ? (
+                      <span className="font-mono text-white/20 text-[10px] tracking-widest">🔒 LOCKED</span>
+                    ) : votedFor ? (
                       <div className="flex items-center gap-2">
                         <div
                           className="w-6 h-6 rounded-full overflow-hidden border"
@@ -1486,12 +1515,8 @@ export default function TeamHub() {
                 </div>
               );
             })}
-              </>
-            )}
           </div>
         )}
-
-
 
         {/* ─── SPONSORS TAB ─── */}
         {activeTab === "sponsors" && (
@@ -1571,21 +1596,38 @@ export default function TeamHub() {
               ))}
             </div>
 
-            {/* Static map placeholder */}
+            {/* Interactive map — Endcliffe Park, Sheffield */}
             <div
-              className="relative overflow-hidden border border-white/10"
-              style={{ height: 200 }}
+              className="relative overflow-hidden border"
+              style={{ height: 260, borderColor: `${tc.hex}40` }}
             >
-              <iframe
-                title="Venue map"
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(hub?.event?.fullAddress ?? "Endcliffe Park Sheffield S11 7AB")}&output=embed`}
-                className="w-full h-full"
-                style={{ filter: "grayscale(1) invert(1) brightness(0.8)" }}
-                loading="lazy"
+              <MapView
+                initialCenter={{ lat: 53.3718, lng: -1.5046 }}
+                initialZoom={15}
+                onMapReady={(map: google.maps.Map) => {
+                  // Add a marker for Endcliffe Park
+                  new google.maps.marker.AdvancedMarkerElement({
+                    map,
+                    position: { lat: 53.3718, lng: -1.5046 },
+                    title: "Endcliffe Park — Sports Day 002",
+                  });
+                  // Dark style to match the app theme
+                  map.setOptions({
+                    styles: [
+                      { elementType: "geometry", stylers: [{ color: "#1a1a1a" }] },
+                      { elementType: "labels.text.fill", stylers: [{ color: "#666" }] },
+                      { elementType: "labels.text.stroke", stylers: [{ color: "#0a0a0a" }] },
+                      { featureType: "road", elementType: "geometry", stylers: [{ color: "#2a2a2a" }] },
+                      { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#888" }] },
+                      { featureType: "water", elementType: "geometry", stylers: [{ color: "#0d0d0d" }] },
+                      { featureType: "park", elementType: "geometry", stylers: [{ color: "#1a2a1a" }] },
+                    ],
+                  });
+                }}
               />
               <div
                 className="absolute inset-0 pointer-events-none"
-                style={{ background: `linear-gradient(to top, ${tc.hex}20, transparent)` }}
+                style={{ background: `linear-gradient(to top, ${tc.hex}15, transparent 60%)` }}
               />
             </div>
           </div>
