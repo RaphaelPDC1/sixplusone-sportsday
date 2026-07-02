@@ -1596,26 +1596,27 @@ export default function TeamHub() {
               ))}
             </div>
 
-            {/* Interactive map — Endcliffe Park, Sheffield */}
+            {/* Google Maps embed — Endcliffe Park, Sheffield */}
             <div
               className="relative overflow-hidden border"
               style={{ borderColor: `${tc.hex}40` }}
             >
-              <MapView
-                className="w-full h-[260px]"
-                initialCenter={{ lat: 53.3718, lng: -1.5046 }}
-                initialZoom={15}
-                onMapReady={(map: google.maps.Map) => {
-                  new google.maps.marker.AdvancedMarkerElement({
-                    map,
-                    position: { lat: 53.3718, lng: -1.5046 },
-                    title: "Endcliffe Park — Sports Day 002",
-                  });
-                }}
-              />
+              <a
+                href="https://maps.google.com/?q=Endcliffe+Park+Sheffield+S11+7AB"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block"
+              >
+                <img
+                  src="/api/static-map?center=53.3718,-1.5046&zoom=15&size=600x260&maptype=roadmap&markers=color:red%7C53.3718,-1.5046"
+                  alt="Endcliffe Park, Sheffield — tap to open in Google Maps"
+                  className="w-full h-[260px] object-cover block"
+                  loading="lazy"
+                />
+              </a>
               <div
                 className="absolute inset-0 pointer-events-none"
-                style={{ background: `linear-gradient(to top, ${tc.hex}15, transparent 60%)` }}
+                style={{ background: `linear-gradient(to top, ${tc.hex}10, transparent 60%)` }}
               />
             </div>
           </div>

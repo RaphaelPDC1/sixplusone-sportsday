@@ -59,6 +59,30 @@ async function startServer() {
   // ⚠️ Stripe webhook MUST use raw body — register BEFORE express.json()
   app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), stripeWebhookHandler);
 
+  // Static map proxy — fetches Google Static Maps using server-side API key
+  app.get("/api/static-map", async (req, res) => {
+    try {
+      const forgeUrl = process.env.BUILT_IN_FORGE_API_URL || "https://forge.manus.ai";
+      const apiKey = process.env.BUILT_IN_FORGE_API_KEY || "";
+      const { center = "53.3718,-1.5046", zoom = "15", size = "600x260", maptype = "roadmap", markers = "" } = req.query as Record<string, string>;
+      const params = new URLSearchParams({ center, zoom, size, scale: "2", maptype, key: apiKey });
+      if (markers) params.set("markers", markers);
+      const mapUrl = `${forgeUrl}/v1/maps/proxy/maps/api/staticmap?${params.toString()}`;
+      const response = await fetch(mapUrl);
+      if (!response.ok) {
+        res.status(502).json({ error: "Map fetch failed", status: response.status });
+        return;
+      }
+      const contentType = response.headers.get("content-type") || "image/png";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Cache-Control", "public, max-age=3600");
+      const buffer = await response.arrayBuffer();
+      res.send(Buffer.from(buffer));
+    } catch (err) {
+      res.status(500).json({ error: "Map proxy error" });
+    }
+  });
+
   // SECURITY: Configure body parser with reasonable size limit (10MB instead of 50MB)
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ limit: "10mb", extended: true }));
