@@ -31,7 +31,7 @@ export default function Home() {
       metaDescription.setAttribute('name', 'description');
       document.head.appendChild(metaDescription);
     }
-    metaDescription.setAttribute('content', 'Join Sports Day 002 on July 11th 2026 in Sheffield. Register now to discover your team and compete with 6+1. Early access with Priority Player Pass.');
+    metaDescription.setAttribute('content', 'Sports Day 002 — July 11th 2026, Sheffield. Registration is now closed. Already registered? Log in to access your team hub.');
     
     // Set keywords
     let metaKeywords = document.querySelector('meta[name="keywords"]');
@@ -87,12 +87,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
-      {/* Ad popup — shown 3s after load to Meta ad traffic who haven't registered */}
-      <AdPopup
-        variant="new_visitor"
-        onCtaClick={() => navigate("/enter")}
-        delay={3000}
-      />
+      {/* Registration closed — AdPopup for new visitors removed */}
 
       {/* Shooting star canvas overlay — renders above everything */}
       {starActive && (
@@ -137,7 +132,7 @@ export default function Home() {
       {/* Shader Hero — full screen */}
       <AnimatedShaderHero
         trustBadge={{
-          text: "REGISTRATION OPEN — 2026",
+          text: "REGISTRATION CLOSED",
           icons: ["◈"],
         }}
         headline={{
@@ -147,8 +142,8 @@ export default function Home() {
         subtitle="Your team is waiting. Your identity is hidden. Show up and earn it."
         buttons={{
           primary: {
-            text: "REGISTER NOW →",
-            onClick: () => navigate("/enter"),
+            text: "ALREADY IN? LOG IN →",
+            onClick: () => navigate("/holding"),
           },
         }}
       />
@@ -160,18 +155,18 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <InfoBlock
             number="01"
-            title="REGISTER"
-            body="Fill in your profile. Every answer shapes your team identity. No filler questions."
+            title="YOUR TEAM"
+            body="You've been assigned. Log in to see your teammates, your team identity, and your role."
           />
           <InfoBlock
             number="02"
-            title="GET YOUR TEAM"
-            body="Unlock your reveal with a Priority Player Pass. Or refer 3 friends. Either way, earn it."
+            title="THE DAY"
+            body="Four teams. One day. Saturday 11 July 2026. Sheffield. Come ready."
           />
           <InfoBlock
             number="03"
-            title="SHOW UP"
-            body="Four teams. One day. Saturday 11 July 2026. Come ready."
+            title="COMPETE"
+            body="Sprints, relays, tug of war, and more. One team wins. Make sure it's yours."
           />
           </div>
         </div>

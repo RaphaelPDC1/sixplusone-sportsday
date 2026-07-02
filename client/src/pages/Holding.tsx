@@ -491,14 +491,7 @@ function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
             {loading ? "CHECKING..." : "GET BACK IN →"}
           </button>
 
-          <div className="mt-6 text-center">
-            <a
-              href="/enter"
-              className="font-mono text-[#444] text-xs tracking-[0.2em] hover:text-[#FF5500] transition-colors"
-            >
-              Not registered? → ENTER THE SYSTEM
-            </a>
-          </div>
+          {/* Registration closed — new registration link removed */}
         </div>
       </div>
     </div>

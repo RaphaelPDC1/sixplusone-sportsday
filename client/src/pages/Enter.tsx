@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useEffect } from "react";
 import { useSEO } from "@/hooks/useSEO";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
@@ -57,12 +58,23 @@ const STEP_PALETTES: string[][] = [
 
 export default function Enter() {
   useSEO({
-    title: "Register for 6+1 Sports Day 002 — Team Building Event July 2026",
-    description: "Sign up for 6+1 Sports Day 002 on 11 July 2026 in Sheffield. Answer your profile questions, get assigned to a team, and unlock your reveal with a Priority Player Pass.",
-    keywords: "register sports day, 6+1 event registration, team building Sheffield, July 2026 event, sports day signup",
+    title: "Registration Closed — 6+1 Sports Day 002",
+    description: "Registration for Sports Day 002 is now closed. Already registered? Log in to access your team hub.",
+    keywords: "sports day 002, 6+1 event, Sheffield, July 2026",
   });
 
   const [, navigate] = useLocation();
+
+  // ── REGISTRATION CLOSED — redirect all visitors to holding ──────────────
+  useEffect(() => {
+    navigate("/holding");
+  }, [navigate]);
+
+  return (
+    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+      <p className="font-mono text-white/30 text-sm tracking-widest">REGISTRATION CLOSED</p>
+    </div>
+  );
   const [showSplash, setShowSplash] = useState(
     () => sessionStorage.getItem("enter_splash_seen") !== "true"
   );
@@ -442,7 +454,7 @@ export default function Enter() {
                       <div className="flex flex-col gap-2">
                         {verifyGroupCodeQuery.data?.creatorName && (
                           <p className="font-mono text-[#FF5500] text-xs tracking-wider text-center">
-                            ✓ YOU'RE JOINING {verifyGroupCodeQuery.data.creatorName.toUpperCase()}'S GROUP
+                            ✓ YOU'RE JOINING {verifyGroupCodeQuery.data?.creatorName?.toUpperCase()}'S GROUP
                           </p>
                         )}
                         <button
