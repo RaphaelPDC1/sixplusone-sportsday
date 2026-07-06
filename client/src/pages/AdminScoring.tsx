@@ -85,6 +85,24 @@ function LiveLeaderboard() {
 }
 
 // ─── Event Status Control ─────────────────────────────────────────────────────
+const STATUS_LABELS: Record<string, string> = {
+  upcoming: "UPCOMING",
+  armed: "ARMED",
+  briefing: "BRIEFING",
+  live: "● LIVE",
+  delayed: "DELAYED",
+  complete: "✓ DONE",
+};
+
+const STATUS_BG: Record<string, string> = {
+  upcoming: "#1A1A1A",
+  armed: "#FF880022",
+  briefing: "#FFCC0022",
+  live: "#00FF8822",
+  delayed: "#FF444422",
+  complete: "#4488FF22",
+};
+
 function EventControl() {
   const { data: events, refetch } = trpc.scoring.getEvents.useQuery();
   const setStatus = trpc.scoring.adminSetEventStatus.useMutation({
@@ -92,37 +110,66 @@ function EventControl() {
     onError: (e) => toast.error(e.message),
   });
 
-  if (!events) return <div className="font-mono text-[#555] text-sm">Loading…</div>;
+  if (!events) return <div className="font-mono text-[#888] text-sm p-4">Loading events…</div>;
+
+  const TYPE_EMOJI: Record<string, string> = {
+    male: "♂", female: "♀", mixed: "⚡", team: "👥", finale: "🏆",
+  };
 
   return (
-    <div className="space-y-2">
-      <p className="font-mono text-[#555] text-xs tracking-[0.3em] mb-4">EVENT STATUS CONTROL</p>
-      {events.map((ev) => (
-        <div key={ev.id} className="border border-[#1A1A1A] p-3 flex items-center justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <p className="font-mono text-[#F2F0EB] text-sm truncate">{ev.name}</p>
-            <p className="font-mono text-[#444] text-xs">{ev.arena} · {ev.startTime}–{ev.endTime} · ×{ev.pointsMultiplier}</p>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <span
-              className="font-mono text-xs tracking-wider px-2 py-1 border"
-              style={{ color: STATUS_COLORS[ev.status], borderColor: STATUS_COLORS[ev.status] + "44" }}
-            >
-              {ev.status.toUpperCase()}
-            </span>
-            {(["upcoming", "armed", "live", "complete"] as const).map((s) => (
-              <button
-                key={s}
-                disabled={ev.status === s || setStatus.isPending}
-                onClick={() => setStatus.mutate({ eventId: ev.id, status: s })}
-                className="font-mono text-xs px-2 py-1 border border-[#222] text-[#555] hover:border-[#FF5500] hover:text-[#FF5500] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+    <div className="space-y-3">
+      <p className="font-mono text-[#888] text-xs tracking-[0.3em] mb-2">EVENT STATUS CONTROL</p>
+      {events.map((ev) => {
+        const statusColor = STATUS_COLORS[ev.status] ?? "#555";
+        return (
+          <div
+            key={ev.id}
+            className="border border-[#222] rounded overflow-hidden"
+            style={{ borderColor: ev.status === "live" ? "#00FF8866" : ev.status === "armed" ? "#FF880066" : "#222" }}
+          >
+            {/* Header row */}
+            <div className="flex items-center justify-between px-4 py-3" style={{ background: STATUS_BG[ev.status] ?? "#0D0D0D" }}>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-base flex-shrink-0">{TYPE_EMOJI[ev.eventType ?? ""] ?? "🎯"}</span>
+                <div className="min-w-0">
+                  <p className="font-mono text-[#F2F0EB] text-sm font-bold leading-tight">{ev.name}</p>
+                  <p className="font-mono text-[#888] text-xs mt-0.5">
+                    {ev.arena} · {ev.startTime}–{ev.endTime}{ev.pointsMultiplier > 1 ? ` · ×${ev.pointsMultiplier}` : ""}
+                  </p>
+                </div>
+              </div>
+              <span
+                className="font-mono text-xs tracking-wider px-2 py-1 border flex-shrink-0 ml-2"
+                style={{ color: statusColor, borderColor: statusColor + "66", background: statusColor + "11" }}
               >
-                {s === "upcoming" ? "↩" : s === "armed" ? "ARM" : s === "live" ? "▶ LIVE" : "✓ DONE"}
-              </button>
-            ))}
+                {STATUS_LABELS[ev.status] ?? ev.status.toUpperCase()}
+              </span>
+            </div>
+            {/* Status buttons — 2×3 grid */}
+            <div className="grid grid-cols-3 gap-px bg-[#111] border-t border-[#222]">
+              {(["upcoming", "armed", "briefing", "live", "delayed", "complete"] as const).map((s) => {
+                const isActive = ev.status === s;
+                const btnColor = STATUS_COLORS[s] ?? "#555";
+                return (
+                  <button
+                    key={s}
+                    disabled={isActive || setStatus.isPending}
+                    onClick={() => setStatus.mutate({ eventId: ev.id, status: s })}
+                    className="font-mono text-xs py-2.5 px-1 transition-colors text-center"
+                    style={{
+                      background: isActive ? btnColor + "22" : "#0D0D0D",
+                      color: isActive ? btnColor : "#555",
+                      borderBottom: isActive ? `2px solid ${btnColor}` : "2px solid transparent",
+                    }}
+                  >
+                    {s === "upcoming" ? "RESET" : s === "armed" ? "ARM" : s === "briefing" ? "BRIEF" : s === "live" ? "▶ LIVE" : s === "delayed" ? "DELAY" : "✓ DONE"}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

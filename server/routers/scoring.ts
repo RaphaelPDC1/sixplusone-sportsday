@@ -86,7 +86,7 @@ export const scoringRouter = router({
   adminSetEventStatus: adminProcedure
     .input(z.object({
       eventId: z.number(),
-      status: z.enum(["upcoming", "armed", "live", "complete"]),
+      status: z.enum(["upcoming", "armed", "briefing", "live", "delayed", "complete"]),
     }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
