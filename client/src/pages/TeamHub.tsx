@@ -2123,12 +2123,20 @@ export default function TeamHub() {
                 }}
                 className="font-mono text-white/25 text-xs tracking-[0.2em] hover:text-[#FF5500] transition-colors border border-white/10 hover:border-[#FF5500]/40 px-4 py-2"
               >
-                LOG OUT
+                              LOG OUT
               </button>
             </div>
+            {/* Legal + Admin links */}
+            <div className="flex items-center gap-4 flex-wrap justify-center mt-6 pt-4 border-t border-white/5">
+              <a href="/terms" className="font-mono text-white/20 text-[10px] tracking-wider hover:text-white/50 transition-colors">TERMS &amp; CONDITIONS</a>
+              <span className="text-white/10 text-[10px]">|</span>
+              <a href="/privacy" className="font-mono text-white/20 text-[10px] tracking-wider hover:text-white/50 transition-colors">PRIVACY POLICY</a>
+              <span className="text-white/10 text-[10px]">|</span>
+              <a href="/admin" className="font-mono text-white/10 text-[10px] tracking-wider hover:text-white/30 transition-colors">ADMIN</a>
+            </div>
+            <p className="font-mono text-white/10 text-[10px] tracking-wider text-center mt-3">© 6+1 SPORTS DAY 002 — 2026</p>
           </div>
         </div>
-        
         {/* Member Profile Modal */}
         {selectedMember && (
           <div
