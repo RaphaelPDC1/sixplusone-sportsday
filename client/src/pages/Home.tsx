@@ -215,10 +215,12 @@ export default function Home() {
 
         {/* Footer */}
         <div className="flex flex-col items-center gap-3 px-6 py-6 border-t border-white/10">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 flex-wrap justify-center">
             <a href="/terms" className="font-mono text-white/30 text-xs tracking-wider hover:text-white/60 transition-colors">TERMS &amp; CONDITIONS</a>
             <span className="text-white/20 text-xs">|</span>
             <a href="/privacy" className="font-mono text-white/30 text-xs tracking-wider hover:text-white/60 transition-colors">PRIVACY POLICY</a>
+            <span className="text-white/20 text-xs">|</span>
+            <a href="/admin" className="font-mono text-white/10 text-xs tracking-wider hover:text-white/30 transition-colors">ADMIN</a>
           </div>
           <div className="flex items-center justify-between w-full">
             <img

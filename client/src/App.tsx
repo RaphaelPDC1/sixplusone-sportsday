@@ -25,6 +25,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/enter" component={Enter} />
+      <Route path="/register" component={Enter} />
       <Route path="/holding" component={Holding} />
       <Route path="/reveal" component={Reveal} />
       <Route path="/unlock/success" component={UnlockSuccess} />

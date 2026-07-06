@@ -62,27 +62,49 @@ const REGISTRATION_CLOSE_TIME = new Date("2026-07-02T14:00:00Z");
 export default function Enter() {
   const registrationClosed = Date.now() >= REGISTRATION_CLOSE_TIME.getTime();
 
+  // Read invite code from URL: /enter?invite=LATE-XXXXXX
+  const inviteCode = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("invite")?.toUpperCase().trim() ?? ""
+    : "";
+
+  // Validate invite code if present
+  const validateInvite = trpc.admin.validateInviteCode.useQuery(
+    { code: inviteCode },
+    { enabled: registrationClosed && inviteCode.length > 0 }
+  );
+  const inviteValid = !registrationClosed || (inviteCode.length > 0 && validateInvite.data?.valid === true);
+  const inviteChecking = registrationClosed && inviteCode.length > 0 && validateInvite.isLoading;
+
   useSEO({
     title: registrationClosed
-      ? "Registration Closed — 6+1 Sports Day 002"
+      ? "Late Registration — 6+1 Sports Day 002"
       : "Register for 6+1 Sports Day 002 — Team Building Event July 2026",
     description: registrationClosed
-      ? "Registration for Sports Day 002 is now closed. Already registered? Log in to access your team hub."
+      ? "Late registration for Sports Day 002 is now closed. Already registered? Log in to access your team hub."
       : "Sign up for 6+1 Sports Day 002 on 11 July 2026 in Sheffield. Answer your profile questions, get assigned to a team, and unlock your reveal.",
     keywords: "register sports day, 6+1 event registration, team building Sheffield, July 2026 event, sports day signup",
   });
 
   const [, navigate] = useLocation();
 
-  // Redirect to holding if registration is closed
+  // Redirect to holding if registration is closed AND no valid invite
   useEffect(() => {
-    if (registrationClosed) {
+    if (registrationClosed && !inviteChecking && !inviteValid) {
       navigate("/holding");
     }
-  }, [registrationClosed, navigate]);
+  }, [registrationClosed, inviteChecking, inviteValid, navigate]);
 
-  // Show closed message briefly while redirecting
-  if (registrationClosed) {
+  // Show loading while validating invite
+  if (inviteChecking) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <p className="font-mono text-white/30 text-sm tracking-widest">VALIDATING INVITE...</p>
+      </div>
+    );
+  }
+
+  // Show closed message briefly while redirecting (no valid invite)
+  if (registrationClosed && !inviteValid) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <p className="font-mono text-white/30 text-sm tracking-widest">REGISTRATION CLOSED</p>
@@ -131,10 +153,16 @@ export default function Enter() {
 
   const referredBy = typeof window !== "undefined" ? localStorage.getItem("referredBy") ?? undefined : undefined;
 
+  const consumeInviteMutation = trpc.admin.consumeInviteCode.useMutation();
+
   const registerMutation = trpc.sportsday.register.useMutation({
     onSuccess: (data) => {
       localStorage.setItem("sd_user_id", data.id);
       localStorage.setItem("sd_referral_code", data.referralCode);
+      // Consume invite code if one was used
+      if (inviteCode) {
+        consumeInviteMutation.mutate({ code: inviteCode, registrationId: data.id });
+      }
       // Fire Meta Pixel CompleteRegistration event
       if (typeof window !== 'undefined' && (window as any).fbq) {
         (window as any).fbq('track', 'CompleteRegistration');
