@@ -415,3 +415,35 @@ export const sdTeamMembers = mysqlTable("sd_team_members", {
 });
 export type SdTeamMember = typeof sdTeamMembers.$inferSelect;
 export type InsertSdTeamMember = typeof sdTeamMembers.$inferInsert;
+
+// ─── Day-of Attendance ────────────────────────────────────────────────────────
+// Tracks which registered participants are physically present on Sports Day
+export const sdAttendance = mysqlTable("sd_attendance", {
+  id: int("id").autoincrement().primaryKey(),
+  registrationId: varchar("registrationId", { length: 36 }).notNull().unique(),
+  team: mysqlEnum("team", ["red", "blue", "pink", "orange"]).notNull(),
+  present: boolean("present").default(false).notNull(),
+  markedAt: timestamp("markedAt"),
+  markedBy: varchar("markedBy", { length: 64 }), // admin identifier
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SdAttendance = typeof sdAttendance.$inferSelect;
+export type InsertSdAttendance = typeof sdAttendance.$inferInsert;
+
+// ─── Straggler Invite Codes ───────────────────────────────────────────────────
+// Admin-generated codes that bypass closed registration
+export const sdInviteCodes = mysqlTable("sd_invite_codes", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 16 }).notNull().unique(), // e.g. "LATE-XXXX"
+  createdBy: varchar("createdBy", { length: 64 }).notNull(), // admin identifier
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt"),          // optional expiry
+  usedAt: timestamp("usedAt"),                // set when registration completes
+  usedByRegistrationId: varchar("usedByRegistrationId", { length: 36 }), // who used it
+  note: text("note"),                          // admin note (e.g. "for John Smith")
+  maxUses: int("maxUses").default(1).notNull(), // default single-use
+  useCount: int("useCount").default(0).notNull(),
+});
+export type SdInviteCode = typeof sdInviteCodes.$inferSelect;
+export type InsertSdInviteCode = typeof sdInviteCodes.$inferInsert;

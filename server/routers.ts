@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { and, eq, like, or } from "drizzle-orm";
 import { z } from "zod";
-import { awardsVotes, groupCodes, powerUpVotes, profilePhotos, sdEvents, sportsDayRegistrations, sportsDaySessions, unmatchedPayments } from "../drizzle/schema";
+import { awardsVotes, groupCodes, powerUpVotes, profilePhotos, sdEvents, sdInviteCodes, sportsDayRegistrations, sportsDaySessions, unmatchedPayments } from "../drizzle/schema";
 import { getDb } from "./db";
 import {
   assignTeam,
@@ -35,6 +35,7 @@ import { handleSportsDayRegistration, handleSportsDayPayment, handleTeamReassign
 import { sendCompleteRegistrationEvent, extractUserDataFromRequest } from "./_core/metaConversionsApi";
 import { TRPCError } from "@trpc/server";
 import { scoringRouter } from "./routers/scoring";
+import { adminRouter } from "./routers/admin";
 import { wildcardsRouter } from "./routers/wildcards";
 
 // ─── In-memory rate limiter ───────────────────────────────────────────────────
@@ -1511,6 +1512,7 @@ export const appRouter = router({
   sportsday: sportsDayRouter,
   scoring: scoringRouter,
   powerUps: wildcardsRouter,
+  admin: adminRouter,
 });
 
 export type AppRouter = typeof appRouter;

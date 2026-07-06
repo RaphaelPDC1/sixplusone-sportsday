@@ -169,6 +169,13 @@
       "when": 1781699052992,
       "tag": "0023_zippy_iron_lad",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1783336361732,
+      "tag": "0024_magenta_quicksilver",
+      "breakpoints": true
     }
   ]
 }

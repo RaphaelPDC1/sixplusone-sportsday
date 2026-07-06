@@ -101,7 +101,7 @@ export default function Admin() {
   const [passwordUnlocked, setPasswordUnlocked] = useState(
     () => sessionStorage.getItem("admin_unlocked") === "true"
   );
-  const [activeTab, setActiveTab] = useState<"users" | "health" | "leaderboard" | "schedule" | "settings" | "scoring">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "health" | "leaderboard" | "schedule" | "settings" | "scoring" | "attendance" | "tshirts" | "invites">("users");
   const [scheduleForm, setScheduleForm] = useState({ eventName: "", startTime: "", endTime: "", location: "", description: "", sortOrder: "0", isCompleted: false });
   const [lbForm, setLbForm] = useState({
     eventName: "sprint",
@@ -152,6 +152,55 @@ export default function Admin() {
   const setLiveEventMutation = { mutate: (_: any) => {}, isPending: false } as any;
   const upsertEventMutation = { mutate: (_: any) => {}, isPending: false } as any;
   const deleteEventMutation = { mutate: (_: any) => {}, isPending: false } as any;
+  // Attendance
+  const attendanceQuery = trpc.admin.getAttendance.useQuery(undefined, {
+    enabled: canAccess && activeTab === "attendance",
+    refetchInterval: activeTab === "attendance" ? 5000 : false,
+  });
+  const attendanceData: any[] = (attendanceQuery.data as any[]) ?? [];
+  const refetchAttendance = attendanceQuery.refetch;
+  const markAttendanceMutation = trpc.admin.markAttendance.useMutation({
+    onSuccess: () => refetchAttendance(),
+    onError: (e) => toast.error(e.message),
+  });
+
+  // T-shirt export
+  const { data: paidUsers = [] } = trpc.admin.getPaidUsersExport.useQuery(undefined, {
+    enabled: canAccess && activeTab === "tshirts",
+  }) as { data: any[] };
+
+  // Invite codes
+  const inviteCodesQuery = trpc.admin.getInviteCodes.useQuery(undefined, {
+    enabled: canAccess && activeTab === "invites",
+  });
+  const inviteCodes: any[] = (inviteCodesQuery.data as any[]) ?? [];
+  const refetchInvites = inviteCodesQuery.refetch;
+  const createInviteMutation = trpc.admin.createInviteCode.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Code created: ${data.code}`);
+      refetchInvites();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const [inviteNote, setInviteNote] = useState("");
+  const [inviteMaxUses, setInviteMaxUses] = useState(1);
+
+  // Attendance helpers
+  const attendanceByTeam = useMemo(() => {
+    const grouped: Record<string, any[]> = { red: [], blue: [], pink: [], orange: [] };
+    for (const m of attendanceData) {
+      if (m.team && grouped[m.team]) grouped[m.team].push(m);
+    }
+    return grouped;
+  }, [attendanceData]);
+  const presentCounts = useMemo(() => {
+    const counts: Record<string, number> = { red: 0, blue: 0, pink: 0, orange: 0 };
+    for (const m of attendanceData) {
+      if (m.present && m.team) counts[m.team] = (counts[m.team] ?? 0) + 1;
+    }
+    return counts;
+  }, [attendanceData]);
+
   const { data: adminSettings, refetch: refetchSettings } = trpc.sportsday.adminGetSettings.useQuery(undefined, {
     enabled: canAccess && activeTab === "settings",
   });
@@ -327,7 +376,7 @@ export default function Admin() {
         )}
         {/* Tabs */}
         <div className="flex gap-0 border-b border-[#1A1A1A] overflow-x-auto scrollbar-hide">
-          {(["users", "health", "leaderboard", "schedule", "settings", "scoring"] as const).map((tab) => (
+          {(["users", "attendance", "tshirts", "invites", "health", "scoring", "settings"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as typeof activeTab)}
@@ -337,7 +386,7 @@ export default function Admin() {
                   : "text-[#444] hover:text-[#F2F0EB]"
               }`}
             >
-              {tab === "users" ? "ALL REGISTRATIONS" : tab === "health" ? "HEALTH NOTES" : tab === "leaderboard" ? "LEADERBOARD" : tab === "schedule" ? "SCHEDULE" : tab === "scoring" ? "🏆 SCORING" : "SETTINGS"}
+              {tab === "users" ? "REGISTRATIONS" : tab === "health" ? "HEALTH" : tab === "scoring" ? "🏆 SCORING" : tab === "settings" ? "SETTINGS" : tab === "attendance" ? "✅ ATTENDANCE" : tab === "tshirts" ? "👕 T-SHIRTS" : "🔗 INVITES"}
             </button>
           ))}
         </div>
@@ -812,6 +861,224 @@ export default function Admin() {
 
         {activeTab === "scoring" && (
           <AdminScoring />
+        )}
+
+        {/* Attendance Tab */}
+        {activeTab === "attendance" && (
+          <div className="space-y-6">
+            {/* Summary bar */}
+            <div className="grid grid-cols-2 gap-3">
+              {(["red", "blue", "pink", "orange"] as const).map((team) => {
+                const total = attendanceByTeam[team]?.length ?? 0;
+                const present = presentCounts[team] ?? 0;
+                return (
+                  <div key={team} className="border border-[#1A1A1A] bg-[#0D0D0D] p-4">
+                    <p className="font-mono text-xs tracking-wider mb-1 uppercase" style={{ color: TEAM_COLORS[team] }}>{team}</p>
+                    <p className="font-display text-3xl" style={{ color: TEAM_COLORS[team] }}>{present}<span className="text-[#444] text-lg">/{total}</span></p>
+                    <p className="font-mono text-[#444] text-[10px] tracking-wider mt-1">PRESENT</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Per-team check-in lists */}
+            {(["red", "blue", "pink", "orange"] as const).map((team) => {
+              const members = attendanceByTeam[team] ?? [];
+              return (
+                <div key={team} className="border border-[#1A1A1A] bg-[#0D0D0D]">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-[#1A1A1A]">
+                    <p className="font-mono text-xs tracking-[0.2em] uppercase" style={{ color: TEAM_COLORS[team] }}>{team} TEAM</p>
+                    <p className="font-mono text-[#444] text-xs">{presentCounts[team] ?? 0}/{members.length} present</p>
+                  </div>
+                  <div className="divide-y divide-[#111]">
+                    {members.map((m: any) => (
+                      <div key={m.id} className="flex items-center justify-between px-4 py-3">
+                        <div>
+                          <p className="font-mono text-[#F2F0EB] text-sm">{m.fullName}</p>
+                          <p className="font-mono text-[#444] text-[10px] tracking-wider">
+                            {m.shirtSize ?? "?"} {m.shirtFit ?? ""} {m.accessType === "priority" ? "· PAID" : ""}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => markAttendanceMutation.mutate({ registrationId: m.id, present: !m.present })}
+                          disabled={markAttendanceMutation.isPending}
+                          className={`font-mono text-xs tracking-wider px-4 py-2 border transition-colors min-w-[80px] ${
+                            m.present
+                              ? "border-[#22c55e] text-[#22c55e] bg-[#22c55e]/10"
+                              : "border-[#333] text-[#444] hover:border-[#F2F0EB] hover:text-[#F2F0EB]"
+                          }`}
+                        >
+                          {m.present ? "✓ HERE" : "ABSENT"}
+                        </button>
+                      </div>
+                    ))}
+                    {members.length === 0 && (
+                      <p className="font-mono text-[#444] text-xs px-4 py-6 text-center">Loading team roster...</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* T-Shirts Tab */}
+        {activeTab === "tshirts" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="font-mono text-[#444] text-xs tracking-wider">{paidUsers.length} PAID USERS</p>
+              <button
+                onClick={() => {
+                  const headers = ["Name", "Email", "Team", "Shirt Size", "Shirt Fit", "Top Name", "Paid At"];
+                  const rows = paidUsers.map((u: any) => [
+                    u.fullName, u.email ?? "", u.team ?? "", u.shirtSize ?? "", u.shirtFit ?? "", u.topName ?? "",
+                    u.paidAt ? new Date(u.paidAt).toLocaleDateString() : "",
+                  ]);
+                  const csv = [headers, ...rows].map((r) => r.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+                  const blob = new Blob([csv], { type: "text/csv" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a"); a.href = url; a.download = `tshirts-${new Date().toISOString().split("T")[0]}.csv`; a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success(`Exported ${paidUsers.length} T-shirt records`);
+                }}
+                className="bg-[#FF5500] text-[#0A0A0A] font-mono text-xs tracking-widest px-5 py-2 hover:bg-[#F2F0EB] transition-colors"
+              >
+                EXPORT CSV ↓
+              </button>
+            </div>
+
+            {/* Size summary */}
+            <div className="border border-[#1A1A1A] bg-[#0D0D0D] p-4">
+              <p className="font-mono text-[#444] text-[10px] tracking-[0.3em] mb-3">SIZE BREAKDOWN</p>
+              <div className="flex flex-wrap gap-3">
+                {["XS", "S", "M", "L", "XL", "XXL"].map((size) => {
+                  const count = paidUsers.filter((u: any) => u.shirtSize === size).length;
+                  return (
+                    <div key={size} className="border border-[#222] px-3 py-2 text-center min-w-[60px]">
+                      <p className="font-display text-xl text-[#FF5500]">{count}</p>
+                      <p className="font-mono text-[#444] text-[10px]">{size}</p>
+                    </div>
+                  );
+                })}
+                <div className="border border-[#222] px-3 py-2 text-center min-w-[80px]">
+                  <p className="font-display text-xl text-[#444]">{paidUsers.filter((u: any) => !u.shirtSize).length}</p>
+                  <p className="font-mono text-[#444] text-[10px]">NO SIZE</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Per-team paid list */}
+            {(["red", "blue", "pink", "orange"] as const).map((team) => {
+              const teamPaid = paidUsers.filter((u: any) => u.team === team);
+              if (teamPaid.length === 0) return null;
+              return (
+                <div key={team} className="border border-[#1A1A1A] bg-[#0D0D0D]">
+                  <div className="px-4 py-3 border-b border-[#1A1A1A]">
+                    <p className="font-mono text-xs tracking-[0.2em] uppercase" style={{ color: TEAM_COLORS[team] }}>{team} — {teamPaid.length} paid</p>
+                  </div>
+                  <div className="divide-y divide-[#111]">
+                    {teamPaid.map((u: any) => (
+                      <div key={u.id} className="px-4 py-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-mono text-[#F2F0EB] text-sm">{u.fullName}</p>
+                            <p className="font-mono text-[#444] text-[10px] tracking-wider">{u.email}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-mono text-[#FF5500] text-sm">{u.shirtSize ?? "?"} {u.shirtFit ?? ""}</p>
+                            {u.topName && <p className="font-mono text-[#555] text-[10px]">&#34;{u.topName}&#34;</p>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+
+            {paidUsers.length === 0 && (
+              <div className="py-12 text-center font-mono text-[#444] text-sm tracking-wider">No paid users found.</div>
+            )}
+          </div>
+        )}
+
+        {/* Invite Codes Tab */}
+        {activeTab === "invites" && (
+          <div className="space-y-6">
+            {/* Create new code */}
+            <div className="border border-[#1A1A1A] bg-[#0D0D0D] p-5">
+              <p className="font-mono text-[#FF5500] text-xs tracking-[0.2em] mb-4">CREATE INVITE LINK</p>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Note (e.g. 'For Marcus + Priya')"
+                  value={inviteNote}
+                  onChange={(e) => setInviteNote(e.target.value)}
+                  className="w-full bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-4 py-3 outline-none focus:border-[#FF5500] transition-colors placeholder:text-[#444]"
+                />
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[#444] text-xs">MAX USES:</span>
+                    <select
+                      value={inviteMaxUses}
+                      onChange={(e) => setInviteMaxUses(Number(e.target.value))}
+                      className="bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-3 py-2 outline-none focus:border-[#FF5500]"
+                    >
+                      {[1, 2, 3, 5, 10].map((n) => <option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => createInviteMutation.mutate({ note: inviteNote || undefined, maxUses: inviteMaxUses })}
+                    disabled={createInviteMutation.isPending}
+                    className="flex-1 bg-[#FF5500] text-[#0A0A0A] font-mono text-xs tracking-widest py-3 hover:bg-[#F2F0EB] transition-colors disabled:opacity-50"
+                  >
+                    {createInviteMutation.isPending ? "CREATING..." : "GENERATE CODE →"}
+                  </button>
+                </div>
+                <p className="font-mono text-[#444] text-[10px] tracking-wider leading-relaxed">
+                  Share the link: <span className="text-[#FF5500]">{typeof window !== "undefined" ? window.location.origin : ""}/register?invite=LATE-XXXXXX</span><br/>
+                  The code bypasses closed registration. Set max uses to control how many people can use it.
+                </p>
+              </div>
+            </div>
+
+            {/* Existing codes */}
+            <div className="space-y-3">
+              {inviteCodes.length === 0 && (
+                <div className="py-12 text-center font-mono text-[#444] text-sm tracking-wider">No invite codes yet. Create one above.</div>
+              )}
+              {inviteCodes.map((code: any) => {
+                const isUsed = code.useCount >= code.maxUses;
+                const isExpired = code.expiresAt && new Date() > new Date(code.expiresAt);
+                const inviteUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/register?invite=${code.code}`;
+                return (
+                  <div key={code.id} className={`border bg-[#0D0D0D] p-4 ${ isUsed || isExpired ? "border-[#1A1A1A] opacity-50" : "border-[#FF5500]/30" }`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-mono text-[#FF5500] text-lg tracking-widest">{code.code}</p>
+                        {code.note && <p className="font-mono text-[#444] text-[10px] mt-1">{code.note}</p>}
+                      </div>
+                      <div className="text-right">
+                        <span className={`font-mono text-xs px-2 py-1 ${ isUsed || isExpired ? "text-[#444] border border-[#222]" : "text-[#22c55e] border border-[#22c55e]/30 bg-[#22c55e]/10" }`}>
+                          {isExpired ? "EXPIRED" : isUsed ? "USED" : "ACTIVE"}
+                        </span>
+                        <p className="font-mono text-[#444] text-[10px] mt-1">{code.useCount}/{code.maxUses} uses</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-mono text-[#333] text-[10px] flex-1 truncate">{inviteUrl}</p>
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(inviteUrl); toast.success("Link copied!"); }}
+                        className="font-mono text-[#FF5500] text-[10px] tracking-wider border border-[#FF5500]/30 px-3 py-1 hover:bg-[#FF5500]/10 transition-colors shrink-0"
+                      >
+                        COPY
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
 
         {activeTab === "health" && (
