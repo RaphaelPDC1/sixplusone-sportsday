@@ -553,3 +553,16 @@
 - [x] Per-event insights for all 11 events with multi-signal language (confidence prefix, count, fear signals, veteran signals)
 - [x] Best-fit member tags updated: Speed specialist, Competitor, Fear-proof, Veteran, Tactical mind, Steady performer, Composed under pressure, Drives the pair, Endurance specialist, Energy carrier, Chaos agent, Consistent performer, Unshakeable, Momentum driver, Relay veteran, Team engine, Driven by accountability, Tactical anchor, Fearless, Experienced
 - [x] TypeScript: 0 errors
+
+## Power-Up Voting Event-Status Gate (Jul 7)
+- [x] Fix AdminScoring tab bar overflow on mobile (overflow-x-auto scrollbar-hide)
+- [x] Wire power-up voting to event status: ARMED or LIVE = open, all other statuses = locked
+- [x] Backend: wildcards.ts openVote checks event.status === "armed" || "live" before allowing vote
+- [x] Backend: wildcards.ts castVote checks event.status === "armed" || "live" before allowing vote
+- [x] Backend: routers.ts initiatePowerUp checks any event is armed/live before allowing initiation
+- [x] Frontend TeamHub: power-ups tab banner shows "POWER UPS OPEN · [EVENT] · [STATUS]" when armed/live, else "POWER UPS UNLOCK WHEN AN EVENT IS ARMED OR LIVE"
+- [x] Frontend TeamHub: per-card action area locked when no event is armed/live
+- [x] Frontend AdminWildcardMonitor: auto-selects first ARMED/LIVE event on load
+- [x] Frontend AdminWildcardMonitor: event chips show status badge (ARMED/LIVE/COMPLETE etc.)
+- [x] Frontend AdminWildcardMonitor: voting status banner shows VOTING OPEN/CLOSED for selected event
+- [x] TypeScript: 0 errors

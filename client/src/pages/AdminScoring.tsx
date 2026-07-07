@@ -476,7 +476,7 @@ export default function AdminScoring() {
   return (
     <div className="space-y-6">
       {/* Tab bar */}
-      <div className="flex gap-1 border-b border-[#1A1A1A]">
+      <div className="flex gap-1 border-b border-[#1A1A1A] overflow-x-auto scrollbar-hide">
         {tabs.map((t) => (
           <button
             key={t.id}

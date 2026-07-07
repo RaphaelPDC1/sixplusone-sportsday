@@ -1,9 +1,10 @@
 /**
  * Admin Power Up Monitor
  * View active power ups, votes, and manage resolutions
- * Standalone — no required props, includes event selector
+ * Standalone — no required props, includes event selector.
+ * Auto-selects the first ARMED or LIVE event when data loads.
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 
 const TEAM_COLORS: Record<string, string> = {
@@ -29,50 +30,115 @@ const STATUS_COLORS: Record<string, string> = {
   failed: "#555",
 };
 
+/** Colour-coded pill for event status */
+function EventStatusBadge({ status }: { status: string }) {
+  const colors: Record<string, { color: string; bg: string }> = {
+    armed:    { color: "#FF8800", bg: "#FF880018" },
+    live:     { color: "#00FF88", bg: "#00FF8818" },
+    briefing: { color: "#FFDD00", bg: "#FFDD0018" },
+    complete: { color: "#4488FF", bg: "#4488FF18" },
+    delayed:  { color: "#FF4444", bg: "#FF444418" },
+    upcoming: { color: "#555",    bg: "transparent" },
+  };
+  const c = colors[status] ?? colors.upcoming;
+  return (
+    <span
+      className="text-[9px] tracking-widest px-1.5 py-0.5 border"
+      style={{ color: c.color, borderColor: `${c.color}40`, background: c.bg }}
+    >
+      {status.toUpperCase()}
+    </span>
+  );
+}
+
 export function AdminPowerUpMonitor() {
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
-  const events = trpc.scoring.getEvents.useQuery();
+  const events = trpc.scoring.getEvents.useQuery(undefined, { refetchInterval: 10_000 });
   const wildcards = trpc.powerUps.getEventWildcards.useQuery(
     { eventId: selectedEventId ?? 0 },
     { enabled: selectedEventId !== null && selectedEventId > 0, refetchInterval: 5_000 }
   );
+
+  // Auto-select the first ARMED or LIVE event when events load
+  useEffect(() => {
+    if (!events.data || selectedEventId !== null) return;
+    const active = events.data.find((e) => e.status === "armed" || e.status === "live");
+    if (active) setSelectedEventId(Number(active.id));
+  }, [events.data, selectedEventId]);
 
   const activeWildcards = (wildcards.data ?? []).filter(
     (w) => w.status === "active" || w.status === "pending"
   );
   const allWildcards = wildcards.data ?? [];
 
+  // Determine whether voting is open for the selected event
+  const selectedEvent = (events.data ?? []).find((e) => Number(e.id) === selectedEventId);
+  const votingOpen = selectedEvent?.status === "armed" || selectedEvent?.status === "live";
+
   return (
     <div className="space-y-6 font-mono">
+      {/* Voting status banner */}
+      {selectedEvent && (
+        <div
+          className="flex items-center gap-3 px-4 py-3 border"
+          style={{
+            borderColor: votingOpen ? "#00FF8840" : "#33333380",
+            background: votingOpen ? "#00FF8808" : "transparent",
+          }}
+        >
+          <span className="text-base">{votingOpen ? "⚡" : "⏳"}</span>
+          <div>
+            <div
+              className="text-[10px] tracking-widest"
+              style={{ color: votingOpen ? "#00FF88" : "#555" }}
+            >
+              {votingOpen ? "VOTING OPEN" : "VOTING CLOSED"}
+            </div>
+            <div className="text-[9px] text-[#444] tracking-wider mt-0.5">
+              {selectedEvent.name.toUpperCase()} · {selectedEvent.status.toUpperCase()}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Event selector */}
       <div>
         <div className="text-xs text-[#555] tracking-widest mb-2">SELECT EVENT</div>
         <div className="flex flex-wrap gap-2">
-          {(events.data ?? []).map((ev) => (
-            <button
-              key={ev.id}
-              onClick={() => setSelectedEventId(Number(ev.id))}
-              className="px-3 py-1.5 text-xs tracking-widest border transition-colors"
-              style={{
-                borderColor: selectedEventId === Number(ev.id) ? "#FF5500" : "#222",
-                color: selectedEventId === Number(ev.id) ? "#FF5500" : "#555",
-                background: selectedEventId === Number(ev.id) ? "#FF550010" : "transparent",
-              }}
-            >
-              {ev.name}
-            </button>
-          ))}
+          {(events.data ?? []).map((ev) => {
+            const isSelected = selectedEventId === Number(ev.id);
+            const isActive = ev.status === "armed" || ev.status === "live";
+            return (
+              <button
+                key={ev.id}
+                onClick={() => setSelectedEventId(Number(ev.id))}
+                className="px-3 py-1.5 text-xs tracking-widest border transition-colors flex items-center gap-2"
+                style={{
+                  borderColor: isSelected ? "#FF5500" : isActive ? "#FF880050" : "#222",
+                  color: isSelected ? "#FF5500" : isActive ? "#FF8800" : "#555",
+                  background: isSelected ? "#FF550010" : isActive ? "#FF880008" : "transparent",
+                }}
+              >
+                {ev.name}
+                <EventStatusBadge status={ev.status} />
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {selectedEventId === null ? (
-        <p className="text-xs text-[#444] tracking-wider">Select an event to view power ups.</p>
+        <p className="text-xs text-[#444] tracking-wider">No ARMED or LIVE event found. Select an event above to view power ups.</p>
       ) : wildcards.isLoading ? (
         <p className="text-xs text-[#444] tracking-wider">Loading...</p>
       ) : allWildcards.length === 0 ? (
-        <p className="text-xs text-[#444] tracking-wider">No power ups for this event yet.</p>
+        <p className="text-xs text-[#444] tracking-wider">
+          {votingOpen
+            ? "No power ups initiated yet — voting is open."
+            : "No power ups for this event."}
+        </p>
       ) : (
         <div className="space-y-4">
           {/* Summary */}

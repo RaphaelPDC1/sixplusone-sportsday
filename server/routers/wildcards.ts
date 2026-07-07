@@ -57,7 +57,13 @@ export const wildcardsRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      // TODO: verify user is captain of teamName
+      // Check event is armed or live (voting window)
+      const events = await db.select().from(sdEvents).where(eq(sdEvents.id, input.eventId));
+      const event = events[0];
+      if (!event) throw new TRPCError({ code: "NOT_FOUND", message: "Event not found" });
+      if (event.status !== "armed" && event.status !== "live") {
+        throw new TRPCError({ code: "FORBIDDEN", message: `Power Up voting is not open for this event (status: ${event.status}). Voting opens when the event is ARMED or LIVE.` });
+      }
 
       // Check team has cards remaining
       const teams = await db.select().from(sdTeams).where(eq(sdTeams.name, input.teamName as any));
@@ -113,6 +119,12 @@ export const wildcardsRouter = router({
       if (!wc) throw new TRPCError({ code: "NOT_FOUND", message: "Power Up not found" });
       if (wc.status !== "pending") {
         throw new TRPCError({ code: "CONFLICT", message: "Power Up is not open for voting" });
+      }
+      // Check event is still armed or live
+      const eventRows = await db.select().from(sdEvents).where(eq(sdEvents.id, wc.eventId));
+      const wcEvent = eventRows[0];
+      if (!wcEvent || (wcEvent.status !== "armed" && wcEvent.status !== "live")) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Voting window has closed for this event." });
       }
 
       const weights = await calculateVoteWeights(wc.ownerTeam, db);
