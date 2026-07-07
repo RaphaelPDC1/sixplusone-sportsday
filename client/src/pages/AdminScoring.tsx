@@ -6,6 +6,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { AdminPowerUpMonitor } from "@/components/AdminWildcardMonitor";
+import { AdminEventPanel } from "@/components/AdminEventPanel";
 
 type Team = "red" | "blue" | "pink" | "orange";
 const TEAMS: Team[] = ["red", "blue", "pink", "orange"];
@@ -31,7 +32,7 @@ const STATUS_COLORS: Record<string, string> = {
   complete: "#4488FF",
 };
 
-type ScoringView = "leaderboard" | "events" | "entry" | "audit" | "wildcards";
+type ScoringView = "leaderboard" | "events" | "entry" | "audit";
 
 // ─── Live Leaderboard ─────────────────────────────────────────────────────────
 function LiveLeaderboard() {
@@ -467,10 +468,8 @@ export default function AdminScoring() {
 
   const tabs: { id: ScoringView; label: string }[] = [
     { id: "leaderboard", label: "LEADERBOARD" },
-    { id: "events", label: "EVENTS" },
-    { id: "entry", label: "RESULT ENTRY" },
+    { id: "events", label: "⚡ EVENTS" },
     { id: "audit", label: "AUDIT LOG" },
-    { id: "wildcards", label: "⚡ WILDCARDS" },
   ];
 
   return (
@@ -499,10 +498,8 @@ export default function AdminScoring() {
           <ManualAdjust />
         </div>
       )}
-      {view === "events" && <EventControl />}
-      {view === "entry" && <ResultEntry />}
+      {view === "events" && <AdminEventPanel />}
       {view === "audit" && <AuditLog />}
-      {view === "wildcards" && <AdminPowerUpMonitor />}
     </div>
   );
 }

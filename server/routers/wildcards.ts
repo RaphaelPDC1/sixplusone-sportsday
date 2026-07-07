@@ -5,7 +5,7 @@
 import { z } from "zod";
 import { and, eq, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, router } from "../_core/trpc";
+import { protectedProcedure, adminProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { sdPowerUps, sdPowerUpVotes, sdTeams, sdTeamMembers, sdRosterOverrides, sdPointsLog, sdEvents } from "../../drizzle/schema";
 
@@ -227,5 +227,37 @@ export const wildcardsRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
       return await db.select().from(sdPowerUpVotes).where(eq(sdPowerUpVotes.powerUpId, input.wildcardId));
+    }),
+
+  // Admin: force-resolve a power up (mark resolved, apply sabotage effect if applicable)
+  adminResolvePowerUp: adminProcedure
+    .input(z.object({ wildcardId: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const [wc] = await db.select().from(sdPowerUps).where(eq(sdPowerUps.id, input.wildcardId)).limit(1);
+      if (!wc) throw new TRPCError({ code: "NOT_FOUND", message: "Power Up not found" });
+      await db.update(sdPowerUps).set({ status: "resolved", resolvedAt: new Date() }).where(eq(sdPowerUps.id, input.wildcardId));
+      // Apply sabotage: deduct 5 points from target team
+      if (wc.type === "sabotage" && wc.targetTeam) {
+        await db.insert(sdPointsLog).values({
+          team: wc.targetTeam,
+          delta: -5,
+          reason: "sabotage",
+          note: `SABOTAGE by ${wc.ownerTeam} (power up #${wc.id}) — admin resolved`,
+          actor: "admin",
+        });
+      }
+      return { success: true };
+    }),
+
+  // Admin: block a power up (no effect applied)
+  adminBlockPowerUp: adminProcedure
+    .input(z.object({ wildcardId: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      await db.update(sdPowerUps).set({ status: "blocked", resolvedAt: new Date() }).where(eq(sdPowerUps.id, input.wildcardId));
+      return { success: true };
     }),
 });

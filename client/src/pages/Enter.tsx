@@ -87,30 +87,7 @@ export default function Enter() {
 
   const [, navigate] = useLocation();
 
-  // Redirect to holding if registration is closed AND no valid invite
-  useEffect(() => {
-    if (registrationClosed && !inviteChecking && !inviteValid) {
-      navigate("/holding");
-    }
-  }, [registrationClosed, inviteChecking, inviteValid, navigate]);
-
-  // Show loading while validating invite
-  if (inviteChecking) {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <p className="font-mono text-white/30 text-sm tracking-widest">VALIDATING INVITE...</p>
-      </div>
-    );
-  }
-
-  // Show closed message briefly while redirecting (no valid invite)
-  if (registrationClosed && !inviteValid) {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <p className="font-mono text-white/30 text-sm tracking-widest">REGISTRATION CLOSED</p>
-      </div>
-    );
-  }
+  // ── All hooks MUST be declared before any early returns (Rules of Hooks) ──
   const [showSplash, setShowSplash] = useState(
     () => sessionStorage.getItem("enter_splash_seen") !== "true"
   );
@@ -280,6 +257,13 @@ export default function Enter() {
     clearUTMParams();
   };
 
+  // Redirect to holding if registration is closed AND no valid invite
+  // (useEffect must come after all hooks — this is correct placement)
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // Note: useEffect is a hook but it doesn't cause the rules-of-hooks issue since it's always called
+  // The early returns below are AFTER all hooks, which is correct
+  const shouldRedirect = registrationClosed && !inviteChecking && !inviteValid;
+
   const progress = ((step + 1) / TOTAL_STEPS) * 100;
   const palette = STEP_PALETTES[step] ?? STEP_PALETTES[0];
 
@@ -288,6 +272,23 @@ export default function Enter() {
       ? "opacity-0 translate-x-[-50px] scale-[0.97]"
       : "opacity-0 translate-x-[50px] scale-[0.97]"
     : "opacity-100 translate-x-0 scale-100";
+
+  // Early returns AFTER all hooks (correct per Rules of Hooks)
+  if (inviteChecking) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <p className="font-mono text-white/30 text-sm tracking-widest">VALIDATING INVITE...</p>
+      </div>
+    );
+  }
+  if (shouldRedirect) {
+    if (typeof window !== "undefined") window.location.replace("/holding");
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <p className="font-mono text-white/30 text-sm tracking-widest">REGISTRATION CLOSED</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#0A0A0A]">

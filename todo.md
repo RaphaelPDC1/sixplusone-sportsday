@@ -566,3 +566,11 @@
 - [x] Frontend AdminWildcardMonitor: event chips show status badge (ARMED/LIVE/COMPLETE etc.)
 - [x] Frontend AdminWildcardMonitor: voting status banner shows VOTING OPEN/CLOSED for selected event
 - [x] TypeScript: 0 errors
+
+## Invite Link Fix + Admin Event Panel (Jul 7)
+- [ ] Fix invite link crash: move all useState/useCallback/useMutation hooks before early returns in Enter.tsx
+- [ ] Ensure invite code LATE-EB7E45 exists in DB (create if missing)
+- [ ] Combine AdminScoring event result entry + AdminWildcardMonitor into single AdminEventPanel
+- [ ] AdminEventPanel: event list on left, selected event shows status control + result entry + power-ups on right
+- [ ] Rename "Wildcards" to "Power Ups" throughout admin UI
+- [ ] Wire AdminEventPanel into AdminScoring replacing the separate tabs
