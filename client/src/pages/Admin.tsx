@@ -240,29 +240,25 @@ export default function Admin() {
   }, [allUsers, filters]);
 
   const exportCSV = () => {
+    // Only export the fields actually returned by the backend (adminGetRegistrations)
+    // Columns with no data are omitted to avoid blank fields in the CSV
     const headers = [
-      "ID", "Name", "Email", "Instagram", "Attended Before", "Coming Type", "Group Code", "Group Role",
-      "Date 4 July", "Date 11 July", "Date 18 July", "Date Any",
-      "Competitiveness", "Teammate Type", "Strongest Event", "Fear", "Event Motivation",
-      "Captain Vote Interest", "Profile", "Tagline", "Team", "Payment Status", "Access Type",
-      "Shirt Size", "Shirt Fit", "Content Consent",
-      "Referral Code", "Referred By", "Referral Count", "Referral Reward Unlocked",
-      "Created At",
+      "ID", "Name", "Team", "Payment Status", "Shirt Size", "Content Consent", "Registered At",
     ];
 
+    // Build active filter summary for the filename
+    const activeFilters = Object.entries(filters)
+      .filter(([k, v]) => k !== "search" && v !== "all")
+      .map(([k, v]) => `${k}=${v}`)
+      .join("_");
+
     const rows = filteredUsers.map((u) => [
-      u.id, u.fullName, "", "",
-      "",
-      "", "", "",
-      "", "",
-      "", "",
-      "", "", "", "",
-      "", "",
-      "", "",
-      u.team ?? "", u.paymentStatus ?? "", "",
-      u.shirtSize ?? "", "", u.contentConsent ?? "",
-      "", "", 0,
-      "No",
+      u.id,
+      u.fullName,
+      u.team ?? "",
+      u.paymentStatus ?? "",
+      u.shirtSize ?? "",
+      u.contentConsent ?? "",
       u.createdAt ? new Date(u.createdAt).toISOString() : "",
     ]);
 
@@ -274,7 +270,10 @@ export default function Admin() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `sportsday002-registrations-${new Date().toISOString().split("T")[0]}.csv`;
+    const dateSuffix = new Date().toISOString().split("T")[0];
+    a.download = activeFilters
+      ? `sportsday002-registrations-${activeFilters}-${dateSuffix}.csv`
+      : `sportsday002-registrations-${dateSuffix}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success(`Exported ${filteredUsers.length} records`);
