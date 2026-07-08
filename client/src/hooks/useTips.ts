@@ -67,7 +67,7 @@ export const TIPS: Tip[] = [
   {
     id: "location",
     label: "LOCATION",
-    body: "Use this card for directions to Endcliffe Park.",
+    body: "Use this card for directions to Millhouses Park.",
   },
 ];
 

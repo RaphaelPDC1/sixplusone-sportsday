@@ -2068,12 +2068,12 @@ export default function TeamHub() {
                 className="font-display text-4xl tracking-widest mb-1"
                 style={{ color: tc.hex }}
               >
-                {hub?.event?.location?.toUpperCase() ?? "ENDCLIFFE PARK"}
+                {hub?.event?.location?.toUpperCase() ?? "MILLHOUSES PARK"}
               </div>
-              <p className="font-mono text-white/40 text-sm">{hub?.event?.fullAddress ?? "Endcliffe Park, Sheffield, S11 7AB"}</p>
+              <p className="font-mono text-white/40 text-sm">{hub?.event?.fullAddress ?? "Millhouses Park, Sheffield, S7 2QQ"}</p>
               <p className="font-mono text-white/40 text-sm mt-1">{hub?.event?.date ?? "Saturday 11 July 2026"}</p>
               <a
-                href={hub?.event?.mapsUrl ?? "https://maps.google.com/?q=Endcliffe+Park+Sheffield+S11+7AB"}
+                href={hub?.event?.mapsUrl ?? "https://maps.google.com/?q=Millhouses+Park+Sheffield+S7+2QQ"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block mt-4 font-mono text-xs tracking-widest underline underline-offset-4 transition-opacity hover:opacity-70"
@@ -2098,20 +2098,20 @@ export default function TeamHub() {
               ))}
             </div>
 
-            {/* Google Maps embed — Endcliffe Park, Sheffield */}
+            {/* Google Maps embed — Millhouses Park, Sheffield */}
             <div
               className="relative overflow-hidden border"
               style={{ borderColor: `${tc.hex}40` }}
             >
               <a
-                href="https://maps.google.com/?q=Endcliffe+Park+Sheffield+S11+7AB"
+                href="https://maps.google.com/?q=Millhouses+Park+Sheffield+S7+2QQ"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block"
               >
                 <img
-                  src="/api/static-map?center=53.3718,-1.5046&zoom=15&size=600x260&maptype=roadmap&markers=color:red%7C53.3718,-1.5046"
-                  alt="Endcliffe Park, Sheffield — tap to open in Google Maps"
+                  src="/api/static-map?center=53.3453,-1.5000&zoom=15&size=600x260&maptype=roadmap&markers=color:red%7C53.3453,-1.5000"
+                  alt="Millhouses Park, Sheffield — tap to open in Google Maps"
                   className="w-full h-[260px] object-cover block"
                   loading="lazy"
                 />

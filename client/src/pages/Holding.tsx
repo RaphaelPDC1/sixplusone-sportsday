@@ -826,7 +826,7 @@ export default function Holding() {
             SATURDAY 11 JULY 2026
           </p>
           <p className="font-mono text-[#F2F0EB]/30 text-xs tracking-[0.3em]">
-            SHEFFIELD
+            MILLHOUSES PARK, SHEFFIELD
           </p>
         </section>
 
