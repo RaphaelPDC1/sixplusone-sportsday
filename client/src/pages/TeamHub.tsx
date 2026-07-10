@@ -81,13 +81,17 @@ function getEventEmoji(name: string, arena?: string): string {
 }
 
 const EVENTS = [
-  { id: "sprint",        name: "100M SPRINT",          icon: "💨", desc: "Pure speed. No excuses." },
-  { id: "relay",         name: "4×100 RELAY",           icon: "🏃", desc: "Team timing is everything." },
-  { id: "tug_of_war",   name: "TUG OF WAR",            icon: "💪", desc: "Strength meets strategy." },
-  { id: "obstacle",     name: "OBSTACLE COURSE",       icon: "🧱", desc: "Chaos, controlled." },
-  { id: "long_jump",    name: "LONG JUMP",              icon: "🦘", desc: "Commit or go home." },
-  { id: "penalty_shoot",name: "PENALTY SHOOTOUT",      icon: "⚽", desc: "Nerves of steel required." },
-  { id: "tiebreaker",   name: "MYSTERY TIEBREAKER",    icon: "❓", desc: "Nobody knows. Yet." },
+  { id: "1",  name: "60M SPRINT (M)",      icon: "💨", desc: "Pure speed. No excuses." },
+  { id: "2",  name: "60M SPRINT (W)",      icon: "💨", desc: "Pure speed. No excuses." },
+  { id: "7",  name: "SACK RACE",           icon: "🥊", desc: "Rhythm and confidence win it." },
+  { id: "4",  name: "WHEELBARROW RACE",    icon: "🤝", desc: "Chemistry and communication." },
+  { id: "6",  name: "400M (W)",            icon: "🏃", desc: "Controlled aggression." },
+  { id: "5",  name: "400M (M)",            icon: "🏃", desc: "Controlled aggression." },
+  { id: "8",  name: "THREE LEGGED RACE",   icon: "👥", desc: "Sync or sink." },
+  { id: "3",  name: "EGG AND SPOON",       icon: "🥚", desc: "Patience under pressure." },
+  { id: "10", name: "CHAIN RACE",          icon: "🔗", desc: "Every member counts." },
+  { id: "9",  name: "60M TEAM RELAY",      icon: "🏅", desc: "Trust and timing." },
+  { id: "11", name: "TUG OF WAR",          icon: "💪", desc: "Strength meets strategy. Finale." },
 ];
 
 const POWER_UPS = [
@@ -953,9 +957,10 @@ export default function TeamHub() {
           if (fearNothingCount > 0) dnaTags.push({ label: "FEARLESS", value: String(fearNothingCount), color: "#4ade80" });
 
           // ── Best-fit members per event (numeric DB IDs) ───────────────────────────────────
-          // Event IDs in DB: 1=60m Sprint M, 2=60m Sprint W, 3=Egg & Spoon, 4=Wheelbarrow,
-          //   5=400m M, 6=400m W, 7=Sack Race, 8=3-Legged Race, 9=60m Team Relay,
-          //   10=Chain Race, 11=Tug of War Finale
+          // Event IDs in DB (running order):
+          //   sortOrder 1=id1 60m Sprint M, 2=id2 60m Sprint W, 3=id7 Sack Race,
+          //   4=id4 Wheelbarrow Race, 5=id6 400m W, 6=id5 400m M, 7=id8 Three Legged Race,
+          //   8=id3 Egg and Spoon, 9=id10 Chain Race, 10=id9 60m Team Relay, 11=id11 Tug of War
           const eventBestFit: Record<string, { member: typeof members[0]; reason: string }[]> = {};
 
           const addFit = (eventId: string, member: typeof members[0], reason: string) => {
