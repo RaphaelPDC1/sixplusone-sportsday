@@ -5,6 +5,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { BackNav } from "@/components/ui/back-nav";
+import { AdminEventPanel } from "@/components/AdminEventPanel";
 import { EntrySplash } from "@/components/ui/entry-splash";
 
 
@@ -373,13 +374,13 @@ export default function Admin() {
         )}
         {/* ── Voting Toggle ── */}
         <div className="flex items-center justify-between px-5 py-3 border border-[#1A1A1A] bg-[#0D0D0D]">
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="font-mono text-[#F2F0EB] text-xs tracking-[0.2em] font-bold">⚡ POWER UP VOTING</p>
             <p className="font-mono text-[#555] text-[10px] tracking-wider mt-0.5">
               {adminSettings?.votingEnabled ? "OPEN — captains can trigger power ups" : "CLOSED — flip to open for the current event"}
             </p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-3 shrink-0 ml-4">
             <span className={`font-mono text-xs tracking-widest font-bold ${
               adminSettings?.votingEnabled ? "text-[#22c55e]" : "text-[#444]"
             }`}>
@@ -388,17 +389,29 @@ export default function Admin() {
             <button
               onClick={() => toggleVotingMutation.mutate({ enabled: !adminSettings?.votingEnabled })}
               disabled={toggleVotingMutation.isPending}
-              className={`relative w-14 h-7 rounded-full transition-colors duration-300 focus:outline-none ${
-                adminSettings?.votingEnabled ? "bg-[#22c55e]" : "bg-[#222]"
+              className={`relative inline-flex items-center w-14 h-7 rounded-full transition-colors duration-300 focus:outline-none shrink-0 ${
+                adminSettings?.votingEnabled ? "bg-[#22c55e]" : "bg-[#333]"
               }`}
               aria-label="Toggle voting"
             >
               <span
-                className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform duration-300 ${
-                  adminSettings?.votingEnabled ? "translate-x-8" : "translate-x-1"
+                className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${
+                  adminSettings?.votingEnabled ? "translate-x-7" : "translate-x-0"
                 }`}
               />
             </button>
+          </div>
+        </div>
+
+        {/* ── Event Scoring Panel ── */}
+        <div className="border border-[#1A1A1A] bg-[#0A0A0A] mx-0">
+          <div className="px-5 py-3 border-b border-[#1A1A1A] flex items-center gap-2">
+            <span className="text-[#FF5500]">⚡</span>
+            <p className="font-mono text-[#F2F0EB] text-xs tracking-[0.2em] font-bold">EVENT SCORING</p>
+            <p className="font-mono text-[#555] text-[10px] tracking-wider ml-auto">SELECT EVENT · LOG POINTS · SUBMIT</p>
+          </div>
+          <div className="px-4 py-4">
+            <AdminEventPanel />
           </div>
         </div>
 

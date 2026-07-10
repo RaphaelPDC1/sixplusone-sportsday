@@ -34,6 +34,7 @@ export function AdminEventPanel() {
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [placements, setPlacements] = useState<Partial<Record<Team, number>>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const { data: events } = trpc.scoring.getEvents.useQuery(undefined, {
     refetchInterval: 20_000,
@@ -44,6 +45,12 @@ export function AdminEventPanel() {
   const setStatus   = trpc.scoring.adminSetEventStatus.useMutation();
 
   const selectedEvent = (events ?? []).find((e) => Number(e.id) === selectedEventId);
+
+  // Show active events by default; show all when toggled
+  const activeStatuses = ["armed", "briefing", "live", "delayed"];
+  const visibleEvents = showAll
+    ? (events ?? [])
+    : (events ?? []).filter((e) => activeStatuses.includes(e.status));
 
   const handleSelectEvent = (id: number) => {
     setSelectedEventId(id);
@@ -87,7 +94,12 @@ export function AdminEventPanel() {
           <p className="font-mono text-[#555] text-xs">Loading…</p>
         ) : (
           <div className="space-y-1.5">
-            {events.map((ev) => {
+            {visibleEvents.length === 0 && !showAll && (
+              <p className="font-mono text-[#555] text-[10px] tracking-wider py-2">
+                No active events — arm an event to start scoring
+              </p>
+            )}
+            {visibleEvents.map((ev) => {
               const isSelected = Number(ev.id) === selectedEventId;
               const sc = STATUS_COLOR[ev.status] ?? "#555";
               const isDone = ev.status === "complete";
@@ -122,6 +134,13 @@ export function AdminEventPanel() {
                 </button>
               );
             })}
+            {/* Show all / collapse toggle */}
+            <button
+              onClick={() => setShowAll((v) => !v)}
+              className="w-full py-2 font-mono text-[10px] tracking-widest text-[#555] hover:text-[#F2F0EB] transition-colors text-center border border-[#1A1A1A] mt-1"
+            >
+              {showAll ? `▲ SHOW ACTIVE ONLY` : `▼ SHOW ALL EVENTS (${(events ?? []).length})`}
+            </button>
           </div>
         )}
       </div>
