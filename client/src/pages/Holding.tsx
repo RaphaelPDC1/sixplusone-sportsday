@@ -151,7 +151,7 @@ function StatusRow({
         transform: visible ? "translateX(0)" : "translateX(-8px)",
       }}
     >
-      <span className="font-mono text-[#444] text-xs tracking-[0.2em]">{label}</span>
+      <span className="font-mono text-[#999] text-xs tracking-[0.2em]">{label}</span>
       <span
         className="font-mono text-xs tracking-[0.2em]"
         style={{
@@ -203,7 +203,7 @@ function ScratchReplaySection({ visible }: { visible: boolean }) {
           className="w-full flex items-center justify-between px-6 py-5 hover:bg-white/[0.02] transition-colors"
         >
           <div className="text-left">
-            <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-0.5">YOUR GOLDEN TICKET</p>
+            <p className="font-mono text-[#999] text-xs tracking-[0.3em] mb-0.5">YOUR GOLDEN TICKET</p>
             <p className="font-mono text-[#F2F0EB]/40 text-[10px] tracking-wider">
               {expanded ? "Tap to close" : "11 July 2026 · Your confirmed spot"}
             </p>
@@ -357,7 +357,7 @@ function ShareCard() {
 
   return (
     <div className="border-t border-white/8 bg-black/10 p-5 space-y-4">
-      <p className="font-mono text-[#444] text-[10px] tracking-[0.3em]">SHARE YOUR SPOT</p>
+      <p className="font-mono text-[#999] text-[10px] tracking-[0.3em]">SHARE YOUR SPOT</p>
 
       {/* ── Story card image — full natural height, no cropping ── */}
       <img
@@ -378,11 +378,11 @@ function ShareCard() {
       <button
         onClick={handleDownload}
         disabled={sharing || downloading}
-        className="w-full border border-white/10 text-white/40 font-mono text-xs tracking-widest py-3 hover:border-[#FF5500]/30 hover:text-[#FF5500]/60 transition-all disabled:opacity-40"
+        className="w-full border border-white/10 text-white/70 font-mono text-xs tracking-widest py-3 hover:border-[#FF5500]/30 hover:text-[#FF5500]/60 transition-all disabled:opacity-40"
       >
         {downloading ? "SAVING..." : "↓ DOWNLOAD STORY CARD"}
       </button>
-      <p className="font-mono text-[#333] text-[10px] text-center tracking-wider">
+      <p className="font-mono text-[#888] text-[10px] text-center tracking-wider">
         Share opens your share sheet. Download saves the image.
       </p>
     </div>
@@ -448,7 +448,7 @@ function WelcomeBack({ onLogin }: { onLogin: (id: string) => void }) {
       {/* Main content */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-5 pb-16">
         {/* Label */}
-        <p className="font-mono text-[#444] text-xs tracking-[0.3em] mb-4">RETURNING PLAYER</p>
+        <p className="font-mono text-[#999] text-xs tracking-[0.3em] mb-4">RETURNING PLAYER</p>
 
         {/* Headline */}
         <h1
@@ -853,7 +853,7 @@ export default function Holding() {
                   {isUnlocked ? "TEAM UNLOCKED" : "TEAM LOCKED"}
                 </span>
               </div>
-              <span className="font-mono text-[#444] text-[10px] tracking-widest">
+              <span className="font-mono text-[#999] text-[10px] tracking-widest">
                 —
               </span>
             </div>
@@ -959,9 +959,9 @@ export default function Holding() {
               </button>
               {/* Trust micro-copy */}
               <div className="flex items-center justify-center gap-5">
-                <span className="font-mono text-[#333] text-[10px] tracking-wider">Secure checkout</span>
-                <span className="font-mono text-[#333] text-[10px] tracking-wider">Instant unlock</span>
-                <span className="font-mono text-[#333] text-[10px] tracking-wider">Apple Pay</span>
+                <span className="font-mono text-[#888] text-[10px] tracking-wider">Secure checkout</span>
+                <span className="font-mono text-[#888] text-[10px] tracking-wider">Instant unlock</span>
+                <span className="font-mono text-[#888] text-[10px] tracking-wider">Apple Pay</span>
               </div>
               {/* Logout link */}
               <div className="flex justify-center pt-2">
@@ -1005,7 +1005,7 @@ export default function Holding() {
             <div className="border border-white/8 bg-black/15 backdrop-blur-sm px-5 py-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="font-mono text-[#444] text-[10px] tracking-[0.3em] mb-1">YOUR REFERRAL LINK</p>
+                  <p className="font-mono text-[#999] text-[10px] tracking-[0.3em] mb-1">YOUR REFERRAL LINK</p>
                   <p className="font-mono text-[#FF5500] text-xs tracking-wider truncate">{referralLink}</p>
                 </div>
                 <button

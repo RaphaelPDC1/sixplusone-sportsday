@@ -6,7 +6,7 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { BackNav } from "@/components/ui/back-nav";
 import { EntrySplash } from "@/components/ui/entry-splash";
-import { TeamCaptainsSection } from "@/components/TeamCaptainsSection";
+
 
 const LOGO_URL = "/manus-storage/logo-61_f0639c6b.webp";
 
@@ -328,9 +328,6 @@ export default function Admin() {
       </header>
 
       <div className="px-6 py-6 space-y-6">
-
-        {/* Team Captains */}
-        <TeamCaptainsSection />
 
         {/* Stats Cards */}
         {stats && (

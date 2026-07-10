@@ -277,7 +277,7 @@ export default function Enter() {
   if (inviteChecking) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <p className="font-mono text-white/30 text-sm tracking-widest">VALIDATING INVITE...</p>
+        <p className="font-mono text-white/60 text-sm tracking-widest">VALIDATING INVITE...</p>
       </div>
     );
   }
@@ -285,7 +285,7 @@ export default function Enter() {
     if (typeof window !== "undefined") window.location.replace("/holding");
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <p className="font-mono text-white/30 text-sm tracking-widest">REGISTRATION CLOSED</p>
+        <p className="font-mono text-white/60 text-sm tracking-widest">REGISTRATION CLOSED</p>
       </div>
     );
   }
@@ -350,7 +350,7 @@ export default function Enter() {
                   onChange={(e) => set("fullName", e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleNext()}
                   placeholder="Your name"
-                  className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-display text-3xl py-3 placeholder:text-white/20 transition-colors"
+                  className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-display text-3xl py-3 placeholder:text-white/75 transition-colors"
                 />
                 {errors.fullName && <ErrorMsg msg={errors.fullName} />}
                 {form.fullName.trim() && <NextBtn onClick={handleNext} className="mt-6" />}
@@ -366,7 +366,7 @@ export default function Enter() {
                   onChange={(e) => set("email", e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleNext()}
                   placeholder="you@example.com"
-                  className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-xl py-3 placeholder:text-white/20 transition-colors"
+                  className="w-full bg-transparent border-b-2 border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-xl py-3 placeholder:text-white/75 transition-colors"
                 />
                 {errors.email && <ErrorMsg msg={errors.email} />}
                 {form.email.trim() && <NextBtn onClick={handleNext} className="mt-6" />}
@@ -377,14 +377,14 @@ export default function Enter() {
             {step === 2 && (
               <StepCard label="Instagram handle?" caption="We'll tag you when your team drops. Skip if not.">
                 <div className="flex items-center border-b-2 border-white/20 focus-within:border-[#FF5500] transition-colors">
-                  <span className="text-white/30 font-mono text-2xl py-3 mr-1">@</span>
+                  <span className="text-white/60 font-mono text-2xl py-3 mr-1">@</span>
                   <input
                     type="text"
                     value={form.instagramHandle}
                     onChange={(e) => set("instagramHandle", e.target.value.replace("@", ""))}
                     onKeyDown={(e) => e.key === "Enter" && handleNext()}
                     placeholder="yourhandle"
-                    className="flex-1 bg-transparent outline-none text-[#F2F0EB] font-mono text-xl py-3 placeholder:text-white/20"
+                    className="flex-1 bg-transparent outline-none text-[#F2F0EB] font-mono text-xl py-3 placeholder:text-white/75"
                   />
                 </div>
                 <div className="mt-6 flex gap-3">
@@ -465,11 +465,11 @@ export default function Enter() {
                     } disabled:opacity-50`}
                   >
                     {createGroupCodeEarlyMutation.isPending ? (
-                      <span className="font-mono text-white/40 text-sm tracking-widest">GENERATING…</span>
+                      <span className="font-mono text-white/70 text-sm tracking-widest">GENERATING…</span>
                     ) : generatedGroupCode ? (
                       <div>
                         <div className="text-[#FF5500] font-display text-3xl tracking-widest">{generatedGroupCode}</div>
-                        <div className="text-white/40 font-mono text-xs mt-1 tracking-wider">Share this with your crew</div>
+                        <div className="text-white/70 font-mono text-xs mt-1 tracking-wider">Share this with your crew</div>
                       </div>
                     ) : (
                       <span className="font-mono text-white/60 text-sm tracking-widest">CREATE A GROUP CODE →</span>
@@ -478,7 +478,7 @@ export default function Enter() {
 
                   <div className="flex items-center gap-3">
                     <div className="flex-1 h-[1px] bg-white/10" />
-                    <span className="font-mono text-white/30 text-xs">OR</span>
+                    <span className="font-mono text-white/60 text-xs">OR</span>
                     <div className="flex-1 h-[1px] bg-white/10" />
                   </div>
 
@@ -491,7 +491,7 @@ export default function Enter() {
                         setGroupCodeVerified(false);
                       }}
                       placeholder="ENTER A CODE"
-                      className="w-full bg-transparent border border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-lg p-4 placeholder:text-white/20 tracking-widest transition-colors"
+                      className="w-full bg-transparent border border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-lg p-4 placeholder:text-white/75 tracking-widest transition-colors"
                     />
                     {verifyGroupCodeQuery.data?.valid && !groupCodeVerified && (
                       <div className="flex flex-col gap-2">
@@ -523,7 +523,7 @@ export default function Enter() {
                 {(form.groupRole === "creator" || groupCodeVerified) && (
                   <NextBtn onClick={handleNext} className="mt-6" />
                 )}
-                <button onClick={handleNext} className="block mt-3 font-mono text-white/30 text-xs tracking-wider hover:text-white/60 transition-colors">
+                <button onClick={handleNext} className="block mt-3 font-mono text-white/60 text-xs tracking-wider hover:text-white/60 transition-colors">
                   SKIP →
                 </button>
               </StepCard>
@@ -648,7 +648,7 @@ export default function Enter() {
               <StepCard label="Shirt size and fit." caption="Your team kit. We order once.">
                 <div className="space-y-6 mt-6">
                   <div>
-                    <p className="font-mono text-white/40 text-xs tracking-widest mb-3">SIZE</p>
+                    <p className="font-mono text-white/70 text-xs tracking-widest mb-3">SIZE</p>
                     <div className="grid grid-cols-3 gap-2">
                       {(["XS", "S", "M", "L", "XL", "XXL"] as const).map((size) => (
                         <button
@@ -666,7 +666,7 @@ export default function Enter() {
                     </div>
                   </div>
                   <div>
-                    <p className="font-mono text-white/40 text-xs tracking-widest mb-3">FIT</p>
+                    <p className="font-mono text-white/70 text-xs tracking-widest mb-3">FIT</p>
                     <div className="grid grid-cols-2 gap-2">
                       {[
                         { val: "regular" as const, label: "REGULAR" },
@@ -696,7 +696,7 @@ export default function Enter() {
               <StepCard label="Last few things.">
                 <div className="space-y-6 mt-4">
                   <div>
-                    <p className="font-mono text-white/40 text-xs tracking-widest mb-2">
+                    <p className="font-mono text-white/70 text-xs tracking-widest mb-2">
                       Injuries, health notes, or access needs?
                     </p>
                     <textarea
@@ -704,7 +704,7 @@ export default function Enter() {
                       onChange={(e) => set("healthNotes", e.target.value)}
                       placeholder="Optional — stays private."
                       rows={3}
-                      className="w-full bg-black/30 border border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-sm p-4 transition-colors placeholder:text-white/20 resize-none"
+                      className="w-full bg-black/30 border border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-sm p-4 transition-colors placeholder:text-white/75 resize-none"
                     />
                   </div>
                   {/* Marketing consent */}
@@ -735,7 +735,7 @@ export default function Enter() {
                   onChange={(e) => set("eventMotivation", e.target.value)}
                   placeholder="Tell us..."
                   rows={4}
-                  className="w-full bg-black/30 border border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-sm p-4 mt-4 transition-colors placeholder:text-white/20 resize-none"
+                  className="w-full bg-black/30 border border-white/20 focus:border-[#FF5500] outline-none text-[#F2F0EB] font-mono text-sm p-4 mt-4 transition-colors placeholder:text-white/75 resize-none"
                 />
                 <button
                   onClick={handleSubmit}
@@ -744,7 +744,7 @@ export default function Enter() {
                 >
                   {registerMutation.isPending ? "ENTERING THE SYSTEM..." : "ENTER THE SYSTEM →"}
                 </button>
-                <p className="font-mono text-white/20 text-xs text-center mt-4 tracking-wider">
+                <p className="font-mono text-white/75 text-xs text-center mt-4 tracking-wider">
                   By registering you agree to our{" "}
                   <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-[#FF5500]/60 hover:text-[#FF5500] underline transition-colors">Terms &amp; Conditions</a>
                   {" "}and{" "}
@@ -779,7 +779,7 @@ function StepCard({
         {label}
       </h2>
       {caption && (
-        <p className="font-mono text-white/40 text-xs tracking-widest mb-2">{caption}</p>
+        <p className="font-mono text-white/70 text-xs tracking-widest mb-2">{caption}</p>
       )}
       {children}
     </div>
@@ -818,7 +818,7 @@ function ChoiceCard({
         >
           {selected && "✓ "}{label}
         </div>
-        {sub && <div className="font-mono text-white/30 text-xs mt-0.5 tracking-wider">{sub}</div>}
+        {sub && <div className="font-mono text-white/60 text-xs mt-0.5 tracking-wider">{sub}</div>}
       </div>
     </button>
   );
@@ -840,7 +840,7 @@ function NextBtn({
       onClick={onClick}
       className={`${className} ${
         secondary
-          ? "border border-white/20 text-white/40 hover:border-white/40 hover:text-white/70"
+          ? "border border-white/20 text-white/70 hover:border-white/40 hover:text-white/70"
           : "bg-[#FF5500] text-[#0A0A0A] hover:bg-[#F2F0EB]"
       } font-display text-xl tracking-widest px-8 py-4 transition-all active:scale-95`}
     >

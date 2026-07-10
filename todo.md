@@ -574,3 +574,9 @@
 - [ ] AdminEventPanel: event list on left, selected event shows status control + result entry + power-ups on right
 - [ ] Rename "Wildcards" to "Power Ups" throughout admin UI
 - [ ] Wire AdminEventPanel into AdminScoring replacing the separate tabs
+
+## Sunlight Readability + Admin Cleanup (Jul 10)
+- [x] Remove redundant bottom scoring/team-captain section from AdminScoring
+- [x] Sunlight readability: boost contrast and font weights on Team Hub
+- [x] Sunlight readability: boost contrast and font weights on Holding page
+- [x] Sunlight readability: boost contrast and font weights on Enter page

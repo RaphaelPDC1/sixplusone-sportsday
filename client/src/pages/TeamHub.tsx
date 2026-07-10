@@ -260,7 +260,7 @@ export default function TeamHub() {
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <div className="text-center space-y-5 px-6">
           <img src={LOGO_URL} alt="6+1" className="h-8 w-auto mx-auto opacity-40" style={{ filter: "invert(1)" }} />
-          <p className="font-mono text-white/40 text-sm">
+          <p className="font-mono text-white/70 text-sm">
             {code === "FORBIDDEN" ? "Your team is locked. Complete payment to get in." : "No registration found."}
           </p>
           <button
@@ -271,7 +271,7 @@ export default function TeamHub() {
           </button>
           <button
             onClick={() => navigate("/enter")}
-            className="block font-mono text-white/25 text-xs tracking-widest hover:text-white/50 transition-colors mx-auto"
+            className="block font-mono text-white/55 text-xs tracking-widest hover:text-white/75 transition-colors mx-auto"
           >
             REGISTER →
           </button>
@@ -285,7 +285,7 @@ export default function TeamHub() {
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <div className="text-center space-y-5 px-6">
           <img src={LOGO_URL} alt="6+1" className="h-8 w-auto mx-auto opacity-40" style={{ filter: "invert(1)" }} />
-          <p className="font-mono text-white/40 text-sm">We don't recognise this registration.</p>
+          <p className="font-mono text-white/70 text-sm">We don't recognise this registration.</p>
           <button onClick={() => navigate("/holding")} className="block font-display text-[#FF5500] text-xl tracking-widest hover:opacity-80 transition-opacity">
             ← BACK TO HOLDING
           </button>
@@ -299,7 +299,7 @@ export default function TeamHub() {
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <div className="text-center space-y-3">
           <div className="w-8 h-8 border-2 border-[#FF5500] border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="font-mono text-white/30 text-xs tracking-widest">LOADING...</p>
+              <p className="font-mono text-white/60 text-xs tracking-widest">LOADING...</p>
         </div>
       </div>
     );
@@ -309,7 +309,7 @@ export default function TeamHub() {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="font-mono text-white/40 text-sm">Team not unlocked yet. Unlock to get in.</p>
+          <p className="font-mono text-white/70 text-sm">Team not unlocked yet. Unlock to get in.</p>
           <button onClick={() => navigate("/holding")} className="font-display text-[#FF5500] text-xl tracking-widest">
             ← BACK TO HOLDING
           </button>
@@ -447,7 +447,7 @@ export default function TeamHub() {
                 {myPhoto ? (
                   <img src={myPhoto} alt="You" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-white/5">
+                  <div className="w-full h-full flex items-center justify-center bg-white/10">
                     <span className="text-2xl">👤</span>
                   </div>
                 )}
@@ -480,13 +480,13 @@ export default function TeamHub() {
                 {myMember?.fullName?.split(" ")[0]?.toUpperCase() ?? (hub.team ?? "red").toUpperCase()}
               </div>
               {/* Team name as subtitle */}
-              <div className="font-mono text-white/40 text-xs tracking-[0.25em] mt-1">
+              <div className="font-mono text-white/70 text-xs tracking-[0.25em] mt-1">
                 TEAM {(hub.team ?? "red").toUpperCase()}
               </div>
               {myMember?.profileTagline && (
                 <div className="mt-1 overflow-hidden w-full" style={{ maxWidth: '100%' }}>
                   <div
-                    className="font-mono text-white/30 text-[10px] tracking-wider italic whitespace-nowrap"
+                    className="font-mono text-white/60 text-[10px] tracking-wider italic whitespace-nowrap"
                     style={{
                       display: 'inline-block',
                       animation: 'marqueeScroll 18s linear infinite',
@@ -496,7 +496,7 @@ export default function TeamHub() {
                   </div>
                 </div>
               )}
-              <p className="font-mono text-white/20 text-[10px] mt-1">
+              <p className="font-mono text-white/75 text-[10px] mt-1">
                 {hub.totalMembers} MEMBERS
               </p>
             </div>
@@ -514,7 +514,7 @@ export default function TeamHub() {
                     background: team === hub.team ? `${tc.hex}15` : "transparent",
                   }}
                 >
-                  <span className="font-mono text-white/30 text-xs">{i + 1}</span>
+                  <span className="font-mono text-white/60 text-xs">{i + 1}</span>
                   <div
                     className="w-2 h-2 rounded-full"
                     style={{ background: TEAM_COLORS[team]?.hex ?? "#fff" }}
@@ -525,7 +525,7 @@ export default function TeamHub() {
                   >
                     {team.toUpperCase()}
                   </span>
-                  <span className="font-mono text-white/50 text-xs">{pts}pts</span>
+                  <span className="font-mono text-white/75 text-xs">{pts}pts</span>
                 </div>
               ))}
             </div>
@@ -534,7 +534,7 @@ export default function TeamHub() {
 
 
         {/* Tab bar */}
-        <div className="flex border-t border-white/10 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex border-t border-white/25 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -542,7 +542,7 @@ export default function TeamHub() {
               className={`flex-shrink-0 flex flex-col items-center gap-0.5 py-3 font-mono text-[10px] tracking-widest transition-all ${
                 activeTab === tab.id
                   ? "text-[#F2F0EB]"
-                  : "text-white/30 hover:text-white/50"
+                  : "text-white/60 hover:text-white/75"
               }`}
               style={{
                 minWidth: '60px',
@@ -607,7 +607,7 @@ export default function TeamHub() {
                       <span className="font-mono text-xs tracking-[0.3em] flex-shrink-0" style={{ color: tc.hex }}>
                         TEAM CAPTAINS
                       </span>
-                      <span className="font-display text-sm tracking-widest text-white/40 truncate text-right">
+                      <span className="font-display text-sm tracking-widest text-white/70 truncate text-right">
                         {capData.squadName}
                       </span>
                     </div>
@@ -640,10 +640,10 @@ export default function TeamHub() {
                             >
                               {cap.toUpperCase()}
                             </div>
-                            <div className="font-mono text-[10px] tracking-[0.25em] text-white/40 mt-2">
+                            <div className="font-mono text-[10px] tracking-[0.25em] text-white/70 mt-2">
                               CO-CAPTAIN
                             </div>
-                            <div className="font-mono text-[9px] tracking-widest text-white/20 mt-1">
+                            <div className="font-mono text-[9px] tracking-widest text-white/75 mt-1">
                               TAP TO VIEW →
                             </div>
                           </button>
@@ -702,11 +702,11 @@ export default function TeamHub() {
                     </div>
                   )}
                   {liveEvt?.arena && (
-                    <div className="font-mono text-xs text-white/40 mt-1">{liveEvt.arena}</div>
+                    <div className="font-mono text-xs text-white/70 mt-1">{liveEvt.arena}</div>
                   )}
                   {upNextEvt && (
-                    <div className={`${liveEvt ? "mt-3 pt-3 border-t border-white/10" : ""}`}>
-                      <div className="font-mono text-[9px] tracking-[0.25em] text-white/30 mb-1">UP NEXT</div>
+                    <div className={`${liveEvt ? "mt-3 pt-3 border-t border-white/25" : ""}`}>
+                      <div className="font-mono text-[9px] tracking-[0.25em] text-white/60 mb-1">UP NEXT</div>
                       {/* Badges row — type, format, status */}
                       <div className="flex flex-wrap items-center gap-1.5 mb-2">
                         {getTypeBadge(upNextEvt.name) && (
@@ -718,7 +718,7 @@ export default function TeamHub() {
                           </span>
                         )}
                         {getFormatBadge(upNextEvt.name) && (
-                          <span className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 border border-white/15 text-white/40">
+                          <span className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 border border-white/30 text-white/70">
                             {getFormatBadge(upNextEvt.name)}
                           </span>
                         )}
@@ -746,17 +746,17 @@ export default function TeamHub() {
                       </div>
                       {/* Matchup label */}
                       {upNextEvt.matchupLabel && (
-                        <div className="font-mono text-[10px] text-white/30 tracking-wide mb-1">
+                        <div className="font-mono text-[10px] text-white/60 tracking-wide mb-1">
                           {upNextEvt.matchupLabel}
                         </div>
                       )}
                       {/* Arena + setup buffer */}
                       <div className="flex flex-wrap items-center gap-2 text-xs">
                         {upNextEvt.arena && (
-                          <span className="font-mono text-white/40">📍 {upNextEvt.arena}</span>
+                          <span className="font-mono text-white/70">📍 {upNextEvt.arena}</span>
                         )}
                         {upNextEvt.setupBufferMinutes && (
-                          <span className="font-mono text-white/30 text-[9px]">— {upNextEvt.setupBufferMinutes} min setup —</span>
+                          <span className="font-mono text-white/60 text-[9px]">— {upNextEvt.setupBufferMinutes} min setup —</span>
                         )}
                       </div>
                     </div>
@@ -771,7 +771,7 @@ export default function TeamHub() {
               const totalCount = hub.members.length;
 
               if (displayMembers.length === 0) return (
-                <p className="font-mono text-white/30 text-sm text-center py-8">
+                <p className="font-mono text-white/60 text-sm text-center py-8">
                   First one in. Your teammates are on their way.
                 </p>
               );
@@ -781,9 +781,9 @@ export default function TeamHub() {
                   {/* Collapsible squad header */}
                   <button
                     onClick={() => setSquadExpanded((v) => !v)}
-                    className="w-full flex items-center justify-between py-3 px-4 border border-white/10 bg-white/[0.02] transition-all hover:border-white/20 mt-2"
+                    className="w-full flex items-center justify-between py-3 px-4 border border-white/25 bg-white/[0.02] transition-all hover:border-white/35 mt-2"
                   >
-                    <span className="font-mono text-xs tracking-[0.25em] text-white/50">
+                    <span className="font-mono text-xs tracking-[0.25em] text-white/75">
                       {totalCount} TEAMMATES
                     </span>
                     <span className="font-mono text-xs tracking-widest" style={{ color: tc.hex }}>
@@ -796,7 +796,7 @@ export default function TeamHub() {
                       {displayMembers.map((member) => (
                         <div
                           key={member.id}
-                          className="flex items-center gap-4 p-4 border border-white/10 bg-white/[0.02] transition-all"
+                          className="flex items-center gap-4 p-4 border border-white/25 bg-white/[0.02] transition-all"
                           style={{
                             opacity: member.isLocked ? 0.35 : 1,
                             cursor: member.isLocked ? "default" : "pointer",
@@ -815,7 +815,7 @@ export default function TeamHub() {
                             {member.photoUrl ? (
                               <img src={member.photoUrl} alt={member.fullName ?? ""} className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full bg-white/5 flex items-center justify-center">
+                              <div className="w-full h-full bg-white/10 flex items-center justify-center">
                                 <span className="text-xl">
                                   {member.isLocked ? "🔒"
                                     : member.teammateType === "motivator" ? "📣"
@@ -841,7 +841,7 @@ export default function TeamHub() {
                                 </span>
                               )}
                               {member.isLocked && (
-                                <span className="font-mono text-[9px] tracking-widest text-white/25">NOT UNLOCKED</span>
+                                <span className="font-mono text-[9px] tracking-widest text-white/55">NOT UNLOCKED</span>
                               )}
                             </div>
                             {!member.isLocked && member.instagramHandle && (
@@ -849,18 +849,18 @@ export default function TeamHub() {
                                 href={`https://instagram.com/${member.instagramHandle.replace(/^@/, '')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="font-mono text-white/30 text-xs hover:text-white/60 transition-colors"
+                                className="font-mono text-white/60 text-xs hover:text-white/60 transition-colors"
                                 onClick={(e) => e.stopPropagation()}
                               >@{member.instagramHandle}</a>
                             )}
                             {!member.isLocked && member.profileTagline && (
-                              <p className="font-mono text-white/40 text-xs mt-0.5 truncate italic">
+                              <p className="font-mono text-white/70 text-xs mt-0.5 truncate italic">
                                 "{member.profileTagline}"
                               </p>
                             )}
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <div className="font-mono text-white/20 text-[10px] tracking-wider">
+                            <div className="font-mono text-white/75 text-[10px] tracking-wider">
                               {member.isLocked ? "" : (member.strongestEvent?.toUpperCase() ?? "—")}
                             </div>
                           </div>
@@ -874,13 +874,13 @@ export default function TeamHub() {
             {/* Photo upload prompt if no photo */}
             {!myPhoto && (
               <div
-                className="p-4 border border-dashed border-white/20 text-center cursor-pointer hover:border-white/40 transition-colors"
+                className="p-4 border border-dashed border-white/35 text-center cursor-pointer hover:border-white/40 transition-colors"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <p className="font-mono text-white/40 text-xs tracking-wider">
+                <p className="font-mono text-white/70 text-xs tracking-wider">
                   📷 ADD YOUR PROFILE PHOTO
                 </p>
-                <p className="font-mono text-white/20 text-[10px] mt-1">
+                <p className="font-mono text-white/75 text-[10px] mt-1">
                   Shows up in the awards vote
                 </p>
               </div>
@@ -1179,15 +1179,15 @@ export default function TeamHub() {
                   <span className="text-base">⚡</span>
                   <span className="font-display text-sm tracking-widest" style={{ color: tc.hex }}>TEAM DNA</span>
                   <span className="ml-auto flex items-center gap-2">
-                    <span className="font-mono text-white/30 text-[10px]">{n} SQUAD MEMBER{n !== 1 ? "S" : ""}</span>
-                    <span className="font-mono text-white/25 text-[10px]">{dnaExpanded ? "▲" : "▼"}</span>
+                    <span className="font-mono text-white/60 text-[10px]">{n} SQUAD MEMBER{n !== 1 ? "S" : ""}</span>
+                    <span className="font-mono text-white/55 text-[10px]">{dnaExpanded ? "▲" : "▼"}</span>
                   </span>
                 </div>
 
                 {/* Competitiveness bar — always visible */}
                 {(winnerCount + balancedCount + vibesOnlyCount) > 0 && (
                   <div>
-                    <div className="flex justify-between font-mono text-[9px] text-white/30 mb-1">
+                    <div className="flex justify-between font-mono text-[9px] text-white/60 mb-1">
                       <span>SQUAD MINDSET</span>
                       <span>{winnerCount > 0 ? `${winnerCount} WINNER${winnerCount !== 1 ? "S" : ""}` : ""}{balancedCount > 0 ? `${winnerCount > 0 ? " · " : ""}${balancedCount} BALANCED` : ""}{vibesOnlyCount > 0 ? `${(winnerCount + balancedCount) > 0 ? " · " : ""}${vibesOnlyCount} VIBES` : ""}</span>
                     </div>
@@ -1233,17 +1233,17 @@ export default function TeamHub() {
                           >
                             {tag.value}
                           </span>
-                          <span className="font-mono text-white/50 text-[9px] tracking-wider">{tag.label}</span>
+                          <span className="font-mono text-white/75 text-[9px] tracking-wider">{tag.label}</span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="font-mono text-white/25 text-[10px] mt-3 mb-3">Questionnaire data loading…</p>
+                    <p className="font-mono text-white/55 text-[10px] mt-3 mb-3">Questionnaire data loading…</p>
                   )}
 
                   {/* Veteran / first-timer line */}
                   {(veteranCount + firstTimerCount) > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 font-mono text-[9px] text-white/30">
+                    <div className="flex flex-wrap items-center gap-2 font-mono text-[9px] text-white/60">
                       <span>🏆 {veteranCount} VETERAN{veteranCount !== 1 ? "S" : ""}</span>
                       <span className="text-white/15">·</span>
                       <span>✨ {firstTimerCount} FIRST-TIMER{firstTimerCount !== 1 ? "S" : ""}</span>
@@ -1257,7 +1257,7 @@ export default function TeamHub() {
                   )}
 
                   {/* Footer hint */}
-                  <p className="font-mono text-white/20 text-[9px] mt-3 pt-3 border-t" style={{ borderColor: `${tc.hex}20` }}>
+                  <p className="font-mono text-white/75 text-[9px] mt-3 pt-3 border-t" style={{ borderColor: `${tc.hex}20` }}>
                     Tap any event below to see your squad's AI-powered strategy and best-fit players.
                   </p>
                 </div>
@@ -1337,7 +1337,7 @@ export default function TeamHub() {
                             }}
                           >
                             {isComplete ? (
-                              <span className="text-white/25 text-xs">✓</span>
+                              <span className="text-white/55 text-xs">✓</span>
                             ) : (
                               <span>{event.icon}</span>
                             )}
@@ -1368,7 +1368,7 @@ export default function TeamHub() {
                                     </span>
                                   )}
                                   {formatLabel && (
-                                    <span className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 border border-white/15 text-white/40">
+                                    <span className="font-mono text-[9px] tracking-widest px-1.5 py-0.5 border border-white/30 text-white/70">
                                       {formatLabel}
                                     </span>
                                   )}
@@ -1390,7 +1390,7 @@ export default function TeamHub() {
 
                                 {/* Matchup label */}
                                 {event.matchupLabel && (
-                                  <div className="font-mono text-[10px] text-white/30 mt-0.5 tracking-wide">
+                                  <div className="font-mono text-[10px] text-white/60 mt-0.5 tracking-wide">
                                     {event.matchupLabel}
                                   </div>
                                 )}
@@ -1398,10 +1398,10 @@ export default function TeamHub() {
                                 {/* Arena + time */}
                                 <div className="flex flex-wrap items-center gap-2 mt-1.5">
                                   {event.arena && (
-                                    <span className="font-mono text-[9px] text-white/25 tracking-wider">📍 {event.arena}</span>
+                                    <span className="font-mono text-[9px] text-white/55 tracking-wider">📍 {event.arena}</span>
                                   )}
                                   {event.startTime && (
-                                    <span className="font-mono text-[9px] text-white/25 tracking-wider">
+                                    <span className="font-mono text-[9px] text-white/55 tracking-wider">
                                       🕐 {event.startTime}{event.endTime ? ` – ${event.endTime}` : ""}
                                     </span>
                                   )}
@@ -1419,12 +1419,12 @@ export default function TeamHub() {
                                         <div className="font-display text-lg tracking-widest" style={{ color: tc.hex }}>
                                           {myTeamResult.position ? `${myTeamResult.position}${ordinal(myTeamResult.position)}` : "—"}
                                         </div>
-                                        <div className="font-mono text-white/30 text-[10px]">{myTeamResult.points ?? 0}pts</div>
+                                        <div className="font-mono text-white/60 text-[10px]">{myTeamResult.points ?? 0}pts</div>
                                       </div>
                                     )}
                                   </div>
                                 )}
-                                <span className="font-mono text-white/20 text-xs">{isExpanded ? "▲" : "▼"}</span>
+                                <span className="font-mono text-white/75 text-xs">{isExpanded ? "▲" : "▼"}</span>
                               </div>
                             </div>
                           </div>
@@ -1451,9 +1451,9 @@ export default function TeamHub() {
                                     <span className="font-mono text-[9px] tracking-widest" style={{ color: tc.hex }}>POWER UPS ACTIVE</span>
                                   </div>
                                 ) : (
-                                  <div className="flex items-center gap-1.5 px-2 py-0.5 border border-white/10">
+                                  <div className="flex items-center gap-1.5 px-2 py-0.5 border border-white/25">
                                     <span className="text-[10px]">🔒</span>
-                                    <span className="font-mono text-[9px] tracking-widest text-white/25">NO POWER UPS</span>
+                                    <span className="font-mono text-[9px] tracking-widest text-white/55">NO POWER UPS</span>
                                   </div>
                                 )}
                               </div>
@@ -1470,19 +1470,19 @@ export default function TeamHub() {
 
                               {/* Mini results leaderboard */}
                               {normalizedEventResults.length > 0 && (
-                                <div className="mt-3 pt-3 border-t border-white/10">
-                                  <div className="font-mono text-[9px] tracking-[0.25em] text-white/30 mb-2">RESULTS</div>
+                                <div className="mt-3 pt-3 border-t border-white/25">
+                                  <div className="font-mono text-[9px] tracking-[0.25em] text-white/60 mb-2">RESULTS</div>
                                   <div className="grid grid-cols-4 gap-2">
                                     {(["red","blue","pink","orange"] as const).map((team) => {
                                       const r = normalizedEventResults.find((e) => e.team === team);
                                       return (
                                         <div key={team} className="text-center">
                                           <div className="w-2 h-2 rounded-full mx-auto mb-1" style={{ background: TEAM_COLORS[team]?.hex ?? "#fff" }} />
-                                          <div className="font-mono text-white/30 text-[9px]">
+                                          <div className="font-mono text-white/60 text-[9px]">
                                             {r?.dnf ? "DNF" : r ? `${r.position ?? "—"}${r.position ? ordinal(r.position) : ""}` : "—"}
                                           </div>
                                           {r && !r.dnf && (
-                                            <div className="font-mono text-white/20 text-[8px]">{r.points}pts</div>
+                                            <div className="font-mono text-white/75 text-[8px]">{r.points}pts</div>
                                           )}
                                         </div>
                                       );
@@ -1497,7 +1497,7 @@ export default function TeamHub() {
                                 if (fits.length === 0) return null;
                                 return (
                                   <div className="mt-3 pt-3 border-t" style={{ borderColor: `${tc.hex}15` }}>
-                                    <div className="font-mono text-[9px] tracking-[0.25em] text-white/30 mb-2">BEST FIT FOR THIS EVENT</div>
+                                    <div className="font-mono text-[9px] tracking-[0.25em] text-white/60 mb-2">BEST FIT FOR THIS EVENT</div>
                                     <div className="flex flex-wrap gap-2">
                                       {fits.map(({ member, reason }) => (
                                         <div
@@ -1529,7 +1529,7 @@ export default function TeamHub() {
                                               {member.fullName?.split(" ")[0]?.toUpperCase()}
                                               {member.id === userId && <span className="font-mono text-[8px] ml-1 opacity-60">YOU</span>}
                                             </div>
-                                            <div className="font-mono text-[9px] text-white/30 mt-0.5">{reason}</div>
+                                            <div className="font-mono text-[9px] text-white/60 mt-0.5">{reason}</div>
                                           </div>
                                         </div>
                                       ))}
@@ -1545,11 +1545,11 @@ export default function TeamHub() {
                       {/* ── Setup buffer divider (between cards, not after last) ── */}
                       {idx < liveEvents.length - 1 && (
                         <div className="flex items-center gap-2 pl-[50px] py-1 mb-1">
-                          <div className="flex-1 h-px bg-white/5" />
+                          <div className="flex-1 h-px bg-white/10" />
                           <span className="font-mono text-[8px] tracking-widest text-white/15 flex-shrink-0">
                             — {bufferMins} min setup —
                           </span>
-                          <div className="flex-1 h-px bg-white/5" />
+                          <div className="flex-1 h-px bg-white/10" />
                         </div>
                       )}
                     </div>
@@ -1588,7 +1588,7 @@ export default function TeamHub() {
               />
             )}
             {sortedTeams.length === 0 ? (
-              <p className="font-mono text-white/30 text-xs tracking-wider">
+              <p className="font-mono text-white/60 text-xs tracking-wider">
               No results yet. Check back on the day.
             </p>
             ) : (
@@ -1619,7 +1619,7 @@ export default function TeamHub() {
                               <div className="font-display text-lg tracking-widest uppercase">
                                 {index + 1}. {team} TEAM
                               </div>
-                              <div className="font-mono text-white/40 text-xs mt-0.5">
+                              <div className="font-mono text-white/70 text-xs mt-0.5">
                                 {teamEventCount} event{teamEventCount !== 1 ? 's' : ''} done
                               </div>
                             </div>
@@ -1631,7 +1631,7 @@ export default function TeamHub() {
                             >
                               {points}
                             </div>
-                            <div className="font-mono text-white/30 text-xs">POINTS</div>
+                            <div className="font-mono text-white/60 text-xs">POINTS</div>
                           </div>
                         </div>
                       </div>
@@ -1655,12 +1655,12 @@ export default function TeamHub() {
                         points: r.finalPoints ?? r.points ?? 0,
                       }));
                       return (
-                        <div key={event.id} className="border border-white/10 bg-white/[0.02] p-4">
+                        <div key={event.id} className="border border-white/25 bg-white/[0.02] p-4">
                           <div className="flex items-center gap-2 mb-3">
                             <span className="text-xl">{event.icon}</span>
                             <div>
                               <div className="font-display text-base tracking-widest">{event.name}</div>
-                              <div className="font-mono text-white/30 text-xs">{event.desc}</div>
+                              <div className="font-mono text-white/60 text-xs">{event.desc}</div>
                               {(event as any).pointsMultiplier > 1 && (
                                 <div className="font-mono text-[10px] mt-0.5" style={{ color: tc.hex }}>
                                   ×{(event as any).pointsMultiplier} POINTS MULTIPLIER
@@ -1678,11 +1678,11 @@ export default function TeamHub() {
                                     className="w-2 h-2 rounded-full mx-auto mb-1"
                                     style={{ background: teamColor?.hex }}
                                   />
-                                  <div className="font-mono text-[9px] text-white/50 mb-1">{team}</div>
+                                  <div className="font-mono text-[9px] text-white/75 mb-1">{team}</div>
                                   <div className="font-display text-sm tracking-widest" style={{ color: teamColor?.hex }}>
                                     {r?.dnf ? "DNF" : r?.position ? `${r.position}${ordinal(r.position)}` : "—"}
                                   </div>
-                                  <div className="font-mono text-[9px] text-white/40">{r?.points ?? 0}pts</div>
+                                  <div className="font-mono text-[9px] text-white/70">{r?.points ?? 0}pts</div>
                                 </div>
                               );
                             })}
@@ -1692,14 +1692,14 @@ export default function TeamHub() {
                     })}
                   </div>
                 </div>
-                <div className="mt-6 p-4 border border-white/10 bg-white/[0.02]">
-                  <div className="font-mono text-xs text-white/40 tracking-wider mb-2">SCORING SYSTEM</div>
-                  <div className="space-y-1 font-mono text-xs text-white/50">
+                <div className="mt-6 p-4 border border-white/25 bg-white/[0.02]">
+                  <div className="font-mono text-xs text-white/70 tracking-wider mb-2">SCORING SYSTEM</div>
+                  <div className="space-y-1 font-mono text-xs text-white/75">
                     <div>1st Place: 10 points</div>
                     <div>2nd Place: 7 points</div>
                     <div>3rd Place: 4 points</div>
                     <div>4th Place: 2 points</div>
-                    <div className="text-white/30">Tug of War: ×2 multiplier</div>
+                    <div className="text-white/60">Tug of War: ×2 multiplier</div>
                   </div>
                 </div>
               </>
@@ -1754,7 +1754,7 @@ export default function TeamHub() {
                       <span className="text-lg">⚡</span>
                       <div>
                         <div className="font-mono text-[10px] tracking-wider" style={{ color: tc.hex }}>POWER UPS OPEN</div>
-                        <div className="font-mono text-[9px] tracking-wider text-white/40 mt-0.5">{activeEvent.name.toUpperCase()} · {activeEvent.status.toUpperCase()}</div>
+                        <div className="font-mono text-[9px] tracking-wider text-white/70 mt-0.5">{activeEvent.name.toUpperCase()} · {activeEvent.status.toUpperCase()}</div>
                       </div>
                     </div>
                   )}
@@ -1792,11 +1792,11 @@ export default function TeamHub() {
                       </div>
                       <div className="text-right flex-shrink-0 pl-2">
                         <div className="font-display text-xl" style={{ color: isActive ? tc.hex : "rgba(255,255,255,0.2)" }}>{votes}</div>
-                        <div className="font-mono text-white/20 text-[8px] tracking-wider">VOTES</div>
+                        <div className="font-mono text-white/75 text-[8px] tracking-wider">VOTES</div>
                       </div>
                     </div>
                     {/* Vote progress bar */}
-                    <div className="h-0.5 bg-white/5 mx-4 mb-3 overflow-hidden">
+                    <div className="h-0.5 bg-white/10 mx-4 mb-3 overflow-hidden">
                       <div
                         className="h-full transition-all duration-700"
                         style={{ width: `${pct}%`, background: tc.hex }}
@@ -1805,7 +1805,7 @@ export default function TeamHub() {
                     {/* Action area */}
                     <div className="px-4 pb-4">
                       {!liveEvents.some((e) => e.status === "armed" || e.status === "live") ? (
-                        <div className="text-center font-mono text-[9px] tracking-wider text-white/20 py-1">
+                        <div className="text-center font-mono text-[9px] tracking-wider text-white/75 py-1">
                           POWER UPS UNLOCK WHEN EVENT IS ARMED
                         </div>
                       ) : isCaptainUser ? (
@@ -1900,18 +1900,18 @@ export default function TeamHub() {
                 className="p-4 border text-center"
                 style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
               >
-                <div className="font-mono text-white/40 text-[10px] tracking-[0.3em] mb-1">VOTING OPENS IN</div>
+                <div className="font-mono text-white/70 text-[10px] tracking-[0.3em] mb-1">VOTING OPENS IN</div>
                 <div className="font-display text-3xl tracking-widest" style={{ color: tc.hex }}>
                   {votingCountdownStr}
                 </div>
-                <div className="font-mono text-white/25 text-[10px] tracking-wider mt-1">
+                <div className="font-mono text-white/55 text-[10px] tracking-wider mt-1">
                   10:00 AM · SAT 11 JULY 2026
                 </div>
               </div>
             )}
 
             {canVote && (
-              <p className="font-mono text-white/30 text-xs tracking-wider">
+              <p className="font-mono text-white/60 text-xs tracking-wider">
                 One vote per category. Make it count.
               </p>
             )}
@@ -1921,14 +1921,14 @@ export default function TeamHub() {
               const votedFor = myVote ? hub.members.find((m) => m.id === myVote.nomineeId) : null;
 
               return (
-                <div key={cat.id} className="border border-white/10 bg-white/[0.02]">
+                <div key={cat.id} className="border border-white/25 bg-white/[0.02]">
                   <div className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                       <span className="text-xl">{cat.icon}</span>
                       <span className="font-display text-base tracking-widest">{cat.label}</span>
                     </div>
                     {!canVote ? (
-                      <span className="font-mono text-white/20 text-[10px] tracking-widest">🔒 LOCKED</span>
+                      <span className="font-mono text-white/75 text-[10px] tracking-widest">🔒 LOCKED</span>
                     ) : votedFor ? (
                       <div className="flex items-center gap-2">
                         <div
@@ -1946,7 +1946,7 @@ export default function TeamHub() {
                         </span>
                         <button
                           onClick={() => setVotingFor(cat.id)}
-                          className="font-mono text-white/20 text-[10px] hover:text-white/50 transition-colors"
+                          className="font-mono text-white/75 text-[10px] hover:text-white/75 transition-colors"
                         >
                           CHANGE
                         </button>
@@ -1964,8 +1964,8 @@ export default function TeamHub() {
 
                   {/* Expanded voting panel */}
                   {votingFor === cat.id && (
-                    <div className="border-t border-white/10 p-4 space-y-2">
-                      <p className="font-mono text-white/30 text-[10px] tracking-widest mb-3">
+                    <div className="border-t border-white/25 p-4 space-y-2">
+                      <p className="font-mono text-white/60 text-[10px] tracking-widest mb-3">
                         SELECT A TEAMMATE
                       </p>
                       {hub.members
@@ -1981,9 +1981,9 @@ export default function TeamHub() {
                               })
                             }
                             disabled={castVoteMutation.isPending}
-                            className="w-full flex items-center gap-3 p-3 border border-white/10 hover:border-white/30 transition-all text-left active:scale-[0.99]"
+                            className="w-full flex items-center gap-3 p-3 border border-white/25 hover:border-white/30 transition-all text-left active:scale-[0.99]"
                           >
-                            <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 flex-shrink-0 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full overflow-hidden border border-white/35 flex-shrink-0 flex items-center justify-center">
                               {member.photoUrl ? (
                                 <img src={member.photoUrl} alt="" className="w-full h-full object-cover" />
                               ) : (
@@ -1993,7 +1993,7 @@ export default function TeamHub() {
                             <div>
                               <div className="font-display text-sm tracking-widest">{member.fullName}</div>
                               {member.profileTagline && (
-                                <div className="font-mono text-white/25 text-[10px] truncate italic">
+                                <div className="font-mono text-white/55 text-[10px] truncate italic">
                                   "{member.profileTagline}"
                                 </div>
                               )}
@@ -2002,7 +2002,7 @@ export default function TeamHub() {
                         ))}
                       <button
                         onClick={() => setVotingFor(null)}
-                        className="w-full font-mono text-white/20 text-xs py-2 hover:text-white/40 transition-colors"
+                        className="w-full font-mono text-white/75 text-xs py-2 hover:text-white/70 transition-colors"
                       >
                         CANCEL
                       </button>
@@ -2018,7 +2018,7 @@ export default function TeamHub() {
         {activeTab === "sponsors" && (
           <div className="space-y-4">
             <SectionHeader label="SPONSORS & VENDORS" />
-            <p className="font-mono text-white/30 text-xs tracking-wider">
+            <p className="font-mono text-white/60 text-xs tracking-wider">
               The people making the day happen.
             </p>
             <div className="space-y-3">
@@ -2030,12 +2030,12 @@ export default function TeamHub() {
               ].map((sponsor, idx) => (
                 <div
                   key={`sponsor-${idx}`}
-                  className="p-4 border border-white/10 bg-white/[0.02]"
+                  className="p-4 border border-white/25 bg-white/[0.02]"
                 >
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="font-display text-base tracking-widest">{sponsor.name}</div>
-                      <div className="font-mono text-white/30 text-xs mt-0.5">{sponsor.desc}</div>
+                      <div className="font-mono text-white/60 text-xs mt-0.5">{sponsor.desc}</div>
                     </div>
                     <div
                       className="w-12 h-12 rounded border flex items-center justify-center text-2xl"
@@ -2075,8 +2075,8 @@ export default function TeamHub() {
               >
                 {hub?.event?.location?.toUpperCase() ?? "MILLHOUSES PARK"}
               </div>
-              <p className="font-mono text-white/40 text-sm">{hub?.event?.fullAddress ?? "Millhouses Park, Sheffield, S7 2QQ"}</p>
-              <p className="font-mono text-white/40 text-sm mt-1">{hub?.event?.date ?? "Saturday 11 July 2026"}</p>
+              <p className="font-mono text-white/70 text-sm">{hub?.event?.fullAddress ?? "Millhouses Park, Sheffield, S7 2QQ"}</p>
+              <p className="font-mono text-white/70 text-sm mt-1">{hub?.event?.date ?? "Saturday 11 July 2026"}</p>
               <a
                 href={hub?.event?.mapsUrl ?? "https://maps.google.com/?q=Millhouses+Park+Sheffield+S7+2QQ"}
                 target="_blank"
@@ -2092,7 +2092,7 @@ export default function TeamHub() {
               {["Arrive by 9:30AM", "Events start 10:00AM sharp", "Bring water + trainers", "Wear your team colour"].map((detail) => (
                 <div
                   key={detail}
-                  className="flex items-center gap-3 p-4 border border-white/10"
+                  className="flex items-center gap-3 p-4 border border-white/25"
                 >
                   <div
                     className="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -2133,8 +2133,8 @@ export default function TeamHub() {
           <div className="border-t border-white/8 pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-mono text-white/25 text-[10px] tracking-[0.3em] mb-0.5">REGISTERED AS</p>
-                <p className="font-mono text-white/50 text-xs tracking-wider">{typeof window !== "undefined" ? localStorage.getItem("userEmail") ?? "" : ""}</p>
+                <p className="font-mono text-white/55 text-[10px] tracking-[0.3em] mb-0.5">REGISTERED AS</p>
+                <p className="font-mono text-white/75 text-xs tracking-wider">{typeof window !== "undefined" ? localStorage.getItem("userEmail") ?? "" : ""}</p>
               </div>
               <button
                 onClick={() => {
@@ -2144,18 +2144,18 @@ export default function TeamHub() {
                   sessionStorage.setItem("came_from_teamhub", "1");
                   window.location.href = "/";
                 }}
-                className="font-mono text-white/25 text-xs tracking-[0.2em] hover:text-[#FF5500] transition-colors border border-white/10 hover:border-[#FF5500]/40 px-4 py-2"
+                className="font-mono text-white/55 text-xs tracking-[0.2em] hover:text-[#FF5500] transition-colors border border-white/25 hover:border-[#FF5500]/40 px-4 py-2"
               >
                               LOG OUT
               </button>
             </div>
             {/* Legal + Admin links */}
             <div className="flex items-center gap-4 flex-wrap justify-center mt-6 pt-4 border-t border-white/5">
-              <a href="/terms" className="font-mono text-white/20 text-[10px] tracking-wider hover:text-white/50 transition-colors">TERMS &amp; CONDITIONS</a>
+              <a href="/terms" className="font-mono text-white/75 text-[10px] tracking-wider hover:text-white/75 transition-colors">TERMS &amp; CONDITIONS</a>
               <span className="text-white/10 text-[10px]">|</span>
-              <a href="/privacy" className="font-mono text-white/20 text-[10px] tracking-wider hover:text-white/50 transition-colors">PRIVACY POLICY</a>
+              <a href="/privacy" className="font-mono text-white/75 text-[10px] tracking-wider hover:text-white/75 transition-colors">PRIVACY POLICY</a>
               <span className="text-white/10 text-[10px]">|</span>
-              <a href="/admin" className="font-mono text-white/10 text-[10px] tracking-wider hover:text-white/30 transition-colors">ADMIN</a>
+              <a href="/admin" className="font-mono text-white/10 text-[10px] tracking-wider hover:text-white/60 transition-colors">ADMIN</a>
             </div>
             <p className="font-mono text-white/10 text-[10px] tracking-wider text-center mt-3">© 6+1 SPORTS DAY 002 — 2026</p>
           </div>
@@ -2177,7 +2177,7 @@ export default function TeamHub() {
               {/* Close button */}
               <button
                 onClick={() => setSelectedMember(null)}
-                className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors"
+                className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
               >
                 ✕
               </button>
@@ -2191,7 +2191,7 @@ export default function TeamHub() {
                   {selectedMember.photoUrl ? (
                     <img src={selectedMember.photoUrl} alt={selectedMember.fullName ?? ""} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-white/5 flex items-center justify-center text-5xl">👤</div>
+                    <div className="w-full h-full bg-white/10 flex items-center justify-center text-5xl">👤</div>
                   )}
                 </div>
               </div>
@@ -2210,15 +2210,15 @@ export default function TeamHub() {
                      href={`https://instagram.com/${selectedMember.instagramHandle.replace(/^@/, '')}`}
                      target="_blank"
                      rel="noopener noreferrer"
-                     className="font-mono text-white/50 text-sm hover:text-white/80 transition-colors underline underline-offset-2"
+                     className="font-mono text-white/75 text-sm hover:text-white/80 transition-colors underline underline-offset-2"
                    >@{selectedMember.instagramHandle}</a>
                  </div>
               )}
               
               {/* Tagline */}
               {selectedMember.profileTagline && (
-                <div className="text-center mb-4 border-t border-white/10 pt-4">
-                  <p className="font-mono text-white/40 text-xs italic">"{selectedMember.profileTagline}"</p>
+                <div className="text-center mb-4 border-t border-white/25 pt-4">
+                  <p className="font-mono text-white/70 text-xs italic">"{selectedMember.profileTagline}"</p>
                 </div>
               )}
               
@@ -2271,7 +2271,7 @@ export default function TeamHub() {
                 {/* Close */}
                 <button
                   onClick={() => setSelectedCaptain(null)}
-                  className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors"
+                  className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
                 >
                   ✕
                 </button>
@@ -2285,7 +2285,7 @@ export default function TeamHub() {
                     {capMember?.photoUrl ? (
                       <img src={capMember.photoUrl} alt={selectedCaptain} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-white/5 flex items-center justify-center">
+                      <div className="w-full h-full bg-white/10 flex items-center justify-center">
                         <span className="font-display text-4xl" style={{ color: tc.hex }}>C</span>
                       </div>
                     )}
@@ -2313,15 +2313,15 @@ export default function TeamHub() {
                        href={`https://instagram.com/${capMember.instagramHandle.replace(/^@/, '')}`}
                        target="_blank"
                        rel="noopener noreferrer"
-                       className="font-mono text-white/50 text-sm hover:text-white/80 transition-colors underline underline-offset-2"
+                       className="font-mono text-white/75 text-sm hover:text-white/80 transition-colors underline underline-offset-2"
                      >@{capMember.instagramHandle}</a>
                    </div>
                  )}
 
                 {/* Tagline if found */}
                 {capMember?.profileTagline && (
-                  <div className="text-center mb-4 border-t border-white/10 pt-4">
-                    <p className="font-mono text-white/40 text-xs italic">"{capMember.profileTagline}"</p>
+                  <div className="text-center mb-4 border-t border-white/25 pt-4">
+                    <p className="font-mono text-white/70 text-xs italic">"{capMember.profileTagline}"</p>
                   </div>
                 )}
 
@@ -2349,7 +2349,7 @@ function SectionHeader({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3 mb-2">
       <div className="flex-1 h-[1px] bg-white/10" />
-      <span className="font-mono text-white/30 text-[10px] tracking-[0.3em]">{label}</span>
+      <span className="font-mono text-white/60 text-[10px] tracking-[0.3em]">{label}</span>
       <div className="flex-1 h-[1px] bg-white/10" />
     </div>
   );
