@@ -490,16 +490,11 @@ export default function Admin() {
 
             {/* Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left" style={{ minWidth: 1400 }}>
+              <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-[#1A1A1A]">
-                    {[
-                      "Name", "Email", "Instagram", "Attended", "Type", "Group",
-                      "Dates", "Competitive", "Teammate", "Event", "Fear",
-                      "Profile", "Tagline", "Team", "Payment", "Access",
-                      "Shirt", "Consent", "Captain", "Referrals", "Signed Up",
-                    ].map((h) => (
-                      <th key={h} className="font-mono text-[#444] text-xs tracking-wider py-3 pr-4 whitespace-nowrap">
+                    {["Name", "Team", "Payment", "Shirt", "Signed Up"].map((h) => (
+                      <th key={h} className="font-mono text-[#444] text-xs tracking-wider py-3 pr-6 whitespace-nowrap">
                         {h}
                       </th>
                     ))}
@@ -508,30 +503,8 @@ export default function Admin() {
                 <tbody>
                   {filteredUsers.map((u) => (
                     <tr key={u.id} className="border-b border-[#0D0D0D] hover:bg-[#0D0D0D] transition-colors">
-                      <td className="font-mono text-[#F2F0EB] text-xs py-3 pr-4 whitespace-nowrap">{u.fullName}</td>
-                      <td className="font-mono text-[#555] text-xs py-3 pr-4 whitespace-nowrap">—</td>
-                      <td className="font-mono text-[#555] text-xs py-3 pr-4">
-                        —
-                      </td>
-                      <td className="font-mono text-xs py-3 pr-4">
-                        —
-                      </td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
-                      <td className="font-mono text-[#FF5500] text-xs py-3 pr-4">—</td>
-                      <td className="font-mono text-xs py-3 pr-4 whitespace-nowrap">
-                        —
-                      </td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
-                      <td className="font-mono text-[#FF5500] text-xs py-3 pr-4 whitespace-nowrap">
-                        —
-                      </td>
-                      <td className="font-mono text-[#555] text-xs py-3 pr-4 max-w-[160px] truncate" title="">
-                        —
-                      </td>
-                      <td className="py-3 pr-4">
+                      <td className="font-mono text-[#F2F0EB] text-xs py-3 pr-6 whitespace-nowrap">{u.fullName}</td>
+                      <td className="py-3 pr-6">
                         {u.team ? (
                           <span
                             className="font-mono text-xs px-2 py-1 uppercase"
@@ -543,9 +516,9 @@ export default function Admin() {
                           >
                             {u.team}
                           </span>
-                        ) : "—"}
+                        ) : <span className="font-mono text-[#444] text-xs">—</span>}
                       </td>
-                      <td className="py-3 pr-4">
+                      <td className="py-3 pr-6">
                         <span
                           className={`font-mono text-xs px-2 py-1 ${
                             u.paymentStatus === "paid"
@@ -556,15 +529,10 @@ export default function Admin() {
                           {u.paymentStatus ?? "unpaid"}
                         </span>
                       </td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
-                      <td className="font-mono text-xs py-3 pr-4">
+                      <td className="font-mono text-[#888] text-xs py-3 pr-6">
                         {u.shirtSize ?? "—"}
                       </td>
-                      <td className="font-mono text-xs py-3 pr-4 capitalize">—</td>
-                      <td className="font-mono text-xs py-3 pr-4">
-                        —
-                      </td>
-                      <td className="font-mono text-[#444] text-xs py-3 pr-4 whitespace-nowrap">
+                      <td className="font-mono text-[#444] text-xs py-3 whitespace-nowrap">
                         {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
                       </td>
                     </tr>
