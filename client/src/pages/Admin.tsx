@@ -202,7 +202,8 @@ export default function Admin() {
   }, [attendanceData]);
 
   const { data: adminSettings, refetch: refetchSettings } = trpc.sportsday.adminGetSettings.useQuery(undefined, {
-    enabled: canAccess && activeTab === "settings",
+    enabled: canAccess,
+    refetchInterval: 15_000,
   });
   const togglePopupsMutation = trpc.sportsday.adminTogglePopups.useMutation({
     onSuccess: (data) => {
@@ -370,6 +371,37 @@ export default function Admin() {
             </div>
           </div>
         )}
+        {/* ── Voting Toggle ── */}
+        <div className="flex items-center justify-between px-5 py-3 border border-[#1A1A1A] bg-[#0D0D0D]">
+          <div>
+            <p className="font-mono text-[#F2F0EB] text-xs tracking-[0.2em] font-bold">⚡ POWER UP VOTING</p>
+            <p className="font-mono text-[#555] text-[10px] tracking-wider mt-0.5">
+              {adminSettings?.votingEnabled ? "OPEN — captains can trigger power ups" : "CLOSED — flip to open for the current event"}
+            </p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <span className={`font-mono text-xs tracking-widest font-bold ${
+              adminSettings?.votingEnabled ? "text-[#22c55e]" : "text-[#444]"
+            }`}>
+              {adminSettings?.votingEnabled ? "ON" : "OFF"}
+            </span>
+            <button
+              onClick={() => toggleVotingMutation.mutate({ enabled: !adminSettings?.votingEnabled })}
+              disabled={toggleVotingMutation.isPending}
+              className={`relative w-14 h-7 rounded-full transition-colors duration-300 focus:outline-none ${
+                adminSettings?.votingEnabled ? "bg-[#22c55e]" : "bg-[#222]"
+              }`}
+              aria-label="Toggle voting"
+            >
+              <span
+                className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform duration-300 ${
+                  adminSettings?.votingEnabled ? "translate-x-8" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
         {/* Tabs */}
         <div className="flex gap-0 border-b border-[#1A1A1A] overflow-x-auto scrollbar-hide">
           {(["users", "attendance", "tshirts", "invites", "health", "scoring", "settings"] as const).map((tab) => (

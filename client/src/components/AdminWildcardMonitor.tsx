@@ -3,6 +3,7 @@
  * View active power ups, votes, and manage resolutions
  * Standalone — no required props, includes event selector.
  * Auto-selects the first ARMED or LIVE event when data loads.
+ * BLOCK button shows a team target picker before confirming.
  */
 import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
@@ -54,6 +55,9 @@ function EventStatusBadge({ status }: { status: string }) {
 export function AdminPowerUpMonitor() {
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  // Block target picker state: wildcardId -> chosen target team
+  const [blockPicking, setBlockPicking] = useState<number | null>(null);
+  const [blockTarget, setBlockTarget] = useState<Record<number, string>>({});
 
   const events = trpc.scoring.getEvents.useQuery(undefined, { refetchInterval: 10_000 });
   const wildcards = trpc.powerUps.getEventWildcards.useQuery(
@@ -67,6 +71,19 @@ export function AdminPowerUpMonitor() {
     const active = events.data.find((e) => e.status === "armed" || e.status === "live");
     if (active) setSelectedEventId(Number(active.id));
   }, [events.data, selectedEventId]);
+
+  const approveMutation = trpc.powerUps.adminResolvePowerUp.useMutation({
+    onSuccess: () => wildcards.refetch(),
+    onError: (e) => alert(e.message),
+  });
+
+  const blockMutation = trpc.powerUps.adminBlockPowerUp.useMutation({
+    onSuccess: () => {
+      wildcards.refetch();
+      setBlockPicking(null);
+    },
+    onError: (e) => alert(e.message),
+  });
 
   const activeWildcards = (wildcards.data ?? []).filter(
     (w) => w.status === "active" || w.status === "pending"
@@ -154,6 +171,7 @@ export function AdminPowerUpMonitor() {
             const targetColor = wc.targetTeam ? (TEAM_COLORS[wc.targetTeam] ?? "#fff") : null;
             const statusColor = STATUS_COLORS[wc.status] ?? "#555";
             const isExpanded = expandedId === wc.id;
+            const isPicking = blockPicking === wc.id;
 
             return (
               <div
@@ -231,19 +249,71 @@ export function AdminPowerUpMonitor() {
                     )}
 
                     {wc.status === "active" && (
-                      <div className="flex gap-2 pt-1">
-                        <button
-                          className="flex-1 py-2 text-xs tracking-widest border transition-colors"
-                          style={{ borderColor: "#00FF8840", color: "#00FF88", background: "#00FF8808" }}
-                        >
-                          APPROVE
-                        </button>
-                        <button
-                          className="flex-1 py-2 text-xs tracking-widest border transition-colors"
-                          style={{ borderColor: "#FF444440", color: "#FF4444", background: "#FF444408" }}
-                        >
-                          BLOCK
-                        </button>
+                      <div className="space-y-2 pt-1">
+                        {/* ── Block target picker ── */}
+                        {isPicking ? (
+                          <div className="space-y-2">
+                            <p className="text-[10px] tracking-widest text-[#FF4444]">
+                              SELECT TEAM TO BLOCK:
+                            </p>
+                            <div className="grid grid-cols-4 gap-1">
+                              {(["red", "blue", "pink", "orange"] as const).map((t) => {
+                                const tc = TEAM_COLORS[t];
+                                const isChosen = blockTarget[wc.id] === t;
+                                return (
+                                  <button
+                                    key={t}
+                                    onClick={() => setBlockTarget((prev) => ({ ...prev, [wc.id]: t }))}
+                                    className="py-3 text-[10px] tracking-widest border font-bold transition-all"
+                                    style={{
+                                      borderColor: isChosen ? tc : `${tc}30`,
+                                      color: isChosen ? "#0A0A0A" : tc,
+                                      background: isChosen ? tc : "transparent",
+                                    }}
+                                  >
+                                    {t.toUpperCase()}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => { setBlockPicking(null); setBlockTarget((p) => { const n = { ...p }; delete n[wc.id]; return n; }); }}
+                                className="flex-1 py-2 text-xs tracking-widest border"
+                                style={{ borderColor: "#33333380", color: "#555" }}
+                              >
+                                CANCEL
+                              </button>
+                              <button
+                                disabled={!blockTarget[wc.id] || blockMutation.isPending}
+                                onClick={() => blockMutation.mutate({ wildcardId: wc.id })}
+                                className="flex-1 py-2 text-xs tracking-widest border transition-colors disabled:opacity-40"
+                                style={{ borderColor: "#FF444440", color: "#FF4444", background: "#FF444408" }}
+                              >
+                                {blockMutation.isPending ? "…" : "CONFIRM BLOCK"}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          /* ── Normal APPROVE / BLOCK row ── */
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => approveMutation.mutate({ wildcardId: wc.id })}
+                              disabled={approveMutation.isPending}
+                              className="flex-1 py-2 text-xs tracking-widest border transition-colors disabled:opacity-40"
+                              style={{ borderColor: "#00FF8840", color: "#00FF88", background: "#00FF8808" }}
+                            >
+                              {approveMutation.isPending ? "…" : "APPROVE"}
+                            </button>
+                            <button
+                              onClick={() => setBlockPicking(wc.id)}
+                              className="flex-1 py-2 text-xs tracking-widest border transition-colors"
+                              style={{ borderColor: "#FF444440", color: "#FF4444", background: "#FF444408" }}
+                            >
+                              BLOCK
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
