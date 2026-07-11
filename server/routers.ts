@@ -1401,21 +1401,10 @@ Return ONLY valid JSON with this exact shape:
       // Verify voting is enabled (admin master switch — this is the only gate)
       const settings = await getSportsDaySettings();
       if (!settings?.votingEnabled) throw new TRPCError({ code: "FORBIDDEN", message: "Power Ups are not open yet. The admin will enable them on the day." });
-      // Verify registrant is on this team
+      // Verify registrant is on this team and is marked as captain in the DB
       const reg = await getRegistrationById(input.registrationId);
       if (!reg || reg.team !== input.team) throw new TRPCError({ code: "FORBIDDEN", message: "Not on this team" });
-      // Verify registrant is a captain (check TEAM_CAPTAINS constant by name)
-      const CAPTAIN_NAMES: Record<string, string[]> = {
-        red:    ["Raphael", "Togbe"],
-        blue:   ["Shola", "Adekunle"],
-        pink:   ["Sade", "Adesola"],
-        orange: ["Temi", "Adewale"],
-      };
-      const captainNames = CAPTAIN_NAMES[input.team] ?? [];
-      const isCaptain = captainNames.some((name) =>
-        reg.fullName?.toLowerCase().includes(name.toLowerCase())
-      );
-      if (!isCaptain) throw new TRPCError({ code: "FORBIDDEN", message: "Only team captains can initiate power ups." });
+      if (!reg.isCaptain) throw new TRPCError({ code: "FORBIDDEN", message: "Only team captains can initiate power ups." });
       // Check no duplicate pending power up for this team
       const existing = await db
         .select()
