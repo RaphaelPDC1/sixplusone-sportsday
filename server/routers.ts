@@ -1188,8 +1188,8 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
     .mutation(async ({ input, ctx }) => {
       // SECURITY: Rate limit admin password attempts (3 per 15 minutes per IP)
       const ip = ctx.req.ip ?? ctx.req.socket?.remoteAddress ?? "unknown";
-      if (!checkRateLimit(`admin_password:${ip}`, 3, 15 * 60_000)) {
-        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Too many attempts. Please wait 15 minutes and try again." });
+      if (!checkRateLimit(`admin_password:${ip}`, 10, 5 * 60_000)) {
+        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Too many attempts. Please wait 5 minutes and try again." });
       }
 
       const adminPassword = process.env.ADMIN_PASSWORD;
