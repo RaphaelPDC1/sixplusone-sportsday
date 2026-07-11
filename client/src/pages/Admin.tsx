@@ -310,7 +310,7 @@ export default function Admin() {
           <img src={LOGO_URL} alt="6+1" className="h-7 w-auto" />
           <div>
             <h1 className="font-display text-[#FF5500] text-2xl tracking-widest">ADMIN DASHBOARD</h1>
-            <p className="font-mono text-[#444] text-xs tracking-wider">SPORTS DAY 002</p>
+            <p className="font-mono text-[#666] text-xs tracking-wider">SPORTS DAY 002</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -322,7 +322,7 @@ export default function Admin() {
           </button>
           <button
             onClick={() => adminLogoutMutation.mutate()}
-            className="border border-[#DDD] text-[#666] font-mono text-xs tracking-widest px-4 py-2 hover:border-[#FF5500] hover:text-[#FF5500] transition-colors"
+            className="border border-[#999] text-[#333] font-mono text-xs tracking-widest px-4 py-2 hover:border-[#FF5500] hover:text-[#FF5500] transition-colors"
           >
             LOGOUT
           </button>
@@ -344,7 +344,7 @@ export default function Admin() {
         {/* Team Distribution */}
         {stats && (
           <div className="border border-[#DDD] p-5 bg-white">
-            <p className="font-mono text-[#999] text-xs tracking-[0.3em] mb-4">TEAM DISTRIBUTION</p>
+            <p className="font-mono text-[#555] text-xs tracking-[0.3em] mb-4">TEAM DISTRIBUTION</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {(["red", "blue", "pink", "orange"] as const).map((team) => {
                 const count = stats.teams[team] ?? 0;
@@ -365,7 +365,7 @@ export default function Admin() {
                         style={{ width: `${pct}%`, backgroundColor: TEAM_COLORS[team] }}
                       />
                     </div>
-                    <span className="font-mono text-[#999] text-xs">{pct}%</span>
+                    <span className="font-mono text-[#555] text-xs">{pct}%</span>
                   </div>
                 );
               })}
@@ -376,7 +376,7 @@ export default function Admin() {
         <div className="flex items-center justify-between px-5 py-3 border border-[#DDD] bg-white">
           <div className="flex-1 min-w-0">
             <p className="font-mono text-[#0A0A0A] text-xs tracking-[0.2em] font-bold">⚡ POWER UP VOTING</p>
-            <p className="font-mono text-[#999] text-[10px] tracking-wider mt-0.5">
+            <p className="font-mono text-[#666] text-[10px] tracking-wider mt-0.5">
               {adminSettings?.votingEnabled ? "OPEN — captains can trigger power ups" : "CLOSED — flip to open for the current event"}
             </p>
           </div>
@@ -408,7 +408,7 @@ export default function Admin() {
           <div className="px-5 py-3 border-b border-[#DDD] flex items-center gap-2">
             <span className="text-[#FF5500]">⚡</span>
             <p className="font-mono text-[#0A0A0A] text-xs tracking-[0.2em] font-bold">EVENT SCORING</p>
-            <p className="font-mono text-[#999] text-[10px] tracking-wider ml-auto">SELECT EVENT · LOG POINTS · SUBMIT</p>
+            <p className="font-mono text-[#666] text-[10px] tracking-wider ml-auto">SELECT EVENT · LOG POINTS · SUBMIT</p>
           </div>
           <div className="px-4 py-4">
             <AdminEventPanel />
@@ -424,7 +424,7 @@ export default function Admin() {
               className={`font-mono text-xs tracking-[0.2em] px-4 md:px-6 py-3 transition-colors whitespace-nowrap ${
                 activeTab === tab
                   ? "text-[#FF5500] border-b-2 border-[#FF5500]"
-                  : "text-[#444] hover:text-[#F2F0EB]"
+                  : "text-[#333] hover:text-[#FF5500]"
               }`}
             >
               {tab === "users" ? "REGISTRATIONS" : tab === "health" ? "HEALTH" : tab === "scoring" ? "🏆 SCORING" : tab === "settings" ? "SETTINGS" : tab === "attendance" ? "✅ ATTENDANCE" : tab === "tshirts" ? "👕 T-SHIRTS" : "🔗 INVITES"}
@@ -442,7 +442,7 @@ export default function Admin() {
                 placeholder="Search name, email, instagram..."
                 value={filters.search}
                 onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-                className="bg-[#111] border border-[#222] text-[#F2F0EB] font-mono text-xs px-4 py-2 outline-none focus:border-[#FF5500] transition-colors placeholder:text-[#444] flex-1 min-w-48"
+                className="bg-white border border-[#CCC] text-[#0A0A0A] font-mono text-xs px-4 py-2 outline-none focus:border-[#FF5500] transition-colors placeholder:text-[#999] flex-1 min-w-48"
               />
               <FilterSelect
                 value={filters.team}
