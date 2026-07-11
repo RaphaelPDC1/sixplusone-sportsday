@@ -1738,27 +1738,27 @@ export default function TeamHub() {
               const powerUpsOpen = !!activeEvent;
               return (
                 <>
-                  {!powerUpsOpen ? (
+              {!votingEnabled ? (
                     <div
                       className="flex items-center gap-3 px-4 py-3 border"
                       style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}
                     >
-                      <span className="text-lg">⏳</span>
-                      <div className="font-mono text-[10px] tracking-wider text-white/35">POWER UPS UNLOCK WHEN AN EVENT IS ARMED OR LIVE</div>
+                      <span className="text-lg">🔒</span>
+                      <div className="font-mono text-[10px] tracking-wider text-white/35">POWER UPS LOCKED — ADMIN WILL OPEN ON THE DAY</div>
                     </div>
                   ) : (
                     <div
                       className="flex items-center gap-3 px-4 py-3 border"
-                      style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
+                      style={{ borderColor: `${tc.hex}30`, background: `${tc.hex}08` }}
                     >
                       <span className="text-lg">⚡</span>
                       <div>
                         <div className="font-mono text-[10px] tracking-wider" style={{ color: tc.hex }}>POWER UPS OPEN</div>
-                        <div className="font-mono text-[9px] tracking-wider text-white/70 mt-0.5">{activeEvent.name.toUpperCase()} · {activeEvent.status.toUpperCase()}</div>
+                        <div className="font-mono text-[9px] tracking-wider text-white/70 mt-0.5">CAPTAINS CAN INITIATE — TEAM VOTES TO CONFIRM</div>
                       </div>
                     </div>
                   )}
-                  {powerUpsOpen && isCaptainUser && (
+                  {votingEnabled && isCaptainUser && (
                     <div className="font-mono text-[10px] tracking-[0.3em] px-1" style={{ color: tc.hex }}>
                       TAP A CARD TO INITIATE AS CAPTAIN
                     </div>
@@ -1804,9 +1804,9 @@ export default function TeamHub() {
                     </div>
                     {/* Action area */}
                     <div className="px-4 pb-4">
-                      {!liveEvents.some((e) => e.status === "armed" || e.status === "live") ? (
+                      {!votingEnabled ? (
                         <div className="text-center font-mono text-[9px] tracking-wider text-white/75 py-1">
-                          POWER UPS UNLOCK WHEN EVENT IS ARMED
+                          POWER UPS LOCKED — ADMIN WILL OPEN ON THE DAY
                         </div>
                       ) : isCaptainUser ? (
                         /* Captain: initiate flow */

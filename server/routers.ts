@@ -1398,13 +1398,9 @@ Return ONLY valid JSON with this exact shape:
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-      // Verify voting is enabled (admin master switch)
+      // Verify voting is enabled (admin master switch — this is the only gate)
       const settings = await getSportsDaySettings();
-      if (!settings?.votingEnabled) throw new TRPCError({ code: "FORBIDDEN", message: "Voting is not open yet. Power Ups unlock on the day." });
-      // Power Ups are only available when an event is ARMED or LIVE
-      const allEvents = await db.select().from(sdEvents);
-      const hasActiveEvent = allEvents.some((e) => e.status === "armed" || e.status === "live");
-      if (!hasActiveEvent) throw new TRPCError({ code: "FORBIDDEN", message: "No event is currently ARMED or LIVE. Power Ups open when an event is armed." });
+      if (!settings?.votingEnabled) throw new TRPCError({ code: "FORBIDDEN", message: "Power Ups are not open yet. The admin will enable them on the day." });
       // Verify registrant is on this team
       const reg = await getRegistrationById(input.registrationId);
       if (!reg || reg.team !== input.team) throw new TRPCError({ code: "FORBIDDEN", message: "Not on this team" });
