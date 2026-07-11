@@ -166,24 +166,32 @@ export function PhotoFeed({ registrationId, teamColor }: PhotoFeedProps) {
                   loading="lazy"
                 />
               </div>
-              {/* Overlay with uploader info */}
+              {/* Team colour bar at top */}
               <div
-                className="absolute bottom-0 left-0 right-0 px-2 py-1.5"
+                className="absolute top-0 left-0 right-0 h-1"
+                style={{ background: TEAM_COLORS[photo.uploaderTeam] ?? teamColor }}
+              />
+              {/* Name + team stamp overlay at bottom */}
+              <div
+                className="absolute bottom-0 left-0 right-0 px-2 py-2"
                 style={{
-                  background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)",
+                  background: `linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.5) 60%, transparent 100%)`,
                 }}
               >
-                <div className="flex items-center gap-1">
-                  <div
-                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                    style={{ background: TEAM_COLORS[photo.uploaderTeam] ?? teamColor }}
-                  />
-                  <span className="font-mono text-white/80 text-[9px] tracking-wider truncate">
-                    {photo.uploaderName.split(" ")[0].toUpperCase()}
-                  </span>
+                <div
+                  className="font-mono text-[10px] font-bold tracking-widest truncate"
+                  style={{ color: TEAM_COLORS[photo.uploaderTeam] ?? teamColor }}
+                >
+                  {photo.uploaderName.split(" ")[0].toUpperCase()}
+                </div>
+                <div
+                  className="font-mono text-[8px] tracking-[0.2em] uppercase"
+                  style={{ color: `${TEAM_COLORS[photo.uploaderTeam] ?? teamColor}99` }}
+                >
+                  {photo.uploaderTeam} TEAM
                 </div>
                 {photo.caption && (
-                  <p className="font-mono text-white/60 text-[8px] tracking-wide truncate mt-0.5">
+                  <p className="font-mono text-white/55 text-[8px] tracking-wide truncate mt-0.5">
                     {photo.caption}
                   </p>
                 )}
