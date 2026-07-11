@@ -299,15 +299,15 @@ export default function Admin() {
   const totalTeam = stats ? Object.values(stats.teams).reduce((a, b) => a + b, 0) : 0;
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB]">
+    <div className="min-h-screen bg-white text-[#0A0A0A]">
       {showSplash && <EntrySplash onComplete={() => { sessionStorage.setItem("admin_splash_seen", "true"); setShowSplash(false); }} />}
       <div className="h-[2px] bg-[#FF5500]" />
 
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-[#1A1A1A]">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-[#DDD]">
         <div className="flex items-center gap-4">
           <BackNav to="/" inline />
-          <img src={LOGO_URL} alt="6+1" className="h-7 w-auto" style={{ filter: "invert(1)" }} />
+          <img src={LOGO_URL} alt="6+1" className="h-7 w-auto" />
           <div>
             <h1 className="font-display text-[#FF5500] text-2xl tracking-widest">ADMIN DASHBOARD</h1>
             <p className="font-mono text-[#444] text-xs tracking-wider">SPORTS DAY 002</p>
@@ -322,7 +322,7 @@ export default function Admin() {
           </button>
           <button
             onClick={() => adminLogoutMutation.mutate()}
-            className="border border-[#333] text-[#555] font-mono text-xs tracking-widest px-4 py-2 hover:border-[#FF5500] hover:text-[#FF5500] transition-colors"
+            className="border border-[#DDD] text-[#666] font-mono text-xs tracking-widest px-4 py-2 hover:border-[#FF5500] hover:text-[#FF5500] transition-colors"
           >
             LOGOUT
           </button>
@@ -343,8 +343,8 @@ export default function Admin() {
 
         {/* Team Distribution */}
         {stats && (
-          <div className="border border-[#1A1A1A] p-5 bg-[#0D0D0D]">
-            <p className="font-mono text-[#555] text-xs tracking-[0.3em] mb-4">TEAM DISTRIBUTION</p>
+          <div className="border border-[#DDD] p-5 bg-white">
+            <p className="font-mono text-[#999] text-xs tracking-[0.3em] mb-4">TEAM DISTRIBUTION</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {(["red", "blue", "pink", "orange"] as const).map((team) => {
                 const count = stats.teams[team] ?? 0;
@@ -359,13 +359,13 @@ export default function Admin() {
                         {count}
                       </span>
                     </div>
-                    <div className="h-1 bg-[#1A1A1A]">
+                    <div className="h-1 bg-[#EEE]">
                       <div
                         className="h-full transition-all duration-500"
                         style={{ width: `${pct}%`, backgroundColor: TEAM_COLORS[team] }}
                       />
                     </div>
-                    <span className="font-mono text-[#444] text-xs">{pct}%</span>
+                    <span className="font-mono text-[#999] text-xs">{pct}%</span>
                   </div>
                 );
               })}
@@ -373,10 +373,10 @@ export default function Admin() {
           </div>
         )}
         {/* ── Voting Toggle ── */}
-        <div className="flex items-center justify-between px-5 py-3 border border-[#1A1A1A] bg-[#0D0D0D]">
+        <div className="flex items-center justify-between px-5 py-3 border border-[#DDD] bg-white">
           <div className="flex-1 min-w-0">
-            <p className="font-mono text-[#F2F0EB] text-xs tracking-[0.2em] font-bold">⚡ POWER UP VOTING</p>
-            <p className="font-mono text-[#555] text-[10px] tracking-wider mt-0.5">
+            <p className="font-mono text-[#0A0A0A] text-xs tracking-[0.2em] font-bold">⚡ POWER UP VOTING</p>
+            <p className="font-mono text-[#999] text-[10px] tracking-wider mt-0.5">
               {adminSettings?.votingEnabled ? "OPEN — captains can trigger power ups" : "CLOSED — flip to open for the current event"}
             </p>
           </div>
@@ -404,11 +404,11 @@ export default function Admin() {
         </div>
 
         {/* ── Event Scoring Panel ── */}
-        <div className="border border-[#1A1A1A] bg-[#0A0A0A] mx-0">
-          <div className="px-5 py-3 border-b border-[#1A1A1A] flex items-center gap-2">
+        <div className="border border-[#DDD] bg-white mx-0">
+          <div className="px-5 py-3 border-b border-[#DDD] flex items-center gap-2">
             <span className="text-[#FF5500]">⚡</span>
-            <p className="font-mono text-[#F2F0EB] text-xs tracking-[0.2em] font-bold">EVENT SCORING</p>
-            <p className="font-mono text-[#555] text-[10px] tracking-wider ml-auto">SELECT EVENT · LOG POINTS · SUBMIT</p>
+            <p className="font-mono text-[#0A0A0A] text-xs tracking-[0.2em] font-bold">EVENT SCORING</p>
+            <p className="font-mono text-[#999] text-[10px] tracking-wider ml-auto">SELECT EVENT · LOG POINTS · SUBMIT</p>
           </div>
           <div className="px-4 py-4">
             <AdminEventPanel />
@@ -416,7 +416,7 @@ export default function Admin() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-0 border-b border-[#1A1A1A] overflow-x-auto scrollbar-hide">
+        <div className="flex gap-0 border-b border-[#DDD] overflow-x-auto scrollbar-hide">
           {(["users", "attendance", "tshirts", "invites", "health", "scoring", "settings"] as const).map((tab) => (
             <button
               key={tab}
