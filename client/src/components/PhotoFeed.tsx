@@ -16,6 +16,7 @@ interface PhotoFeedProps {
 
 export function PhotoFeed({ registrationId, teamColor }: PhotoFeedProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadingRef = useRef(false); // ref guard prevents double-fire before state update
   const [uploading, setUploading] = useState(false);
   const [caption, setCaption] = useState("");
   const [showComposer, setShowComposer] = useState(false);
@@ -37,7 +38,7 @@ export function PhotoFeed({ registrationId, teamColor }: PhotoFeedProps) {
     onError: (err) => {
       toast.error(err.message ?? "Upload failed");
     },
-    onSettled: () => setUploading(false),
+    onSettled: () => { setUploading(false); uploadingRef.current = false; },
   });
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,6 +60,8 @@ export function PhotoFeed({ registrationId, teamColor }: PhotoFeedProps) {
 
   const handleSubmit = () => {
     if (!pendingImage || !registrationId) return;
+    if (uploadingRef.current) return; // block double-tap
+    uploadingRef.current = true;
     setUploading(true);
     uploadMutation.mutate({
       registrationId,
