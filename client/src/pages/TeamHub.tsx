@@ -1618,9 +1618,9 @@ export default function TeamHub() {
                     const teamEventCount = publicEventResults
                       ? publicEventResults.filter((e) => e.team === team).length
                       : (hub.leaderboard as any[]).filter((e: any) => e.team === team && !e.dnf).length;
-                    // Power-ups used by this team
-                    const teamActivePUs = (powerUpLog ?? []).filter(p => p.team === team && p.status === "activated");
-                    // Power-ups used AGAINST this team (sabotage/block)
+                    // Power-ups used by this team (all statuses for transparency)
+                    const teamActivePUs = (powerUpLog ?? []).filter(p => p.team === team);
+                    // Power-ups used AGAINST this team (sabotage/block) — only activated ones landed
                     const teamTargetedPUs = (powerUpLog ?? []).filter(p => p.targetTeam === team && p.status === "activated");
                     const POWER_UP_ICONS: Record<string, string> = {
                       boost: "🚀", sabotage: "💣", block: "🛡️", double_down: "×2", all_in: "🔥",
@@ -1669,7 +1669,7 @@ export default function TeamHub() {
                                 style={{ background: `${teamColor?.hex}25`, color: teamColor?.hex }}
                                 title={`Used ${pu.powerUpId.replace(/_/g,' ')}${pu.targetTeam ? ` on ${pu.targetTeam}` : ''}`}
                               >
-                                {POWER_UP_ICONS[pu.powerUpId] ?? "⚡"} {pu.powerUpId.replace(/_/g,' ').toUpperCase()}
+                                {POWER_UP_ICONS[pu.powerUpId] ?? "⚡"} {pu.powerUpId.replace(/_/g,' ').toUpperCase()} {pu.status === "cancelled" ? "(BLOCKED)" : "✓"}
                               </span>
                             ))}
                             {teamTargetedPUs.map((pu) => (
@@ -1684,15 +1684,14 @@ export default function TeamHub() {
                             ))}
                           </div>
                         )}
-                        {/* Transparent points breakdown */}
-                        {pointsBreakdown && pointsBreakdown[team] && pointsBreakdown[team].length > 0 && (
+                        {/* Transparent power-up effects only (not event results — those show in EVENT RESULTS section) */}
+                        {pointsBreakdown && pointsBreakdown[team] && pointsBreakdown[team].filter(r => (r.reason as string) !== "event_result").length > 0 && (
                           <div className="mt-2 pt-2 border-t border-white/10 space-y-0.5">
-                            {pointsBreakdown[team].map((row, ri) => {
+                            {pointsBreakdown[team].filter(r => (r.reason as string) !== "event_result").map((row, ri) => {
                               const isPositive = row.delta > 0;
                               const reasonStr = row.reason as string;
                               const label = row.note
                                 ? row.note
-                                : reasonStr === "event_result" ? "Event result"
                                 : reasonStr === "sabotage" ? "💣 SABOTAGE"
                                 : reasonStr === "boost" ? "🚀 BOOST"
                                 : reasonStr === "admin_override" ? "Admin adjustment"
@@ -1830,7 +1829,7 @@ export default function TeamHub() {
                                     color: entry.status === "activated" ? "#22c55e" : "#ef4444",
                                   }}
                                 >
-                                  {entry.status === "activated" ? "ACTIVE" : entry.status.toUpperCase()}
+                                  {entry.status === "activated" ? "USED" : entry.status === "cancelled" ? "BLOCKED" : entry.status.toUpperCase()}
                                 </span>
                               </div>
                             </div>
