@@ -1489,7 +1489,7 @@ Return ONLY valid JSON with this exact shape:
     }),
 
   // ─── Captain-only: initiate a power up vote ────────────────────────────────
-  initiatePowerUp: protectedProcedure
+  initiatePowerUp: publicProcedure
     .input(z.object({
       registrationId: z.string(),
       team: z.enum(["red","blue","pink","orange"]),
