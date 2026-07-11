@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -16,12 +16,12 @@ interface PhotoFeedProps {
 
 export function PhotoFeed({ registrationId, teamColor }: PhotoFeedProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const uploadingRef = useRef(false); // ref guard prevents double-fire before state update
+  const uploadingRef = useRef(false);
   const [uploading, setUploading] = useState(false);
   const [caption, setCaption] = useState("");
   const [showComposer, setShowComposer] = useState(false);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
+  const [paused, setPaused] = useState(false);
 
   const { data: photos = [], refetch } = trpc.sportsday.listPhotos.useQuery(undefined, {
     refetchInterval: 15_000,
@@ -38,11 +38,17 @@ export function PhotoFeed({ registrationId, teamColor }: PhotoFeedProps) {
     onError: (err) => {
       toast.error(err.message ?? "Upload failed");
     },
-    onSettled: () => { setUploading(false); uploadingRef.current = false; },
+    onSettled: () => {
+      setUploading(false);
+      uploadingRef.current = false;
+    },
   });
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Always reset the input value immediately so re-selecting the same file works
+    // and so the browser doesn't re-fire onChange on re-render
+    e.target.value = "";
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
       toast.error("Image too large — max 10MB");
@@ -54,13 +60,11 @@ export function PhotoFeed({ registrationId, teamColor }: PhotoFeedProps) {
       setShowComposer(true);
     };
     reader.readAsDataURL(file);
-    // reset input so same file can be re-selected
-    e.target.value = "";
   }, []);
 
   const handleSubmit = () => {
     if (!pendingImage || !registrationId) return;
-    if (uploadingRef.current) return; // block double-tap
+    if (uploadingRef.current) return;
     uploadingRef.current = true;
     setUploading(true);
     uploadMutation.mutate({
@@ -70,27 +74,38 @@ export function PhotoFeed({ registrationId, teamColor }: PhotoFeedProps) {
     });
   };
 
-  // Pause marquee on hover
-  const [paused, setPaused] = useState(false);
+  const openPicker = () => fileInputRef.current?.click();
 
-  if (photos.length === 0 && !showComposer) {
-    return (
-      <div className="mt-10 mb-2">
-        <div className="flex items-center justify-between mb-3">
-          <span
-            className="font-mono text-[10px] tracking-[0.3em]"
-            style={{ color: teamColor }}
-          >
-            📸 MOMENTS
-          </span>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="font-mono text-[10px] tracking-widest border px-3 py-1.5 transition-opacity hover:opacity-70"
-            style={{ borderColor: `${teamColor}60`, color: teamColor }}
-          >
-            + ADD PHOTO
-          </button>
-        </div>
+  // Duplicate photos for seamless infinite scroll
+  const doubled = [...photos, ...photos];
+
+  return (
+    <div className="mt-10 mb-2">
+      {/* Single file input — rendered ONCE, always present, never duplicated */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      {/* Header row — always shown */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-mono text-[10px] tracking-[0.3em]" style={{ color: teamColor }}>
+          📸 MOMENTS{photos.length > 0 ? ` (${photos.length})` : ""}
+        </span>
+        <button
+          onClick={openPicker}
+          className="font-mono text-[10px] tracking-widest border px-3 py-1.5 transition-opacity hover:opacity-70"
+          style={{ borderColor: `${teamColor}60`, color: teamColor }}
+        >
+          + ADD PHOTO
+        </button>
+      </div>
+
+      {/* Empty state */}
+      {photos.length === 0 && !showComposer && (
         <div
           className="border border-dashed flex items-center justify-center py-8"
           style={{ borderColor: `${teamColor}30` }}
@@ -99,110 +114,80 @@ export function PhotoFeed({ registrationId, teamColor }: PhotoFeedProps) {
             No photos yet — be the first to share a moment
           </p>
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-      </div>
-    );
-  }
-
-  // Duplicate photos for seamless infinite scroll
-  const doubled = [...photos, ...photos];
-
-  return (
-    <div className="mt-10 mb-2">
-      {/* Header row */}
-      <div className="flex items-center justify-between mb-3">
-        <span
-          className="font-mono text-[10px] tracking-[0.3em]"
-          style={{ color: teamColor }}
-        >
-          📸 MOMENTS ({photos.length})
-        </span>
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="font-mono text-[10px] tracking-widest border px-3 py-1.5 transition-opacity hover:opacity-70"
-          style={{ borderColor: `${teamColor}60`, color: teamColor }}
-        >
-          + ADD PHOTO
-        </button>
-      </div>
+      )}
 
       {/* Scrolling banner */}
-      <div
-        className="overflow-hidden relative"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onTouchStart={() => setPaused(true)}
-        onTouchEnd={() => setPaused(false)}
-      >
+      {photos.length > 0 && (
         <div
-          ref={trackRef}
-          className="flex gap-3"
-          style={{
-            animation: `marqueeScroll ${Math.max(20, photos.length * 4)}s linear infinite`,
-            animationPlayState: paused ? "paused" : "running",
-            width: "max-content",
-          }}
+          className="overflow-hidden relative"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onTouchStart={() => setPaused(true)}
+          onTouchEnd={() => setPaused(false)}
         >
-          {doubled.map((photo, idx) => (
-            <div
-              key={`${photo.id}-${idx}`}
-              className="flex-shrink-0 relative group"
-              style={{ width: 160 }}
-            >
+          <div
+            className="flex gap-3"
+            style={{
+              animation: `marqueeScroll ${Math.max(20, photos.length * 4)}s linear infinite`,
+              animationPlayState: paused ? "paused" : "running",
+              width: "max-content",
+            }}
+          >
+            {doubled.map((photo, idx) => (
               <div
-                className="overflow-hidden border"
-                style={{
-                  borderColor: `${TEAM_COLORS[photo.uploaderTeam] ?? teamColor}60`,
-                  height: 160,
-                }}
+                key={`${photo.id}-${idx}`}
+                className="flex-shrink-0 relative group"
+                style={{ width: 160 }}
               >
-                <img
-                  src={photo.url}
-                  alt={photo.caption ?? `Photo by ${photo.uploaderName}`}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
+                <div
+                  className="overflow-hidden border"
+                  style={{
+                    borderColor: `${TEAM_COLORS[photo.uploaderTeam] ?? teamColor}60`,
+                    height: 160,
+                  }}
+                >
+                  <img
+                    src={photo.url}
+                    alt={photo.caption ?? `Photo by ${photo.uploaderName}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                {/* Team colour bar at top */}
+                <div
+                  className="absolute top-0 left-0 right-0 h-1"
+                  style={{ background: TEAM_COLORS[photo.uploaderTeam] ?? teamColor }}
                 />
-              </div>
-              {/* Team colour bar at top */}
-              <div
-                className="absolute top-0 left-0 right-0 h-1"
-                style={{ background: TEAM_COLORS[photo.uploaderTeam] ?? teamColor }}
-              />
-              {/* Name + team stamp overlay at bottom */}
-              <div
-                className="absolute bottom-0 left-0 right-0 px-2 py-2"
-                style={{
-                  background: `linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.5) 60%, transparent 100%)`,
-                }}
-              >
+                {/* Name + team stamp overlay */}
                 <div
-                  className="font-mono text-[10px] font-bold tracking-widest truncate"
-                  style={{ color: TEAM_COLORS[photo.uploaderTeam] ?? teamColor }}
+                  className="absolute bottom-0 left-0 right-0 px-2 py-2"
+                  style={{
+                    background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.5) 60%, transparent 100%)",
+                  }}
                 >
-                  {photo.uploaderName.split(" ")[0].toUpperCase()}
+                  <div
+                    className="font-mono text-[10px] font-bold tracking-widest truncate"
+                    style={{ color: TEAM_COLORS[photo.uploaderTeam] ?? teamColor }}
+                  >
+                    {photo.uploaderName.split(" ")[0].toUpperCase()}
+                  </div>
+                  <div
+                    className="font-mono text-[8px] tracking-[0.2em] uppercase"
+                    style={{ color: `${TEAM_COLORS[photo.uploaderTeam] ?? teamColor}99` }}
+                  >
+                    {photo.uploaderTeam} TEAM
+                  </div>
+                  {photo.caption && (
+                    <p className="font-mono text-white/55 text-[8px] tracking-wide truncate mt-0.5">
+                      {photo.caption}
+                    </p>
+                  )}
                 </div>
-                <div
-                  className="font-mono text-[8px] tracking-[0.2em] uppercase"
-                  style={{ color: `${TEAM_COLORS[photo.uploaderTeam] ?? teamColor}99` }}
-                >
-                  {photo.uploaderTeam} TEAM
-                </div>
-                {photo.caption && (
-                  <p className="font-mono text-white/55 text-[8px] tracking-wide truncate mt-0.5">
-                    {photo.caption}
-                  </p>
-                )}
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Composer modal */}
       {showComposer && pendingImage && (
@@ -258,15 +243,6 @@ export function PhotoFeed({ registrationId, teamColor }: PhotoFeedProps) {
           </div>
         </div>
       )}
-
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
-      />
     </div>
   );
 }
