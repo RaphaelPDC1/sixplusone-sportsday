@@ -198,15 +198,33 @@ export const awardsVotes = mysqlTable("awards_votes", {
 export type AwardsVote = typeof awardsVotes.$inferSelect;
 
 // ─── Wildcard Votes ───────────────────────────────────────────────────────────
-// Each team has 3 power ups they can vote to activate
+// Each team has power ups they can vote to activate.
+// A "session" row is created when a captain initiates (voterId = captain, isInitiation = true).
+// Subsequent YES votes are additional rows (isInitiation = false).
 export const powerUpVotes = mysqlTable("power_up_votes", {
   id: int("id").autoincrement().primaryKey(),
   voterId: varchar("voterId", { length: 36 }).notNull(),
   team: mysqlEnum("team", ["red", "blue", "pink", "orange"]).notNull(),
-  powerUpId: varchar("powerUpId", { length: 50 }).notNull(), // e.g. "boost", "sabotage", "double_down", "all_in"
+  powerUpId: varchar("powerUpId", { length: 50 }).notNull(), // e.g. "boost", "sabotage", "block", "double_down", "all_in"
+
+  // Optional: which team is being targeted (for sabotage / block)
+  targetTeam: mysqlEnum("targetTeam", ["red", "blue", "pink", "orange"]),
+
+  // For counter-BLOCK: the id of the incoming BLOCK session row this is countering
+  counterBlockOf: int("counterBlockOf"),
+
+  // Is this the initiation row (captain's first vote that opens the session)?
+  isInitiation: boolean("isInitiation").default(false).notNull(),
+
+  // How many team members were present when this session was opened (snapshot for 45% calc)
+  presentCount: int("presentCount").default(0).notNull(),
+
+  // Session lifecycle: pending → activated | cancelled
+  status: mysqlEnum("status", ["pending", "activated", "cancelled"]).default("pending").notNull(),
+
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (t) => ({
-  // One vote per voter per wildcard
+  // One vote per voter per power-up (prevents double-voting)
   voterPowerUpIdx: uniqueIndex("voter_power_up_idx").on(t.voterId, t.powerUpId),
 }));
 export type PowerUpVote = typeof powerUpVotes.$inferSelect;

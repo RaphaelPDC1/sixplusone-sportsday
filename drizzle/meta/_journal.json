@@ -176,6 +176,13 @@
       "when": 1783336361732,
       "tag": "0024_magenta_quicksilver",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1783734720132,
+      "tag": "0025_striped_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }

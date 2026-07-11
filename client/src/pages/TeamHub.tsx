@@ -187,12 +187,19 @@ export default function TeamHub() {
   // Power Up initiation state
   const [powerUpInitiating, setWildcardInitiating] = useState<string | null>(null);
   const [powerUpTarget, setWildcardTarget] = useState<string | null>(null);
+  // Counter-block state: id of the incoming BLOCK session being countered
+  const [counterBlockSessionId, setCounterBlockSessionId] = useState<number | null>(null);
 
   const initiatePowerUpMutation = trpc.sportsday.initiatePowerUp.useMutation({
-    onSuccess: () => {
-      toast.success("Power Up initiated! Your team is now voting.");
+    onSuccess: (data) => {
+      if (data.activated) {
+        toast.success("⚡ POWER UP ACTIVATED!");
+      } else {
+        toast.success("Power Up initiated! Your team is now voting.");
+      }
       setWildcardInitiating(null);
       setWildcardTarget(null);
+      setCounterBlockSessionId(null);
       refetch();
     },
     onError: (e) => toast.error(e.message),
@@ -217,8 +224,12 @@ export default function TeamHub() {
   });
 
   const powerUpMutation = trpc.sportsday.castPowerUpVote.useMutation({
-    onSuccess: () => {
-      toast.success("Power Up vote locked in!");
+    onSuccess: (data) => {
+      if (data.activated) {
+        toast.success(`⚡ POWER UP ACTIVATED! (${data.totalYes}/${data.threshold} votes)`);
+      } else {
+        toast.success(`Vote locked in! (${data.totalYes}/${data.threshold} needed)`);
+      }
       refetch();
     },
     onError: (e) => toast.error(e.message),
@@ -1732,55 +1743,140 @@ export default function TeamHub() {
                 arrowDir="down"
               />
             )}
-            {/* Event-status gate banner */}
-            {(() => {
-              const activeEvent = liveEvents.find((e) => e.status === "armed" || e.status === "live");
-              const powerUpsOpen = !!activeEvent;
+            {/* Status banner */}
+            {!votingEnabled ? (
+              <div
+                className="flex items-center gap-3 px-4 py-3 border"
+                style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}
+              >
+                <span className="text-lg">🔒</span>
+                <div className="font-mono text-[10px] tracking-wider text-white/35">POWER UPS LOCKED — ADMIN WILL OPEN ON THE DAY</div>
+              </div>
+            ) : (
+              <div
+                className="flex items-center gap-3 px-4 py-3 border"
+                style={{ borderColor: `${tc.hex}30`, background: `${tc.hex}08` }}
+              >
+                <span className="text-lg">⚡</span>
+                <div>
+                  <div className="font-mono text-[10px] tracking-wider" style={{ color: tc.hex }}>POWER UPS OPEN</div>
+                  <div className="font-mono text-[9px] tracking-wider text-white/70 mt-0.5">
+                    {isCaptainUser ? "TAP A CARD TO INITIATE AS CAPTAIN" : "CAPTAINS INITIATE — TEAM VOTES TO CONFIRM"}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ⚠️ INCOMING BLOCK ALERT — shown to the target team when another team is voting to block them */}
+            {votingEnabled && hub.incomingBlockSession && hub.incomingBlockSession.status === "pending" && (() => {
+              const attacker = hub.incomingBlockSession.attackerTeam;
+              const ATTACKER_COLORS: Record<string, string> = { red: "#B80000", blue: "#1A4FE8", pink: "#F72B8C", orange: "#FF6B00" };
+              const attackerHex = ATTACKER_COLORS[attacker] ?? "#FF6B00";
+              // Has this team already initiated a counter-block for this session?
+              const counterSession = hub.wildcardSessions["block"];
+              const hasCounterBlock = counterSession?.counterBlockOf === hub.incomingBlockSession.id && counterSession?.status === "pending";
+              const hasVotedCounterBlock = hub.myWildcardVotes.includes("block");
               return (
-                <>
-              {!votingEnabled ? (
-                    <div
-                      className="flex items-center gap-3 px-4 py-3 border"
-                      style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}
-                    >
-                      <span className="text-lg">🔒</span>
-                      <div className="font-mono text-[10px] tracking-wider text-white/35">POWER UPS LOCKED — ADMIN WILL OPEN ON THE DAY</div>
-                    </div>
-                  ) : (
-                    <div
-                      className="flex items-center gap-3 px-4 py-3 border"
-                      style={{ borderColor: `${tc.hex}30`, background: `${tc.hex}08` }}
-                    >
-                      <span className="text-lg">⚡</span>
-                      <div>
-                        <div className="font-mono text-[10px] tracking-wider" style={{ color: tc.hex }}>POWER UPS OPEN</div>
-                        <div className="font-mono text-[9px] tracking-wider text-white/70 mt-0.5">CAPTAINS CAN INITIATE — TEAM VOTES TO CONFIRM</div>
+                <div
+                  className="border-2 p-4 space-y-3"
+                  style={{ borderColor: attackerHex, background: `${attackerHex}12` }}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🛡️</span>
+                    <div>
+                      <div className="font-display text-sm tracking-widest" style={{ color: attackerHex }}>
+                        {attacker.toUpperCase()} IS TRYING TO BLOCK US
+                      </div>
+                      <div className="font-mono text-[9px] tracking-wider text-white/50 mt-0.5">
+                        THEY ARE VOTING TO CANCEL YOUR NEXT POWER UP
                       </div>
                     </div>
+                  </div>
+
+                  {/* Counter-block option — only if captain and no counter-block already initiated */}
+                  {isCaptainUser && !hasCounterBlock && (
+                    <>
+                      <div className="font-mono text-[9px] tracking-wider text-white/40">
+                        YOU HAVE A BLOCK — USE IT TO COUNTER?
+                      </div>
+                      <button
+                        onClick={() => {
+                          hs('powerup');
+                          initiatePowerUpMutation.mutate({
+                            registrationId: userId,
+                            team: hub.team as "red"|"blue"|"pink"|"orange",
+                            wildcardId: "block",
+                            targetTeam: attacker as "red"|"blue"|"pink"|"orange",
+                            counterBlockOf: hub.incomingBlockSession!.id,
+                          });
+                        }}
+                        disabled={initiatePowerUpMutation.isPending}
+                        className="w-full py-2.5 font-display text-sm tracking-widest transition-all active:scale-[0.99]"
+                        style={{ background: attackerHex, color: "#0A0A0A" }}
+                      >
+                        {initiatePowerUpMutation.isPending ? "INITIATING..." : "🛡️ COUNTER-BLOCK →"}
+                      </button>
+                    </>
                   )}
-                  {votingEnabled && isCaptainUser && (
-                    <div className="font-mono text-[10px] tracking-[0.3em] px-1" style={{ color: tc.hex }}>
-                      TAP A CARD TO INITIATE AS CAPTAIN
+
+                  {/* Counter-block in progress — team members can vote */}
+                  {hasCounterBlock && !hasVotedCounterBlock && !isCaptainUser && (
+                    <>
+                      <div className="font-mono text-[9px] tracking-wider" style={{ color: tc.hex }}>
+                        CAPTAIN LAUNCHED COUNTER-BLOCK — VOTE YES TO DEFEND!
+                      </div>
+                      <button
+                        onClick={() => { hs('confirm'); powerUpMutation.mutate({
+                          voterId: userId,
+                          team: hub.team as "red"|"blue"|"pink"|"orange",
+                          wildcardId: "block",
+                        }); }}
+                        disabled={powerUpMutation.isPending}
+                        className="w-full py-2.5 font-display text-sm tracking-widest transition-all active:scale-[0.99]"
+                        style={{ background: `${tc.hex}20`, color: tc.hex, border: `1px solid ${tc.hex}40` }}
+                      >
+                        VOTE YES →
+                      </button>
+                    </>
+                  )}
+
+                  {hasCounterBlock && hasVotedCounterBlock && (
+                    <div className="text-center font-mono text-xs tracking-wider" style={{ color: tc.hex }}>✓ VOTED TO COUNTER</div>
+                  )}
+
+                  {hasCounterBlock && isCaptainUser && (
+                    <div className="font-mono text-[9px] tracking-wider text-white/50">
+                      COUNTER-BLOCK INITIATED — WAITING FOR TEAM VOTES
                     </div>
                   )}
-                </>
+                </div>
               );
             })()}
-            {/* All 5 power up cards — always visible */}
+
+            {/* All 5 power up cards */}
             <div className="space-y-3">
               {POWER_UPS.map((wc) => {
-                const votes = hub.wildcardCounts[wc.id] ?? 0;
+                const session = hub.wildcardSessions?.[wc.id];
+                const votes = session?.voteCount ?? 0;
+                const threshold = session?.threshold ?? Math.ceil(Math.max(1, hub.presentCount || hub.totalMembers) * 0.45);
+                const pct = Math.min(100, Math.round((votes / Math.max(1, threshold)) * 100));
                 const hasVoted = hub.myWildcardVotes.includes(wc.id);
-                const pct = Math.min(100, Math.round((votes / Math.max(1, hub.totalMembers)) * 100));
                 const isInitiating = powerUpInitiating === wc.id;
-                const isActive = votes > 0; // captain has played this card
+                // A session is "active" if it exists and is pending or activated
+                const isActive = !!session && (session.status === "pending" || session.status === "activated");
+                const isActivated = session?.status === "activated";
+                const isCancelled = session?.status === "cancelled";
+                // Skip counter-block card in the main list (shown in the alert banner above)
+                if (wc.id === "block" && session?.counterBlockOf !== null && session?.counterBlockOf !== undefined) return null;
+
                 return (
                   <div
                     key={wc.id}
                     className="border"
                     style={{
-                      borderColor: isActive ? tc.hex : hasVoted ? `${tc.hex}60` : "rgba(255,255,255,0.1)",
-                      background: isActive ? `${tc.hex}10` : "rgba(255,255,255,0.02)",
+                      borderColor: isActivated ? "#22c55e" : isActive ? tc.hex : isCancelled ? "rgba(255,255,255,0.05)" : hasVoted ? `${tc.hex}60` : "rgba(255,255,255,0.1)",
+                      background: isActivated ? "rgba(34,197,94,0.08)" : isActive ? `${tc.hex}10` : isCancelled ? "rgba(255,255,255,0.01)" : "rgba(255,255,255,0.02)",
+                      opacity: isCancelled ? 0.4 : 1,
                     }}
                   >
                     {/* Card header */}
@@ -1788,34 +1884,57 @@ export default function TeamHub() {
                       <span className="text-2xl w-9 text-center flex-shrink-0">{wc.icon}</span>
                       <div className="flex-1 min-w-0">
                         <div className="font-display text-base tracking-widest">{wc.name}</div>
-                        <div className="font-mono text-white/35 text-[9px] mt-0.5 leading-relaxed">{wc.short}</div>
+                        <div className="font-mono text-white/35 text-[9px] mt-0.5 leading-relaxed">
+                          {isActivated ? (
+                            <span style={{ color: "#22c55e" }}>⚡ ACTIVATED{session?.targetTeam ? ` → ${session.targetTeam.toUpperCase()}` : ""}</span>
+                          ) : isCancelled ? (
+                            <span className="text-white/20">CANCELLED</span>
+                          ) : isActive ? (
+                            <span style={{ color: tc.hex }}>{votes}/{threshold} VOTES NEEDED{session?.targetTeam ? ` → ${session.targetTeam.toUpperCase()}` : ""}</span>
+                          ) : (
+                            wc.short
+                          )}
+                        </div>
                       </div>
                       <div className="text-right flex-shrink-0 pl-2">
-                        <div className="font-display text-xl" style={{ color: isActive ? tc.hex : "rgba(255,255,255,0.2)" }}>{votes}</div>
-                        <div className="font-mono text-white/75 text-[8px] tracking-wider">VOTES</div>
+                        {isActive && !isActivated && (
+                          <>
+                            <div className="font-display text-xl" style={{ color: tc.hex }}>{votes}</div>
+                            <div className="font-mono text-white/75 text-[8px] tracking-wider">/{threshold}</div>
+                          </>
+                        )}
+                        {isActivated && <span className="text-2xl">✅</span>}
                       </div>
                     </div>
-                    {/* Vote progress bar */}
-                    <div className="h-0.5 bg-white/10 mx-4 mb-3 overflow-hidden">
-                      <div
-                        className="h-full transition-all duration-700"
-                        style={{ width: `${pct}%`, background: tc.hex }}
-                      />
-                    </div>
+
+                    {/* Vote progress bar — only when pending */}
+                    {isActive && !isActivated && (
+                      <div className="h-0.5 bg-white/10 mx-4 mb-3 overflow-hidden">
+                        <div
+                          className="h-full transition-all duration-700"
+                          style={{ width: `${pct}%`, background: tc.hex }}
+                        />
+                      </div>
+                    )}
+
                     {/* Action area */}
                     <div className="px-4 pb-4">
                       {!votingEnabled ? (
-                        <div className="text-center font-mono text-[9px] tracking-wider text-white/75 py-1">
-                          POWER UPS LOCKED — ADMIN WILL OPEN ON THE DAY
+                        <div className="text-center font-mono text-[9px] tracking-wider text-white/20 py-1">
+                          POWER UPS LOCKED
                         </div>
+                      ) : isActivated ? (
+                        <div className="text-center font-mono text-xs tracking-wider py-1" style={{ color: "#22c55e" }}>⚡ POWER UP ACTIVATED</div>
+                      ) : isCancelled ? (
+                        <div className="text-center font-mono text-[9px] tracking-wider text-white/20 py-1">CANCELLED</div>
                       ) : isCaptainUser ? (
                         /* Captain: initiate flow */
-                        hasVoted ? (
-                          <div className="text-center font-mono text-xs tracking-wider" style={{ color: tc.hex }}>✓ INITIATED</div>
+                        isActive ? (
+                          <div className="text-center font-mono text-xs tracking-wider text-white/40 py-1">VOTING IN PROGRESS</div>
                         ) : (
                           <>
                             {isInitiating && wc.needsTarget && (
-                              <div className="mb-2 grid grid-cols-4 gap-1">
+                              <div className="mb-2 grid grid-cols-3 gap-1">
                                 {(["red","blue","pink","orange"] as const).filter(t => t !== hub.team).map(t => (
                                   <button
                                     key={t}
@@ -1853,13 +1972,17 @@ export default function TeamHub() {
                                 opacity: (isInitiating && wc.needsTarget && !powerUpTarget) ? 0.4 : 1,
                               }}
                             >
-                              {initiatePowerUpMutation.isPending ? "INITIATING..." : isInitiating ? (wc.needsTarget ? (powerUpTarget ? `CONFIRM ${wc.name} →` : "SELECT TARGET FIRST") : `CONFIRM ${wc.name} →`) : `INITIATE →`}
+                              {initiatePowerUpMutation.isPending && powerUpInitiating === wc.id
+                                ? "INITIATING..."
+                                : isInitiating
+                                  ? (wc.needsTarget ? (powerUpTarget ? `CONFIRM ${wc.name} →` : "SELECT TARGET FIRST") : `CONFIRM ${wc.name} →`)
+                                  : `INITIATE →`}
                             </button>
                           </>
                         )
                       ) : (
-                        /* Member: vote on active cards only */
-                        isActive ? (
+                        /* Member: vote on active pending cards only */
+                        isActive && !isActivated ? (
                           hasVoted ? (
                             <div className="text-center font-mono text-xs tracking-wider" style={{ color: tc.hex }}>✓ VOTED</div>
                           ) : (
@@ -1867,7 +1990,7 @@ export default function TeamHub() {
                               onClick={() => { hs('confirm'); powerUpMutation.mutate({
                                 voterId: userId,
                                 team: hub.team as "red"|"blue"|"pink"|"orange",
-                                wildcardId: wc.id as "boost"|"sabotage"|"block"|"double_down"|"all_in",
+                                wildcardId: wc.id,
                               }); }}
                               disabled={powerUpMutation.isPending}
                               className="w-full py-2.5 font-display text-sm tracking-widest transition-all active:scale-[0.99]"
