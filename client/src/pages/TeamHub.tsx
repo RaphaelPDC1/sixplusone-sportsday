@@ -2159,7 +2159,7 @@ export default function TeamHub() {
                   <div className="font-display text-lg tracking-widest mb-1" style={{ color: tc.hex }}>VIRGIN ACTIVE</div>
                   <p className="font-mono text-white/60 text-xs tracking-wider mb-3">FREE DAY PASSES FOR EVERYONE</p>
                   <a
-                    href="https://www.virginactive.co.uk"
+                    href="https://forms.office.com/Pages/ResponsePage.aspx?id=bHjuKcum9USwigeDFWjU90jxSetuYh5As0mw6Z6vJ6VUNlkwM1BWS0s1SEtZVDlTU1ZWMkJFNFZPQy4u"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-block font-mono text-[10px] tracking-widest underline underline-offset-2 transition-opacity hover:opacity-70"
