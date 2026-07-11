@@ -413,7 +413,7 @@ export default function TeamHub() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative overflow-hidden">
+    <div className="min-h-screen bg-[#0A0A0A] text-[#F2F0EB] relative">
       {/* Full-page wave background tinted to team colour */}
       <HeroWave
         tint={TEAM_TINT[hub.team ?? "red"] ?? TEAM_TINT.red}
