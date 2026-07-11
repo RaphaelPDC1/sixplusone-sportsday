@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { and, eq, like, or, sql } from "drizzle-orm";
+import { and, desc, eq, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { awardsVotes, groupCodes, powerUpVotes, profilePhotos, sdAttendance, sdEvents, sdInviteCodes, sdPhotos, sportsDayRegistrations, sportsDaySessions, unmatchedPayments } from "../drizzle/schema";
 import { getDb } from "./db";
@@ -1553,6 +1553,26 @@ Return ONLY valid JSON with this exact shape:
       // Voting removed — power ups now activate instantly on captain tap
       return { success: true, activated: false, totalYes: 0, threshold: 0 };
     }),
+
+  // ─── Public: power-up activity log ─────────────────────────────────────────
+  getPowerUpLog: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    const rows = await db
+      .select()
+      .from(powerUpVotes)
+      .where(eq(powerUpVotes.isInitiation, true))
+      .orderBy(desc(powerUpVotes.createdAt))
+      .limit(50);
+    return rows.map(r => ({
+      id: r.id,
+      team: r.team,
+      powerUpId: r.powerUpId,
+      targetTeam: r.targetTeam ?? null,
+      status: r.status,
+      createdAt: r.createdAt,
+    }));
+  }),
 
   // ─── Create Stripe PaymentIntent (embedded element) ─────────────────────────
   createPaymentIntent: publicProcedure

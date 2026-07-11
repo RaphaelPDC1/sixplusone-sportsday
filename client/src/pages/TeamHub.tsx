@@ -211,6 +211,9 @@ export default function TeamHub() {
     refetchInterval: 15_000, // refresh every 15s on sports day
   });
   const { data: sdEventsData } = trpc.scoring.getEvents.useQuery();
+  const { data: powerUpLog } = trpc.sportsday.getPowerUpLog.useQuery(undefined, {
+    refetchInterval: 15000,
+  });
   const { data: publicEventResults } = trpc.scoring.getPublicEventResults.useQuery(undefined, {
     refetchInterval: 15_000,
   });
@@ -1704,6 +1707,78 @@ export default function TeamHub() {
                     })}
                   </div>
                 </div>
+                {/* Power-up activity log */}
+                {powerUpLog && powerUpLog.length > 0 && (
+                  <div className="mt-6 space-y-3">
+                    <SectionHeader label="⚡ POWER UP ACTIVITY" />
+                    <div className="space-y-2">
+                      {powerUpLog.map((entry) => {
+                        const teamColor = TEAM_COLORS[entry.team as keyof typeof TEAM_COLORS];
+                        const targetColor = entry.targetTeam ? TEAM_COLORS[entry.targetTeam as keyof typeof TEAM_COLORS] : null;
+                        const POWER_UP_LABELS: Record<string, string> = {
+                          boost: "🚀 BOOST",
+                          sabotage: "💣 SABOTAGE",
+                          block: "🛡️ BLOCK",
+                          double_down: "×2 DOUBLE DOWN",
+                          all_in: "🔥 ALL IN",
+                        };
+                        const POWER_UP_DESC: Record<string, string> = {
+                          boost: "+3 bonus points",
+                          sabotage: "-5 pts from target",
+                          block: "cancels rival power-up",
+                          double_down: "doubles event points",
+                          all_in: "triples event points",
+                        };
+                        const label = POWER_UP_LABELS[entry.powerUpId] ?? entry.powerUpId.toUpperCase();
+                        const desc = POWER_UP_DESC[entry.powerUpId] ?? "";
+                        const timeStr = new Date(entry.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                        return (
+                          <div
+                            key={entry.id}
+                            className="p-3 border"
+                            style={{ borderColor: `${teamColor?.hex}40`, background: `${teamColor?.hex}08` }}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-display text-sm tracking-widest" style={{ color: teamColor?.hex }}>
+                                    {entry.team.toUpperCase()} TEAM
+                                  </span>
+                                  <span className="font-mono text-[10px] text-white/50">used</span>
+                                  <span className="font-display text-sm tracking-widest" style={{ color: teamColor?.hex }}>
+                                    {label}
+                                  </span>
+                                  {entry.targetTeam && (
+                                    <>
+                                      <span className="font-mono text-[10px] text-white/50">on</span>
+                                      <span className="font-display text-sm tracking-widest" style={{ color: targetColor?.hex ?? "#fff" }}>
+                                        {entry.targetTeam.toUpperCase()} TEAM
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                                <div className="font-mono text-[10px] text-white/50 mt-0.5">{desc}</div>
+                              </div>
+                              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                <span className="font-mono text-[9px] text-white/40">{timeStr}</span>
+                                <span
+                                  className="font-mono text-[9px] px-1.5 py-0.5"
+                                  style={{
+                                    background: entry.status === "activated" ? "#22c55e20" : "#ef444420",
+                                    color: entry.status === "activated" ? "#22c55e" : "#ef4444",
+                                  }}
+                                >
+                                  {entry.status === "activated" ? "ACTIVE" : entry.status.toUpperCase()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div className="mt-6 p-4 border border-white/25 bg-white/[0.02]">
                   <div className="font-mono text-xs text-white/70 tracking-wider mb-2">SCORING SYSTEM</div>
                   <div className="space-y-1 font-mono text-xs text-white/75">

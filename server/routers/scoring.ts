@@ -6,7 +6,7 @@ import { TRPCError } from "@trpc/server";
 import crypto from "crypto";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { sdEventResults, sdEvents, sdPointsLog } from "../../drizzle/schema";
+import { powerUpVotes, sdEventResults, sdEvents, sdPointsLog } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { getSessionCookieOptions } from "../_core/cookies";
 import { publicProcedure, router } from "../_core/trpc";
@@ -191,6 +191,23 @@ export const scoringRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: "No unlocked results to lock for this event." });
       }
 
+      // Fetch all activated power-ups for this event (used but not yet consumed)
+      // Power-ups are "pending consumption" — we consume them at lock time
+      const activatedPowerUps = await db
+        .select()
+        .from(powerUpVotes)
+        .where(and(
+          eq(powerUpVotes.status, "activated"),
+          eq(powerUpVotes.isInitiation, true)
+        ));
+
+      // Build a map: team → activated power-up ids
+      const teamPowerUps: Record<string, { powerUpId: string; targetTeam: string | null; rowId: number }[]> = {};
+      for (const pu of activatedPowerUps) {
+        if (!teamPowerUps[pu.team]) teamPowerUps[pu.team] = [];
+        teamPowerUps[pu.team].push({ powerUpId: pu.powerUpId, targetTeam: pu.targetTeam ?? null, rowId: pu.id });
+      }
+
       // Lock each result and write audit log
       for (const r of results) {
         await db
@@ -198,14 +215,72 @@ export const scoringRouter = router({
           .set({ locked: true, lockedAt: now, lockedBy: actor })
           .where(eq(sdEventResults.id, r.id));
 
+        let finalPts = r.finalPoints ?? 0;
+
+        // Apply DOUBLE DOWN (×2) or ALL IN (×3) for this team
+        const teamPUs = teamPowerUps[r.team] ?? [];
+        const doubleDown = teamPUs.find(p => p.powerUpId === "double_down");
+        const allIn = teamPUs.find(p => p.powerUpId === "all_in");
+        const boost = teamPUs.find(p => p.powerUpId === "boost");
+
+        let multiplierNote = "";
+        if (allIn) {
+          const bonus = finalPts * 2; // adds 2× on top = 3× total
+          finalPts = finalPts * 3;
+          multiplierNote = ` + ALL IN (×3)`;
+          // Write the bonus delta
+          await db.insert(sdPointsLog).values({
+            team: r.team, delta: bonus, reason: "event_result",
+            eventId: input.eventId, actor,
+            note: `ALL IN power-up: ×3 multiplier applied (+${bonus} bonus pts)`,
+          });
+          // Mark as consumed
+          await db.update(powerUpVotes).set({ status: "cancelled" }).where(eq(powerUpVotes.id, allIn.rowId));
+        } else if (doubleDown) {
+          const bonus = finalPts; // adds 1× on top = 2× total
+          finalPts = finalPts * 2;
+          multiplierNote = ` + DOUBLE DOWN (×2)`;
+          await db.insert(sdPointsLog).values({
+            team: r.team, delta: bonus, reason: "event_result",
+            eventId: input.eventId, actor,
+            note: `DOUBLE DOWN power-up: ×2 multiplier applied (+${bonus} bonus pts)`,
+          });
+          await db.update(powerUpVotes).set({ status: "cancelled" }).where(eq(powerUpVotes.id, doubleDown.rowId));
+        }
+
+        // Apply BOOST (+3 flat)
+        if (boost) {
+          await db.insert(sdPointsLog).values({
+            team: r.team, delta: 3, reason: "event_result",
+            eventId: input.eventId, actor,
+            note: `BOOST power-up: +3 bonus points`,
+          });
+          await db.update(powerUpVotes).set({ status: "cancelled" }).where(eq(powerUpVotes.id, boost.rowId));
+        }
+
         await db.insert(sdPointsLog).values({
           team: r.team,
           delta: r.finalPoints ?? 0,
           reason: "event_result",
           eventId: input.eventId,
           actor,
-          note: `Event ${input.eventId}: placement ${r.placement}, ${r.finalPoints} pts`,
+          note: `Event ${input.eventId}: placement ${r.placement}, ${r.finalPoints} pts${multiplierNote}`,
         });
+      }
+
+      // Apply SABOTAGE (-5 to target team) — not tied to a specific event result
+      const allSabotages = activatedPowerUps.filter(p => p.powerUpId === "sabotage" && p.targetTeam);
+      for (const sab of allSabotages) {
+        await db.insert(sdPointsLog).values({
+          team: sab.targetTeam as Team,
+          delta: -5,
+          reason: "sabotage",
+          eventId: input.eventId,
+          actor,
+          note: `SABOTAGE by ${sab.team} team: -5 points`,
+        });
+        // Mark as consumed so it doesn't apply again
+        await db.update(powerUpVotes).set({ status: "cancelled" }).where(eq(powerUpVotes.id, sab.id));
       }
 
       console.log(`[SCORING] Admin locked ${results.length} results for event ${input.eventId}`);
