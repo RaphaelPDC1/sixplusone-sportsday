@@ -2173,6 +2173,117 @@ export default function TeamHub() {
           </div>
         )}
 
+        {/* ─── SPONSORS TAB ─── */}
+        {activeTab === "sponsors" && (
+          <div className="space-y-4">
+            <SectionHeader label="OUR SPONSORS" />
+
+            {/* Sponsors grid */}
+            <div className="space-y-4">
+              {/* Virgin Active */}
+              <div
+                className="border p-6 flex flex-col items-center justify-center gap-4 min-h-[200px]"
+                style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
+              >
+                <img
+                  src="/manus-storage/N91CO4w4I1b1_c3ada223.png"
+                  alt="Virgin Active"
+                  className="h-16 object-contain"
+                />
+                <div className="text-center">
+                  <div className="font-display text-lg tracking-widest mb-1" style={{ color: tc.hex }}>VIRGIN ACTIVE</div>
+                  <p className="font-mono text-white/60 text-xs tracking-wider mb-3">FREE DAY PASSES FOR EVERYONE</p>
+                  <a
+                    href="https://www.virginactive.co.uk"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block font-mono text-[10px] tracking-widest underline underline-offset-2 transition-opacity hover:opacity-70"
+                    style={{ color: tc.hex }}
+                  >
+                    VISIT SITE →
+                  </a>
+                </div>
+              </div>
+
+              {/* Pure Sport */}
+              <div
+                className="border p-6 flex flex-col items-center justify-center gap-4 min-h-[200px]"
+                style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
+              >
+                <img
+                  src="/manus-storage/eifU8iPmHxfV_bde69309.jpg"
+                  alt="Pure Sport"
+                  className="h-16 object-contain"
+                />
+                <div className="text-center">
+                  <div className="font-display text-lg tracking-widest mb-1" style={{ color: tc.hex }}>PURE SPORT</div>
+                  <p className="font-mono text-white/60 text-xs tracking-wider mb-2">HYDRATION PARTNER</p>
+                  <div className="font-mono text-sm tracking-wider mb-3" style={{ color: tc.hex }}>CODE: <span className="font-bold">6PLUS1</span></div>
+                  <a
+                    href="https://www.puresport.co"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block font-mono text-[10px] tracking-widest underline underline-offset-2 transition-opacity hover:opacity-70"
+                    style={{ color: tc.hex }}
+                  >
+                    VISIT SITE →
+                  </a>
+                </div>
+              </div>
+
+              {/* Kitlocker */}
+              <div
+                className="border p-6 flex flex-col items-center justify-center gap-4 min-h-[200px]"
+                style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
+              >
+                <img
+                  src="/manus-storage/HhQA3cm5zP53_fc58526b.png"
+                  alt="Kitlocker"
+                  className="h-16 object-contain"
+                />
+                <div className="text-center">
+                  <div className="font-display text-lg tracking-widest mb-1" style={{ color: tc.hex }}>KITLOCKER</div>
+                  <p className="font-mono text-white/60 text-xs tracking-wider mb-3">KIT & TEAM MANAGEMENT</p>
+                  <a
+                    href="https://www.kitlocker.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block font-mono text-[10px] tracking-widest underline underline-offset-2 transition-opacity hover:opacity-70"
+                    style={{ color: tc.hex }}
+                  >
+                    VISIT SITE →
+                  </a>
+                </div>
+              </div>
+
+              {/* New Balance */}
+              <div
+                className="border p-6 flex flex-col items-center justify-center gap-4 min-h-[200px]"
+                style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
+              >
+                <img
+                  src="/manus-storage/KVFvqQ3JIe5A_26e8acf9.png"
+                  alt="New Balance"
+                  className="h-16 object-contain"
+                />
+                <div className="text-center">
+                  <div className="font-display text-lg tracking-widest mb-1" style={{ color: tc.hex }}>NEW BALANCE</div>
+                  <p className="font-mono text-white/60 text-xs tracking-wider mb-3">OFFICIAL FOOTWEAR PARTNER</p>
+                  <a
+                    href="https://www.newbalance.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block font-mono text-[10px] tracking-widest underline underline-offset-2 transition-opacity hover:opacity-70"
+                    style={{ color: tc.hex }}
+                  >
+                    VISIT SITE →
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ─── LOCATION TAB ─── */}
         {activeTab === "location" && (
           <div className="space-y-4">
