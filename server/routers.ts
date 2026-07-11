@@ -1495,44 +1495,26 @@ Return ONLY valid JSON with this exact shape:
       team: z.enum(["red","blue","pink","orange"]),
       wildcardId: z.enum(["boost","sabotage","block","double_down","all_in"]),
       targetTeam: z.enum(["red","blue","pink","orange"]).optional(),
-      // For counter-BLOCK: the session id of the incoming BLOCK being countered
-      counterBlockOf: z.number().int().optional(),
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
 
-      // Verify voting is enabled
+      // Verify power ups are enabled
       const settings = await getSportsDaySettings();
       if (!settings?.votingEnabled) throw new TRPCError({ code: "FORBIDDEN", message: "Power Ups are not open yet. The admin will enable them on the day." });
 
       // Verify captain
       const reg = await getRegistrationById(input.registrationId);
       if (!reg || reg.team !== input.team) throw new TRPCError({ code: "FORBIDDEN", message: "Not on this team" });
-      if (!reg.isCaptain) throw new TRPCError({ code: "FORBIDDEN", message: "Only team captains can initiate power ups." });
+      if (!reg.isCaptain) throw new TRPCError({ code: "FORBIDDEN", message: "Only team captains can use power ups." });
 
-      // BLOCK requires a target team
+      // BLOCK and SABOTAGE require a target team
       if ((input.wildcardId === "block" || input.wildcardId === "sabotage") && !input.targetTeam) {
         throw new TRPCError({ code: "BAD_REQUEST", message: `${input.wildcardId.toUpperCase()} requires a target team.` });
       }
 
-      // One BLOCK per team per event (prevent spam)
-      if (input.wildcardId === "block") {
-        const existingBlock = await db
-          .select()
-          .from(powerUpVotes)
-          .where(and(
-            eq(powerUpVotes.team, input.team),
-            eq(powerUpVotes.powerUpId, "block"),
-            eq(powerUpVotes.isInitiation, true)
-          ))
-          .limit(1);
-        if (existingBlock.length > 0) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Your team has already used a BLOCK this event." });
-        }
-      }
-
-      // No duplicate pending session for same power-up
+      // Each power-up can only be used ONCE per team — check for any existing activated row
       const existing = await db
         .select()
         .from(powerUpVotes)
@@ -1540,175 +1522,36 @@ Return ONLY valid JSON with this exact shape:
           eq(powerUpVotes.team, input.team),
           eq(powerUpVotes.powerUpId, input.wildcardId),
           eq(powerUpVotes.isInitiation, true),
-          eq(powerUpVotes.status, "pending")
+          eq(powerUpVotes.status, "activated")
         ))
         .limit(1);
-      if (existing.length > 0) throw new TRPCError({ code: "BAD_REQUEST", message: "A vote for this power up is already in progress." });
+      if (existing.length > 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Your team has already used this power up." });
 
-      // Get present count for this team (45% threshold)
-      const presentRows = await db
-        .select({ count: sql<number>`COUNT(*)` })
-        .from(sdAttendance)
-        .where(and(eq(sdAttendance.team, input.team), eq(sdAttendance.present, true)));
-      const presentCount = Math.max(1, Number(presentRows[0]?.count ?? 0));
-
-      // If this is a counter-BLOCK, verify the incoming BLOCK session exists and is still pending
-      if (input.counterBlockOf !== undefined) {
-        const [incomingSession] = await db
-          .select()
-          .from(powerUpVotes)
-          .where(and(
-            eq(powerUpVotes.id, input.counterBlockOf),
-            eq(powerUpVotes.powerUpId, "block"),
-            eq(powerUpVotes.status, "pending")
-          ))
-          .limit(1);
-        if (!incomingSession) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "The incoming BLOCK has already resolved. Counter-block is no longer possible." });
-        }
-      }
-
-      // Create the initiation session row (captain's YES is implicit in the session)
-      const [result] = await db.insert(powerUpVotes).values({
+      // Insert and immediately activate — no voting required
+      await db.insert(powerUpVotes).values({
         voterId: input.registrationId,
         team: input.team,
         powerUpId: input.wildcardId,
         targetTeam: input.targetTeam ?? null,
-        counterBlockOf: input.counterBlockOf ?? null,
+        counterBlockOf: null,
         isInitiation: true,
-        presentCount,
-        status: "pending",
-      }).$returningId();
+        presentCount: 1,
+        status: "activated",
+      });
 
-      const sessionId = result?.id;
-
-      // Check if threshold already met (1 vote = captain, threshold = ceil(presentCount * 0.45))
-      const threshold = Math.ceil(presentCount * 0.45);
-      if (1 >= threshold) {
-        // Captain alone meets threshold — auto-activate
-        await db.update(powerUpVotes)
-          .set({ status: "activated" })
-          .where(eq(powerUpVotes.id, sessionId!));
-        // If this is a counter-BLOCK, cancel the incoming BLOCK
-        if (input.counterBlockOf !== undefined) {
-          await db.update(powerUpVotes)
-            .set({ status: "cancelled" })
-            .where(eq(powerUpVotes.id, input.counterBlockOf));
-        }
-        return { success: true, activated: true, sessionId, message: "Power Up activated immediately (threshold met)!" };
-      }
-
-      return { success: true, activated: false, sessionId, message: "Power Up initiated. Your team is now voting." };
+      return { success: true, activated: true, message: `${input.wildcardId.toUpperCase()} activated!` };
     }),
 
-  // ─── Member: cast a YES vote on an active power up session ──────────────────
+  // ─── castPowerUpVote kept for backwards compatibility but is now a no-op ─────
   castPowerUpVote: publicProcedure
     .input(z.object({
       voterId: z.string(),
       team: z.enum(["red","blue","pink","orange"]),
-      wildcardId: z.string(), // powerUpId e.g. "boost"
+      wildcardId: z.string(),
     }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-
-      // Check voter is on this team
-      const reg = await getRegistrationById(input.voterId);
-      if (!reg || reg.team !== input.team) throw new TRPCError({ code: "FORBIDDEN", message: "Not on this team" });
-
-      // Find the pending session for this power-up
-      const [session] = await db
-        .select()
-        .from(powerUpVotes)
-        .where(and(
-          eq(powerUpVotes.team, input.team),
-          eq(powerUpVotes.powerUpId, input.wildcardId),
-          eq(powerUpVotes.isInitiation, true),
-          eq(powerUpVotes.status, "pending")
-        ))
-        .limit(1);
-
-      if (!session) throw new TRPCError({ code: "NOT_FOUND", message: "No active vote for this power up. The captain must initiate first." });
-
-      // Check voter hasn't already voted on this session
-      const alreadyVoted = await db
-        .select()
-        .from(powerUpVotes)
-        .where(and(
-          eq(powerUpVotes.voterId, input.voterId),
-          eq(powerUpVotes.powerUpId, input.wildcardId),
-          eq(powerUpVotes.isInitiation, false)
-        ))
-        .limit(1);
-      if (alreadyVoted.length > 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Already voted for this power up" });
-
-      // Record the YES vote
-      await db.insert(powerUpVotes).values({
-        voterId: input.voterId,
-        team: input.team,
-        powerUpId: input.wildcardId,
-        isInitiation: false,
-        presentCount: 0,
-        status: "pending",
-      });
-
-      // Count total YES votes (captain initiation = 1, plus member votes)
-      const memberVotes = await db
-        .select()
-        .from(powerUpVotes)
-        .where(and(
-          eq(powerUpVotes.team, input.team),
-          eq(powerUpVotes.powerUpId, input.wildcardId),
-          eq(powerUpVotes.isInitiation, false)
-        ));
-      const totalYes = 1 + memberVotes.length; // 1 for captain
-      const threshold = Math.ceil((session.presentCount || 1) * 0.45);
-
-      if (totalYes >= threshold) {
-        // Threshold met — activate the power up
-        await db.update(powerUpVotes)
-          .set({ status: "activated" })
-          .where(eq(powerUpVotes.id, session.id));
-
-        // If this was a counter-BLOCK, cancel the incoming BLOCK (first-chronologically wins)
-        if (session.counterBlockOf !== null) {
-          const [incomingBlock] = await db
-            .select()
-            .from(powerUpVotes)
-            .where(and(
-              eq(powerUpVotes.id, session.counterBlockOf),
-              eq(powerUpVotes.status, "pending")
-            ))
-            .limit(1);
-          if (incomingBlock) {
-            await db.update(powerUpVotes)
-              .set({ status: "cancelled" })
-              .where(eq(powerUpVotes.id, session.counterBlockOf));
-          }
-        }
-
-        // If this BLOCK just activated, check if the target team has a pending counter-BLOCK
-        // and cancel it (incoming BLOCK won the race)
-        if (input.wildcardId === "block") {
-          const counterBlock = await db
-            .select()
-            .from(powerUpVotes)
-            .where(and(
-              eq(powerUpVotes.counterBlockOf, session.id),
-              eq(powerUpVotes.status, "pending")
-            ))
-            .limit(1);
-          if (counterBlock[0]) {
-            await db.update(powerUpVotes)
-              .set({ status: "cancelled" })
-              .where(eq(powerUpVotes.id, counterBlock[0].id));
-          }
-        }
-
-        return { success: true, activated: true, totalYes, threshold };
-      }
-
-      return { success: true, activated: false, totalYes, threshold };
+    .mutation(async () => {
+      // Voting removed — power ups now activate instantly on captain tap
+      return { success: true, activated: false, totalYes: 0, threshold: 0 };
     }),
 
   // ─── Create Stripe PaymentIntent (embedded element) ─────────────────────────
