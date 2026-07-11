@@ -2140,42 +2140,6 @@ export default function TeamHub() {
         {/* ─── SPONSORS TAB ─── */}
         {activeTab === "sponsors" && (
           <div className="space-y-4">
-            <SectionHeader label="SPONSORS & VENDORS" />
-            <p className="font-mono text-white/60 text-xs tracking-wider">
-              The people making the day happen.
-            </p>
-            <div className="space-y-3">
-              {[
-                { name: "TBC", desc: "Sponsor details coming soon" },
-                { name: "TBC", desc: "Sponsor details coming soon" },
-                { name: "TBC", desc: "Sponsor details coming soon" },
-                { name: "TBC", desc: "Sponsor details coming soon" },
-              ].map((sponsor, idx) => (
-                <div
-                  key={`sponsor-${idx}`}
-                  className="p-4 border border-white/25 bg-white/[0.02]"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-display text-base tracking-widest">{sponsor.name}</div>
-                      <div className="font-mono text-white/60 text-xs mt-0.5">{sponsor.desc}</div>
-                    </div>
-                    <div
-                      className="w-12 h-12 rounded border flex items-center justify-center text-2xl"
-                      style={{ borderColor: `${tc.hex}40`, background: `${tc.hex}08` }}
-                    >
-                      🏢
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ─── SPONSORS TAB ─── */}
-        {activeTab === "sponsors" && (
-          <div className="space-y-4">
             <SectionHeader label="OUR SPONSORS" />
 
             {/* Sponsors grid */}
@@ -2268,7 +2232,7 @@ export default function TeamHub() {
                 />
                 <div className="text-center">
                   <div className="font-display text-lg tracking-widest mb-1" style={{ color: tc.hex }}>NEW BALANCE</div>
-                  <p className="font-mono text-white/60 text-xs tracking-wider mb-3">OFFICIAL FOOTWEAR PARTNER</p>
+                  <p className="font-mono text-white/60 text-xs tracking-wider mb-3">TECHNICAL GEAR PARTNER</p>
                   <a
                     href="https://www.newbalance.com"
                     target="_blank"
