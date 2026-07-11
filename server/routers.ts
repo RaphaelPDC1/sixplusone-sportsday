@@ -917,7 +917,7 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
       if (!matches) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid image data" });
       const mimeType = matches[1];
       const buffer = Buffer.from(matches[2], "base64");
-      if (buffer.length > 10 * 1024 * 1024) throw new TRPCError({ code: "BAD_REQUEST", message: "Image too large (max 10MB)" });
+      if (buffer.length > 5 * 1024 * 1024) throw new TRPCError({ code: "BAD_REQUEST", message: "Image too large (max 5MB)" });
       const ext = mimeType.includes("png") ? "png" : mimeType.includes("gif") ? "gif" : "jpg";
       const key = `sportsday-photos/${Date.now()}-${input.registrationId}.${ext}`;
       const { url } = await storagePut(key, buffer, mimeType);

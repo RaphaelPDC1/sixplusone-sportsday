@@ -50,8 +50,8 @@ export function PhotoFeed({ registrationId, teamColor }: PhotoFeedProps) {
     // and so the browser doesn't re-fire onChange on re-render
     e.target.value = "";
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image too large — max 10MB");
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image too large — max 5MB");
       return;
     }
     const reader = new FileReader();
