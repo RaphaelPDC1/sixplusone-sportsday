@@ -2288,7 +2288,7 @@ export default function TeamHub() {
             </div>
 
             <div className="space-y-2">
-              {["Arrive by 9:30AM", "Events start 10:00AM sharp", "Bring water + trainers", "Wear your team colour"].map((detail) => (
+              {["Arrive by 9AM", "Events start 10:00AM sharp", "Bring water + trainers", "Wear your team colour"].map((detail) => (
                 <div
                   key={detail}
                   className="flex items-center gap-3 p-4 border border-white/25"
