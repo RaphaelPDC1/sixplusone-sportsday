@@ -2165,7 +2165,7 @@ export default function TeamHub() {
                     className="inline-block font-mono text-[10px] tracking-widest underline underline-offset-2 transition-opacity hover:opacity-70"
                     style={{ color: tc.hex }}
                   >
-                    VISIT SITE →
+                    GET YOURS →
                   </a>
                 </div>
               </div>
