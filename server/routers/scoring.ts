@@ -429,6 +429,29 @@ export const scoringRouter = router({
         .limit(input.limit);
     }),
 
+  // ── Public: per-team points breakdown (for leaderboard transparency) ────────
+  getPointsBreakdown: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return {};
+    const rows = await db
+      .select({
+        team: sdPointsLog.team,
+        delta: sdPointsLog.delta,
+        reason: sdPointsLog.reason,
+        note: sdPointsLog.note,
+        createdAt: sdPointsLog.createdAt,
+      })
+      .from(sdPointsLog)
+      .orderBy(desc(sdPointsLog.createdAt));
+    // Group by team
+    const breakdown: Record<string, typeof rows> = {};
+    for (const row of rows) {
+      if (!breakdown[row.team]) breakdown[row.team] = [];
+      breakdown[row.team].push(row);
+    }
+    return breakdown;
+  }),
+
   // ── Public: locked event results (for TeamHub leaderboard tab) ────────────
   getPublicEventResults: publicProcedure.query(async () => {
     const db = await getDb();

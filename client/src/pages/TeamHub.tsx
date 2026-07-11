@@ -217,6 +217,9 @@ export default function TeamHub() {
   const { data: publicEventResults } = trpc.scoring.getPublicEventResults.useQuery(undefined, {
     refetchInterval: 15_000,
   });
+  const { data: pointsBreakdown } = trpc.scoring.getPointsBreakdown.useQuery(undefined, {
+    refetchInterval: 15_000,
+  });
 
   const castVoteMutation = trpc.sportsday.castAwardVote.useMutation({
     onSuccess: () => {
@@ -1615,6 +1618,13 @@ export default function TeamHub() {
                     const teamEventCount = publicEventResults
                       ? publicEventResults.filter((e) => e.team === team).length
                       : (hub.leaderboard as any[]).filter((e: any) => e.team === team && !e.dnf).length;
+                    // Power-ups used by this team
+                    const teamActivePUs = (powerUpLog ?? []).filter(p => p.team === team && p.status === "activated");
+                    // Power-ups used AGAINST this team (sabotage/block)
+                    const teamTargetedPUs = (powerUpLog ?? []).filter(p => p.targetTeam === team && p.status === "activated");
+                    const POWER_UP_ICONS: Record<string, string> = {
+                      boost: "🚀", sabotage: "💣", block: "🛡️", double_down: "×2", all_in: "🔥",
+                    };
                     return (
                       <div
                         key={team}
@@ -1649,6 +1659,58 @@ export default function TeamHub() {
                             <div className="font-mono text-white/60 text-xs">POINTS</div>
                           </div>
                         </div>
+                        {/* Power-up indicators */}
+                        {(teamActivePUs.length > 0 || teamTargetedPUs.length > 0) && (
+                          <div className="mt-2 pt-2 border-t border-white/10 flex flex-wrap gap-1.5">
+                            {teamActivePUs.map((pu) => (
+                              <span
+                                key={pu.id}
+                                className="font-mono text-[9px] px-1.5 py-0.5 tracking-wider"
+                                style={{ background: `${teamColor?.hex}25`, color: teamColor?.hex }}
+                                title={`Used ${pu.powerUpId.replace(/_/g,' ')}${pu.targetTeam ? ` on ${pu.targetTeam}` : ''}`}
+                              >
+                                {POWER_UP_ICONS[pu.powerUpId] ?? "⚡"} {pu.powerUpId.replace(/_/g,' ').toUpperCase()}
+                              </span>
+                            ))}
+                            {teamTargetedPUs.map((pu) => (
+                              <span
+                                key={`t-${pu.id}`}
+                                className="font-mono text-[9px] px-1.5 py-0.5 tracking-wider"
+                                style={{ background: "#ef444415", color: "#ef4444" }}
+                                title={`${pu.team} used ${pu.powerUpId.replace(/_/g,' ')} against this team`}
+                              >
+                                {POWER_UP_ICONS[pu.powerUpId] ?? "⚡"} {pu.powerUpId.replace(/_/g,' ').toUpperCase()} by {pu.team.toUpperCase()}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {/* Transparent points breakdown */}
+                        {pointsBreakdown && pointsBreakdown[team] && pointsBreakdown[team].length > 0 && (
+                          <div className="mt-2 pt-2 border-t border-white/10 space-y-0.5">
+                            {pointsBreakdown[team].map((row, ri) => {
+                              const isPositive = row.delta > 0;
+                              const reasonStr = row.reason as string;
+                              const label = row.note
+                                ? row.note
+                                : reasonStr === "event_result" ? "Event result"
+                                : reasonStr === "sabotage" ? "💣 SABOTAGE"
+                                : reasonStr === "boost" ? "🚀 BOOST"
+                                : reasonStr === "admin_override" ? "Admin adjustment"
+                                : reasonStr ?? "Points";
+                              return (
+                                <div key={ri} className="flex items-center justify-between gap-2">
+                                  <span className="font-mono text-[9px] text-white/50 truncate flex-1">{label}</span>
+                                  <span
+                                    className="font-mono text-[10px] font-bold flex-shrink-0"
+                                    style={{ color: isPositive ? teamColor?.hex : "#ef4444" }}
+                                  >
+                                    {isPositive ? "+" : ""}{row.delta}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

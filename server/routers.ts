@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { and, desc, eq, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import { awardsVotes, groupCodes, powerUpVotes, profilePhotos, sdAttendance, sdEvents, sdInviteCodes, sdPhotos, sportsDayRegistrations, sportsDaySessions, unmatchedPayments } from "../drizzle/schema";
+import { awardsVotes, groupCodes, powerUpVotes, profilePhotos, sdAttendance, sdEvents, sdInviteCodes, sdPhotos, sdPointsLog, sportsDayRegistrations, sportsDaySessions, unmatchedPayments } from "../drizzle/schema";
 import { getDb } from "./db";
 import {
   assignTeam,
@@ -1538,6 +1538,18 @@ Return ONLY valid JSON with this exact shape:
         presentCount: 1,
         status: "activated",
       });
+
+      // SABOTAGE: apply -5 immediately to target team's points log
+      if (input.wildcardId === "sabotage" && input.targetTeam) {
+        await db.insert(sdPointsLog).values({
+          team: input.targetTeam,
+          delta: -5,
+          reason: "sabotage",
+          eventId: null,
+          actor: `captain:${input.registrationId}`,
+          note: `SABOTAGE by ${input.team} team: -5 points`,
+        });
+      }
 
       return { success: true, activated: true, message: `${input.wildcardId.toUpperCase()} activated!` };
     }),
