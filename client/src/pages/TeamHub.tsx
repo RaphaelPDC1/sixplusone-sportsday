@@ -12,6 +12,7 @@ import { HeroWave } from "@/components/ui/hero-wave";
 import { TeamLiveFeatures } from "@/components/ui/team-live-features";
 import { resetRevealJourneyForReplay } from "@/lib/revealJourney";
 import { TeamFairnessBot } from "@/components/TeamFairnessBot";
+import { PhotoFeed } from "@/components/PhotoFeed";
 import { useTips, TIPS } from "@/hooks/useTips";
 import { TipCard } from "@/components/TipCard";
 
@@ -2326,6 +2327,9 @@ export default function TeamHub() {
             </div>
           </div>
          )}
+        {/* ─── SHARED PHOTO FEED ─── */}
+        <PhotoFeed registrationId={userId} teamColor={tc.hex} />
+
         {/* ─── Account / Logout ─── */}
         <div className="relative z-10 mt-8 pb-10 px-0">
           <div className="border-t border-white/8 pt-6">

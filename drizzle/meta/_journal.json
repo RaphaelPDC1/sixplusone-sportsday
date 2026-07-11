@@ -183,6 +183,13 @@
       "when": 1783734720132,
       "tag": "0025_striped_daimon_hellstrom",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1783735656854,
+      "tag": "0026_tiresome_wrecker",
+      "breakpoints": true
     }
   ]
 }

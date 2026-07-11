@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { and, eq, like, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import { awardsVotes, groupCodes, powerUpVotes, profilePhotos, sdAttendance, sdEvents, sdInviteCodes, sportsDayRegistrations, sportsDaySessions, unmatchedPayments } from "../drizzle/schema";
+import { awardsVotes, groupCodes, powerUpVotes, profilePhotos, sdAttendance, sdEvents, sdInviteCodes, sdPhotos, sportsDayRegistrations, sportsDaySessions, unmatchedPayments } from "../drizzle/schema";
 import { getDb } from "./db";
 import {
   assignTeam,
@@ -897,6 +897,64 @@ Return ONLY the two lines. No extra text, no quotes, no explanation, no markdown
         .values({ registrationId: input.registrationId, storageKey: key, url })
         .onDuplicateKeyUpdate({ set: { storageKey: key, url, uploadedAt: new Date() } });
       return { url };
+    }),
+
+  // ─── Shared photo feed ─────────────────────────────────────────────────────
+  uploadPhoto: publicProcedure
+    .input(z.object({
+      registrationId: z.string(),
+      imageDataUrl: z.string(), // base64 data URL
+      caption: z.string().max(280).optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const reg = await getRegistrationById(input.registrationId);
+      if (!reg) throw new TRPCError({ code: "NOT_FOUND", message: "Registration not found" });
+      if (!reg.team) throw new TRPCError({ code: "BAD_REQUEST", message: "Not assigned to a team" });
+      // Parse base64
+      const matches = input.imageDataUrl.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+      if (!matches) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid image data" });
+      const mimeType = matches[1];
+      const buffer = Buffer.from(matches[2], "base64");
+      if (buffer.length > 10 * 1024 * 1024) throw new TRPCError({ code: "BAD_REQUEST", message: "Image too large (max 10MB)" });
+      const ext = mimeType.includes("png") ? "png" : mimeType.includes("gif") ? "gif" : "jpg";
+      const key = `sportsday-photos/${Date.now()}-${input.registrationId}.${ext}`;
+      const { url } = await storagePut(key, buffer, mimeType);
+      await db.insert(sdPhotos).values({
+        storageKey: key,
+        url,
+        uploaderName: reg.fullName,
+        uploaderTeam: reg.team as "red" | "blue" | "pink" | "orange",
+        caption: input.caption ?? null,
+      });
+      return { url };
+    }),
+
+  listPhotos: publicProcedure
+    .query(async () => {
+      const db = await getDb();
+      if (!db) return [];
+      const photos = await db
+        .select()
+        .from(sdPhotos)
+        .where(eq(sdPhotos.hidden, false))
+        .orderBy(sql`${sdPhotos.createdAt} DESC`)
+        .limit(200);
+      return photos;
+    }),
+
+  hidePhoto: publicProcedure
+    .input(z.object({ id: z.number(), adminPassword: z.string() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const adminPwd = process.env.ADMIN_PASSWORD;
+      if (!adminPwd || input.adminPassword !== adminPwd) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Invalid admin password" });
+      }
+      await db.update(sdPhotos).set({ hidden: true }).where(eq(sdPhotos.id, input.id));
+      return { success: true };
     }),
 
   // ─── Awards voting ────────────────────────────────────────────────────────

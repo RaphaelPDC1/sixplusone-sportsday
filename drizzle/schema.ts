@@ -465,3 +465,18 @@ export const sdInviteCodes = mysqlTable("sd_invite_codes", {
 });
 export type SdInviteCode = typeof sdInviteCodes.$inferSelect;
 export type InsertSdInviteCode = typeof sdInviteCodes.$inferInsert;
+
+// ─── Sports Day Photo Feed ────────────────────────────────────────────────────
+// Shared photo wall — any registered participant can upload, everyone sees it
+export const sdPhotos = mysqlTable("sd_photos", {
+  id: int("id").autoincrement().primaryKey(),
+  storageKey: varchar("storageKey", { length: 512 }).notNull(), // S3 key
+  url: varchar("url", { length: 1024 }).notNull(),              // /manus-storage/...
+  uploaderName: varchar("uploaderName", { length: 255 }).notNull(),
+  uploaderTeam: mysqlEnum("uploaderTeam", ["red", "blue", "pink", "orange"]).notNull(),
+  caption: varchar("caption", { length: 280 }),
+  hidden: boolean("hidden").default(false).notNull(),           // admin can hide
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SdPhoto = typeof sdPhotos.$inferSelect;
+export type InsertSdPhoto = typeof sdPhotos.$inferInsert;
