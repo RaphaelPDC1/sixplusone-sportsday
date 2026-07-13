@@ -268,20 +268,9 @@ export const scoringRouter = router({
         });
       }
 
-      // Apply SABOTAGE (-5 to target team) — not tied to a specific event result
-      const allSabotages = activatedPowerUps.filter(p => p.powerUpId === "sabotage" && p.targetTeam);
-      for (const sab of allSabotages) {
-        await db.insert(sdPointsLog).values({
-          team: sab.targetTeam as Team,
-          delta: -5,
-          reason: "sabotage",
-          eventId: input.eventId,
-          actor,
-          note: `SABOTAGE by ${sab.team} team: -5 points`,
-        });
-        // Mark as consumed so it doesn't apply again
-        await db.update(powerUpVotes).set({ status: "cancelled" }).where(eq(powerUpVotes.id, sab.id));
-      }
+      // NOTE: SABOTAGE now fires immediately at initiation (in initiatePowerUp procedure)
+      // so we do NOT apply it again here at lock time. Only multipliers (DOUBLE DOWN, ALL IN)
+      // and flat bonuses (BOOST) apply at lock time.
 
       console.log(`[SCORING] Admin locked ${results.length} results for event ${input.eventId}`);
       return { success: true, locked: results.length };
