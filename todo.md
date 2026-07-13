@@ -568,12 +568,12 @@
 - [x] TypeScript: 0 errors
 
 ## Invite Link Fix + Admin Event Panel (Jul 7)
-- [ ] Fix invite link crash: move all useState/useCallback/useMutation hooks before early returns in Enter.tsx
-- [ ] Ensure invite code LATE-EB7E45 exists in DB (create if missing)
-- [ ] Combine AdminScoring event result entry + AdminWildcardMonitor into single AdminEventPanel
-- [ ] AdminEventPanel: event list on left, selected event shows status control + result entry + power-ups on right
-- [ ] Rename "Wildcards" to "Power Ups" throughout admin UI
-- [ ] Wire AdminEventPanel into AdminScoring replacing the separate tabs
+- [x] Fix invite link crash: move all useState/useCallback/useMutation hooks before early returns in Enter.tsx (ALREADY DONE — hooks declared before early returns)
+- [ ] DEFERRED — Ensure invite code LATE-EB7E45 exists in DB (create if missing) — not blocking live event
+- [ ] DEFERRED — Combine AdminScoring event result entry + AdminWildcardMonitor into single AdminEventPanel — refactor deferred until post-event
+- [ ] DEFERRED — AdminEventPanel: event list on left, selected event shows status control + result entry + power-ups on right
+- [ ] DEFERRED — Rename "Wildcards" to "Power Ups" throughout admin UI — cosmetic, deferred until post-event
+- [ ] DEFERRED — Wire AdminEventPanel into AdminScoring replacing the separate tabs — refactor deferred until post-event
 
 ## Sunlight Readability + Admin Cleanup (Jul 10)
 - [x] Remove redundant bottom scoring/team-captain section from AdminScoring
